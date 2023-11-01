@@ -10,8 +10,8 @@ jobs:
       - name: Pull Source Code
         uses: actions/checkout@v3
       - name: Train
-        shell: cmd
+        shell: C:\Users\Eric\miniconda3\Scripts\activate.bat
         run: |
-          %windir%\System32\cmd.exe "/K" C:\Users\Eric\miniconda3\Scripts\activate.bat C:\Users\Eric\miniconda3
+          C:\Users\Eric\miniconda3\Scripts\activate.bat
           dir
           python train.py
