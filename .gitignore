@@ -1,9 +1,6 @@
 .idea
 venv
 
-models/*
-!models/.gitkeep
-
 !images/.gitkeep
 
 ui-pics/*
@@ -28,5 +25,4 @@ dataset/train/labels/*
 !dataset/train/labels/.gitkeep
 
 dataset.zip
-*.pt
 *.cache
