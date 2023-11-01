@@ -1,0 +1,15 @@
+name: Build And Deployment
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, cicd ]
+jobs:
+  Train:
+    runs-on: self-hosted
+    steps:
+      - name: Pull Source Code
+        uses: actions/checkout@v3
+      - name: Train
+        shell: cmd
+        run: |
+          %windir%\System32\cmd.exe "/K" C:\Users\Eric\miniconda3\Scripts\activate.bat C:\Users\Eric\miniconda3
