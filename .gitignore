@@ -4,7 +4,6 @@ venv
 models/*
 !models/.gitkeep
 
-images/*
 !images/.gitkeep
 
 ui-pics/*
