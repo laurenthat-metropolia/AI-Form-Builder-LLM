@@ -13,3 +13,5 @@ jobs:
         shell: cmd
         run: |
           %windir%\System32\cmd.exe "/K" C:\Users\Eric\miniconda3\Scripts\activate.bat C:\Users\Eric\miniconda3
+          dir
+          python train.py
