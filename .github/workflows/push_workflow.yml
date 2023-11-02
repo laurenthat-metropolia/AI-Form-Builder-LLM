@@ -77,6 +77,7 @@ jobs:
         run: |
           export IMAGE_TAG=ericaskari/llm-wireframe:${{needs.GenerateVersion.outputs.version}}
           yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment.yml
+          kubectl apply --filename ./deployment.yml
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "[skip ci] Deployed to Production environment ${{needs.GenerateVersion.outputs.version}}"
