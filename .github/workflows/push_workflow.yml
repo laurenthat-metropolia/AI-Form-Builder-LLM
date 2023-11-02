@@ -12,12 +12,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
-      - name: "Tag: Get Last Tag"
+      - name: "Git: Get Last Tag"
         id: previoussemver
         uses: WyriHaximus/github-action-get-previous-tag@v1
         with:
           fallback: 1.0.0
-      - name: "Tag: Get Next Tag"
+      - name: "Git: Get Next Tag"
         id: nextsemver
         uses: "WyriHaximus/github-action-next-semvers@v1"
         with:
@@ -81,7 +81,6 @@ jobs:
         uses: dcarbone/install-yq-action@v1.1.1
       - name: "Kubernetes: Deploy"
         run: |
-          export IMAGE_TAG=ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
           yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = ${{ needs.BuildPushDocker.outputs.image }}' deployment.yml
           kubectl apply --filename ./deployment.yml
       - name: "Git: Commit"
