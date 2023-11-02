@@ -40,11 +40,6 @@ def predict_and_print(model_path, confidence, image_data):
     return detected_objects
 
 
-model_path = "models/2023-11-01-10-41-best-e5-detect.pt"
-confidence = 0.5
-predict_and_print(model_path, confidence, "button-1.png")
-
-
 @app.route('/image-info', methods=['POST'])
 def get_image_info():
     if 'image' not in request.files:
