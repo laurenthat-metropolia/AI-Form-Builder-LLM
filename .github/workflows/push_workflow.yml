@@ -67,9 +67,20 @@ jobs:
           tags: ericaskari/llm-wireframe:latest,ericaskari/llm-wireframe:${{needs.GenerateVersion.outputs.version}}
           cache-from: type=registry,ref=ericaskari/llm-wireframe:latest
           cache-to: type=inline
-          #cache-from: type=gha
-          #cache-to: type=gha,mode=max
-
+      - name: Configure KUBECTL
+        uses: ./.github/workflows/configure-kubectl
+        with:
+          KUBE_CONFIG_BASE64: ${{ secrets.KUBE_CONFIG_BASE64 }}
+      - name: Configure YQ
+        uses: chrisdickinson/setup-yq@latest
+      - name: Deployment
+        run: |
+          yq --help
+          export IMAGE_TAG=ericaskari/llm-wireframe:${{needs.GenerateVersion.outputs.version}}
+          yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment.yml
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "[skip ci] Deployed to Production environment ${{needs.GenerateVersion.outputs.version}}"
 #  Train:
 #    runs-on: self-hosted
 #    steps:
