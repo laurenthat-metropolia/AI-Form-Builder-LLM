@@ -72,7 +72,7 @@ jobs:
         with:
           KUBE_CONFIG_BASE64: ${{ secrets.KUBE_CONFIG_BASE64 }}
       - name: Configure YQ
-        uses: chrisdickinson/setup-yq@latest
+        uses: dcarbone/install-yq-action@v1.1.1
       - name: Deployment
         run: |
           yq --help
