@@ -62,8 +62,13 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
-          tags: ericaskari/llm-wireframe:${{needs.GenerateVersion.outputs.version}}
+          tags: ericaskari/llm-wireframe:latest,ericaskari/llm-wireframe:${{needs.GenerateVersion.outputs.version}}
+          cache-from: type=registry,ref=ericaskari/llm-wireframe:latest
+          cache-to: type=inline
+          #cache-from: type=gha
+          #cache-to: type=gha,mode=max
 
 #  Train:
 #    runs-on: self-hosted
