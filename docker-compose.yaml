@@ -6,19 +6,5 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: 'no'
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     ports:
       - '8000:8000'
-  draw2form--proxy:
-    container_name: draw2form--proxy
-    build:
-      context: assets/containers/proxy
-      dockerfile: Dockerfile
-      args:
-        PROXY_PASS_HOSTNAME: host.docker.internal
-    restart: 'no'
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    ports:
-      - '80:80'

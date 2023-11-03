@@ -1,16 +1,18 @@
+from typing import Annotated
 import os
+import io
 from icecream import ic
 from ultralytics import YOLO
-import cv2
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, File, UploadFile, status
 from PIL import Image
-import io
+from fastapi.responses import JSONResponse
 
-app = Flask(__name__)
+app = FastAPI()
+model_path = "models/2023-11-01-10-41-best-e5-detect.pt"
+model = YOLO(model_path)
 
 
-def predict_and_print(model_path, confidence, image_data):
-    model = YOLO(model_path)
+def predict_and_print(confidence, image_data):
 
     # Perform object detection on the image data
     results = model.predict(image_data, conf=confidence)
@@ -28,11 +30,12 @@ def predict_and_print(model_path, confidence, image_data):
 
                 probability = round(box.conf[i].item(), 2)
 
-                x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
+                # x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
 
                 detected_objects.append({
-                    "class_id": class_id,
-                    "probability": probability
+                    "type": class_id,
+                    "probability": probability,
+                    "coordinates": coordinates
                 })
                 # print("Detected objects")
                 # print(detected_objects)
@@ -40,26 +43,10 @@ def predict_and_print(model_path, confidence, image_data):
     return detected_objects
 
 
-@app.route('/image-info', methods=['POST'])
-def get_image_info():
-    if 'image' not in request.files:
-        return jsonify({"error": "No file part"})
-
-    image_file = request.files['image']
-
-    if image_file.filename == '':
-        return jsonify({"error": "No selected file"})
-
-    path = "models/2023-11-01-10-41-best-e5-detect.pt"
-    conf = 0.5
-
+@app.post('/image-info')
+async def get_image_info(image: UploadFile):
     try:
-        image = Image.open(io.BytesIO(image_file.read()))
-        # print("Image_detail:", image.info)
-        # print("Image_detail:", image.width)
-        # print("Image_detail:", image.height)
-        # print("Image_detail:", image.format)
-        # print("Image_detail:", image.mode)
+        image = Image.open(io.BytesIO(await image.read()))
 
         image_info = {
             "width": image.width,
@@ -67,23 +54,18 @@ def get_image_info():
             "format": image.format,
             "mode": image.mode,
         }
-        # print("img: ", image_info)
 
-        detected_objects = predict_and_print(path, conf, image)
+        conf = 0.5
+
+        detected_objects = predict_and_print(conf, image)
 
         response = {
             "image_info": image_info,
             "detected_objects": detected_objects
         }
 
-        # print("Response: ")
-        # print(response)
-
-        return jsonify(response)
+        return response
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"error": f"Failed to process the image: {str(e)}"})
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=True)
+        ic(e)
+        content = {"message": "Something went wrong!"}
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,content=content)
