@@ -16,8 +16,8 @@ jobs:
       - name: Python information
         shell: bash
         run: |
-          python --version
+          python --version || true
       - name: Conda information
         shell: bash
         run: |
-          conda --version
+          conda --version || true
