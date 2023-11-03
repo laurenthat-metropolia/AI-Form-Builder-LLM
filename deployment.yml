@@ -22,16 +22,6 @@ spec:
         - image: ericaskari/llm-wireframe:1.0.22
           name: draw2form-api
           imagePullPolicy: Always
-          resources:
-            requests:
-              memory: "1Gi"
-              cpu: 150m
-            limits:
-              memory: "1Gi"
-              cpu: '1'
-        - image: ericaskari/llm-wireframe-proxy:latest
-          name: draw2form-proxy
-          imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service
@@ -40,9 +30,9 @@ metadata:
   namespace: app-draw2form
 spec:
   ports:
-    - port: 80
+    - port: 8000
       protocol: TCP
-      targetPort: 80
+      targetPort: 8000
   selector:
     app.kubernetes.io/name: deployment-draw2form
   sessionAffinity: None
@@ -53,16 +43,6 @@ kind: Ingress
 metadata:
   name: ingress-draw2form
   namespace: app-draw2form
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: 100m
-    nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: '1000'
-    nginx.ingress.kubernetes.io/proxy-send-timeout: '1000'
-    nginx.ingress.kubernetes.io/proxy-read-timeout: '1000'
-    nginx.ingress.kubernetes.io/proxy-next-upstream: '1000'
-    nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: '1000'
-    nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '1000'
-    nginx.ingress.kubernetes.io/proxy-request-buffering: '1000'
 spec:
   tls:
     - hosts:
@@ -78,4 +58,4 @@ spec:
               service:
                 name: service-draw2form
                 port:
-                  number: 80
+                  number: 8000
