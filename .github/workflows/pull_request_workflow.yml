@@ -16,6 +16,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: ericaskari/llm-wireframe:latest,ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
+          tags: ericaskari/llm-wireframe:latest
           cache-from: type=registry,ref=ericaskari/llm-wireframe:latest
           cache-to: type=inline
