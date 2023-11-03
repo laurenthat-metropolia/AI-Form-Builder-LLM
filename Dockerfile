@@ -14,3 +14,5 @@ RUN adduser uwsgi
 USER uwsgi
 
 CMD ["uwsgi", "--ini", "app.ini"]
+
+EXPOSE 80

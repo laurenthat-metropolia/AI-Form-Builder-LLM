@@ -30,9 +30,9 @@ metadata:
   namespace: app-draw2form
 spec:
   ports:
-    - port: 8000
+    - port: 80
       protocol: TCP
-      targetPort: 8000
+      targetPort: 80
   selector:
     app.kubernetes.io/name: deployment-draw2form
   sessionAffinity: None
@@ -60,4 +60,4 @@ spec:
               service:
                 name: service-draw2form
                 port:
-                  number: 8000
+                  number: 80
