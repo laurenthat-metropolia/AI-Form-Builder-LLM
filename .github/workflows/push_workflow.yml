@@ -2,7 +2,7 @@ name: Build And Deployment
 on:
   workflow_dispatch:
   push:
-    branches: [ main, cicd ]
+    branches: [ main ]
 permissions: write-all
 
 jobs:

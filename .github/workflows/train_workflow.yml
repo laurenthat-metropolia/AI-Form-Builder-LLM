@@ -1,0 +1,23 @@
+name: Train Model
+on:
+  workflow_dispatch:
+  push:
+    branches: [ train-cicd ]
+permissions: write-all
+
+jobs:
+  Version:
+    runs-on: self-hosted
+    steps:
+      - name: "Git: Pull Source Code"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Python information
+        shell: bash
+        run: |
+          python --version
+      - name: Conda information
+        shell: bash
+        run: |
+          conda --version
