@@ -4,7 +4,7 @@ WORKDIR /src
 
 RUN pip3 install flask icecream uwsgi
 
-COPY main.py main.py
+COPY app.py app.py
 COPY app.ini app.ini
 
 COPY models/2023-11-01-10-41-best-e5-detect.pt models/2023-11-01-10-41-best-e5-detect.pt
@@ -15,4 +15,4 @@ USER uwsgi
 
 CMD ["uwsgi", "--ini", "app.ini"]
 
-EXPOSE 80
+EXPOSE 8000

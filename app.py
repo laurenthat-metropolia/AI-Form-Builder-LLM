@@ -85,5 +85,5 @@ def get_image_info():
         return jsonify({"error": f"Failed to process the image: {str(e)}"})
 
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=80, threaded=True, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80, debug=True)

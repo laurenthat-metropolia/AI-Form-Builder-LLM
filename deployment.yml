@@ -19,8 +19,18 @@ spec:
         app.kubernetes.io/name: deployment-draw2form
     spec:
       containers:
-        - image: ericaskari/llm-wireframe:1.0.18
+        - image: ericaskari/llm-wireframe:latest
           name: draw2form-api
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: 150m
+            limits:
+              memory: "1Gi"
+              cpu: '1'
+        - image: ericaskari/llm-wireframe-proxy:latest
+          name: draw2form-proxy
           imagePullPolicy: Always
 ---
 apiVersion: v1
@@ -43,8 +53,6 @@ kind: Ingress
 metadata:
   name: ingress-draw2form
   namespace: app-draw2form
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: 100m
 spec:
   tls:
     - hosts:

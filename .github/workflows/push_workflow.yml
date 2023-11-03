@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main, cicd ]
 permissions: write-all
+
 jobs:
   Version:
     runs-on: ubuntu-latest
@@ -60,6 +61,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile
           push: true
           tags: ericaskari/llm-wireframe:latest,ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
           cache-from: type=registry,ref=ericaskari/llm-wireframe:latest

@@ -27,3 +27,4 @@ dataset/train/labels/*
 
 dataset.zip
 *.cache
+yolov8n.pt
