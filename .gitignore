@@ -1,6 +1,7 @@
 .idea
 venv
-
+kubectl
+kubectl.sha256
 !images/.gitkeep
 
 ui-pics/*
@@ -26,3 +27,4 @@ dataset/train/labels/*
 
 dataset.zip
 *.cache
+yolov8n.pt

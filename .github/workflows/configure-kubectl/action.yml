@@ -1,0 +1,26 @@
+inputs:
+  KUBE_CONFIG_BASE64:
+    description: 'KUBE_CONFIG_BASE64'
+    required: true
+name: ConfigureKubectl
+description: ConfigureKubectl
+runs:
+    using: 'composite'
+    steps:
+        - name: Run
+          shell: bash
+          run: |
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+            echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+            chmod +x kubectl
+            mkdir -p bin
+            mv kubectl bin/kubectl
+            PATH=$PATH:$(pwd)/bin
+            kubectl version --client
+            mkdir ~/.kube
+            echo ${{ inputs.KUBE_CONFIG_BASE64 }} | base64 --decode >> ~/.kube/config
+            export KUBECONFIG=~/.kube/config
+            kubectl config use-context ericaskari
+            kubectl get all
+

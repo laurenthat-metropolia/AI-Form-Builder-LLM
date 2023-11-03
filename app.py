@@ -34,15 +34,10 @@ def predict_and_print(model_path, confidence, image_data):
                     "class_id": class_id,
                     "probability": probability
                 })
-                print("Detected objects")
-                print(detected_objects)
+                # print("Detected objects")
+                # print(detected_objects)
 
     return detected_objects
-
-
-model_path = "models/2023-11-01-10-41-best-e5-detect.pt"
-confidence = 0.5
-predict_and_print(model_path, confidence, "button-1.png")
 
 
 @app.route('/image-info', methods=['POST'])
@@ -60,11 +55,11 @@ def get_image_info():
 
     try:
         image = Image.open(io.BytesIO(image_file.read()))
-        print("Image_detail:", image.info)
-        print("Image_detail:", image.width)
-        print("Image_detail:", image.height)
-        print("Image_detail:", image.format)
-        print("Image_detail:", image.mode)
+        # print("Image_detail:", image.info)
+        # print("Image_detail:", image.width)
+        # print("Image_detail:", image.height)
+        # print("Image_detail:", image.format)
+        # print("Image_detail:", image.mode)
 
         image_info = {
             "width": image.width,
@@ -72,7 +67,7 @@ def get_image_info():
             "format": image.format,
             "mode": image.mode,
         }
-        print("img: ", image_info)
+        # print("img: ", image_info)
 
         detected_objects = predict_and_print(path, conf, image)
 
@@ -81,8 +76,8 @@ def get_image_info():
             "detected_objects": detected_objects
         }
 
-        print("Response: ")
-        print(response)
+        # print("Response: ")
+        # print(response)
 
         return jsonify(response)
     except Exception as e:
@@ -90,5 +85,5 @@ def get_image_info():
         return jsonify({"error": f"Failed to process the image: {str(e)}"})
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80, debug=True)
