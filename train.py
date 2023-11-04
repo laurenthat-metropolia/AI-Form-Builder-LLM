@@ -24,4 +24,4 @@ data = os.path.join(os.getcwd(), 'dataset', "data.yaml")
 if __name__ == "__main__":
     print(torch.cuda.is_available())
     model = YOLO(base_model)
-    model.train(data=data, epochs=int(epochs), model=base_model, imgsz=int(imgsz), name="train")
+    model.train(data=data, epochs=int(epochs), model=base_model, imgsz=int(imgsz))
