@@ -25,7 +25,14 @@ jobs:
         shell: bash
         run: |
           python train.py
-      - uses: actions/upload-artifact@v3
+      - name: Generate Build Version
+        id: generateversion
+        shell: bash
+        run: |
+          version="$(date +%Y-%m-%d-%H-%M)"
+          echo "version=$version" >> $GITHUB_OUTPUT
+      - name: Upload Trained Model
+        uses: actions/upload-artifact@v3
         with:
-          name: Upload Trained Model
+          name: model-${{ steps.generateversion.outputs.version }}
           path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect/train
