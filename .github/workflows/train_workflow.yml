@@ -6,8 +6,10 @@ on:
 permissions: write-all
 
 jobs:
-  Version:
+  Train:
     runs-on: self-hosted
+    env:
+      APP_ROBEFLOW_API_KEY: ${{ secrets.APP_ROBEFLOW_API_KEY }}
     steps:
       - name: "Git: Pull Source Code"
         uses: actions/checkout@v3
@@ -17,6 +19,10 @@ jobs:
         shell: bash
         run: |
           python --version || true
+      - name: Conda information
+        shell: bash
+        run: |
+          conda --version || true
       - name: Conda information
         shell: bash
         run: |
