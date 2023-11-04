@@ -22,8 +22,6 @@ on:
         type: number
         required: true
         default: 224
-  push:
-    branches: [ train-cicd ]
 permissions: write-all
 
 jobs:
