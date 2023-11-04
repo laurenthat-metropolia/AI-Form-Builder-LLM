@@ -7,24 +7,6 @@ kubectl.sha256
 ui-pics/*
 !ui-pics/.gitkeep
 
-dataset/empty/images/*
-!dataset/empty/images/.gitkeep
-
-dataset/empty/labels/*
-!dataset/empty/labels/.gitkeep
-
-dataset/valid/images/*
-!dataset/valid/images/.gitkeep
-
-dataset/valid/labels/*
-!dataset/valid/labels/.gitkeep
-
-dataset/train/images/*
-!dataset/train/images/.gitkeep
-
-dataset/train/labels/*
-!dataset/train/labels/.gitkeep
-
 dataset.zip
 *.cache
 yolov8n.pt

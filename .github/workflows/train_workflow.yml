@@ -21,3 +21,4 @@ jobs:
         shell: bash
         run: |
           conda --version || true
+          yolo task=detect mode=train model=yolov8s.pt data=$(pwd)/dataset/data.yaml epochs=2 imgsz=224
