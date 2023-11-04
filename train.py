@@ -17,9 +17,9 @@ rf = Roboflow(api_key=apikey)
 
 project = rf.workspace().project(project_name="draw2form")
 
-dataset = project.version(version).download(model_format="yolov8", location="dataset", overwrite=True)
+dataset = project.version(int(version)).download(model_format="yolov8", location="dataset", overwrite=True)
 
 if __name__ == "__main__":
     print(torch.cuda.is_available())
     model = YOLO(baseModel)
-    model.train(data=os.path.join(os.getcwd(), 'dataset', "data.yaml"), epochs=epochs, model=baseModel, imgsz=imgsz)
+    model.train(data=os.path.join(os.getcwd(), 'dataset', "data.yaml"), epochs=int(epochs), model=baseModel, imgsz=int(imgsz))
