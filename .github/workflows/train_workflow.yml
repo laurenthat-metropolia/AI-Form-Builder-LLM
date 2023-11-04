@@ -31,7 +31,6 @@ jobs:
       APP_EPOCHS: ${{ github.event.inputs.epochs }}
       APP_IMAGE_BASE: ${{ github.event.inputs.baseModel }}
       APP_IMAGE_SIZE: ${{ github.event.inputs.imgsz }}
-      APP_MODEL_NAME: model-v${{ github.event.inputs.datasetVersion }}-e${{ github.event.inputs.epochs }}-${{ steps.generateversion.outputs.version }}
     steps:
       - name: "Git: Pull Source Code"
         uses: actions/checkout@v3
@@ -62,5 +61,5 @@ jobs:
       - name: Upload Trained Model
         uses: actions/upload-artifact@v3
         with:
-          name: $APP_MODEL_NAME
-          path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect/$APP_MODEL_NAME
+          name: model-v${{ github.event.inputs.datasetVersion }}-e${{ github.event.inputs.epochs }}-${{ steps.generateversion.outputs.version }}
+          path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect/train

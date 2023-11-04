@@ -12,7 +12,6 @@ version = os.getenv("APP_ROBOFLOW_DATASET_VERSION")  # 2
 epochs = os.getenv("APP_EPOCHS")  # 2
 base_model = os.getenv("APP_IMAGE_BASE")  # yolov8n.pt
 imgsz = os.getenv("APP_IMAGE_SIZE")  # 224
-name = os.getenv("APP_MODEL_NAME")  # 224
 
 rf = Roboflow(api_key=apikey)
 
@@ -25,4 +24,4 @@ data = os.path.join(os.getcwd(), 'dataset', "data.yaml")
 if __name__ == "__main__":
     print(torch.cuda.is_available())
     model = YOLO(base_model)
-    model.train(data=data, epochs=int(epochs), model=base_model, imgsz=int(imgsz), name=name)
+    model.train(data=data, epochs=int(epochs), model=base_model, imgsz=int(imgsz), name="train")
