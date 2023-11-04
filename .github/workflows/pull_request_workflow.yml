@@ -1,4 +1,4 @@
-name: Build And Deployment
+name: Pull Request Tests
 on:
   pull_request:
 jobs:

@@ -1,0 +1,65 @@
+name: Train Model
+on:
+  workflow_dispatch:
+    inputs:
+      datasetVersion:
+        description: Roboflow dataset version to train
+        type: number
+        required: true
+        default: 2
+      epochs:
+        description: Epochs
+        type: number
+        required: true
+        default: 2
+      baseModel:
+        description: Base Model for YOLO
+        type: string
+        required: true
+        default: yolov8n.pt
+      imgsz:
+        description: Image size for YOLO
+        type: number
+        required: true
+        default: 224
+jobs:
+  Train:
+    runs-on: self-hosted
+    env:
+      APP_ROBEFLOW_API_KEY: ${{ secrets.APP_ROBEFLOW_API_KEY }}
+      APP_ROBEFLOW_DATASET_VERSION: ${{ github.event.inputs.datasetVersion }}
+      APP_EPOCHS: ${{ github.event.inputs.epochs }}
+      APP_IMAGE_BASE: ${{ github.event.inputs.baseModel }}
+      APP_IMAGE_SIZE: ${{ github.event.inputs.imgsz }}
+    steps:
+      - name: "Git: Pull Source Code"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Python information
+        shell: bash
+        run: |
+          python --version || true
+      - name: Conda information
+        shell: bash
+        run: |
+          conda --version || true
+      - name: Conda information
+        shell: bash
+        run: |
+          conda --version || true
+      - name: Train Model
+        shell: bash
+        run: |
+          python train.py
+      - name: Generate Build Version
+        id: generateversion
+        shell: bash
+        run: |
+          version="$(date +%Y-%m-%d-%H-%M)"
+          echo "version=$version" >> $GITHUB_OUTPUT
+      - name: Upload Trained Model
+        uses: actions/upload-artifact@v3
+        with:
+          name: model-v${{ github.event.inputs.datasetVersion }}-e${{ github.event.inputs.epochs }}-${{ steps.generateversion.outputs.version }}
+          path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect/train
