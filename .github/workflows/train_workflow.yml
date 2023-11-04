@@ -25,3 +25,7 @@ jobs:
         shell: bash
         run: |
           python train.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Upload Trained Model
+          path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect/train
