@@ -7,14 +7,19 @@ from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env.
 
-rf = Roboflow(api_key=os.getenv("APP_ROBEFLOW_API_KEY"))
+apikey = os.getenv("APP_ROBEFLOW_API_KEY")  # ****
+version = os.getenv("APP_ROBEFLOW_DATASET_VERSION")  # 2
+epochs = os.getenv("APP_EPOCHS")  # 2
+baseModel = os.getenv("APP_IMAGE_BASE")  # yolov8n.pt
+imgsz = os.getenv("APP_IMAGE_SIZE")  # 224
+
+rf = Roboflow(api_key=apikey)
 
 project = rf.workspace().project(project_name="draw2form")
 
-dataset = project.version(1).download(model_format="yolov8", location="dataset", overwrite=True)
-
+dataset = project.version(version).download(model_format="yolov8", location="dataset", overwrite=True)
 
 if __name__ == "__main__":
     print(torch.cuda.is_available())
-    model = YOLO("yolov8n.pt")
-    model.train(data=os.path.join(os.getcwd(), 'dataset', "data.yaml"),epochs=2,model="yolov8n.pt", imgsz=224)
+    model = YOLO(baseModel)
+    model.train(data=os.path.join(os.getcwd(), 'dataset', "data.yaml"), epochs=epochs, model=baseModel, imgsz=imgsz)
