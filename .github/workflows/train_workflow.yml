@@ -62,4 +62,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: model-v${{ github.event.inputs.datasetVersion }}-e${{ github.event.inputs.epochs }}-${{ steps.generateversion.outputs.version }}
-          path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect/train
+          path: /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs
