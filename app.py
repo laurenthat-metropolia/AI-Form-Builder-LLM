@@ -60,7 +60,7 @@ async def get_image_info(image: UploadFile):
         detected_objects = predict_and_print(conf, image)
 
         response = {
-            "model_path": model_path
+            "model_path": model_path,
             "image_info": image_info,
             "detected_objects": detected_objects
         }
