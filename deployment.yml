@@ -20,6 +20,8 @@ spec:
     spec:
       containers:
         - image: ericaskari/llm-wireframe:1.0.25
+          ports:
+            - containerPort: 8000
           name: draw2form-api
           resizePolicy:
             - resourceName: cpu

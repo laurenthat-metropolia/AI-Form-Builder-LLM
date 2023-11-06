@@ -47,7 +47,7 @@ jobs:
       - name: Cleanup
         shell: bash
         run: |
-          rm -rf /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs/detect || true
+          rm -rf /root/miniconda3/lib/python3.11/site-packages/tests/tmp/runs || true
       - name: Train Model
         shell: bash
         run: |
