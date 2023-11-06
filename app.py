@@ -8,7 +8,7 @@ from PIL import Image
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
-model_path = "models/2023-11-01-10-41-best-e5-detect.pt"
+model_path = "models/model-v2-e5-2023-11-06-08-20.pt"
 model = YOLO(model_path)
 
 
@@ -60,6 +60,7 @@ async def get_image_info(image: UploadFile):
         detected_objects = predict_and_print(conf, image)
 
         response = {
+            "model_path": model_path
             "image_info": image_info,
             "detected_objects": detected_objects
         }
