@@ -1,7 +1,10 @@
 import os
 import io
-
 import httpx
+import asyncio
+import pathlib
+
+from uuid import uuid4
 from dotenv import load_dotenv
 from httpx import AsyncClient, Response
 from icecream import ic
@@ -10,12 +13,13 @@ from ultralytics import YOLO
 from fastapi import FastAPI, File, UploadFile, status
 from PIL import Image
 from fastapi.responses import JSONResponse
-import asyncio
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 model_path = "models/model-v2-e5-2023-11-06-08-20.pt"
+conf = 0.5
+
 model = YOLO(model_path)
 load_dotenv()
 
@@ -25,12 +29,12 @@ subscription_key = os.environ['COMPUTER_VISION_KEY']
 
 endpoint = os.environ['COMPUTER_VISION_ENDPOINT']
 
-text_recognition_url = endpoint + "vision/v3.1/read/analyze"
+text_recognition_url = f"{endpoint}vision/v3.1/read/analyze"
 
 headers = {'Ocp-Apim-Subscription-Key': subscription_key}
 
 
-def predict_and_print(confidence, image_data):
+def get_prediction_info(confidence, image_data):
     # Perform object detection on the image data
     results = model.predict(image_data, conf=confidence)
 
@@ -60,10 +64,16 @@ def predict_and_print(confidence, image_data):
     return detected_objects
 
 
-async def get_text_info(name: str, client: AsyncClient):
+async def get_text_info(uploaded_file: UploadFile, image: Image, client: AsyncClient):
+    extension = pathlib.Path(uploaded_file.filename).suffix
+    name = f'{uuid4()}{extension}'
+    image.save(f"static/{name}")
+
     image_url = f"{server_address}/static/{name}"
     data = {'url': image_url}
+    ic(data)
     response: Response = await client.post(text_recognition_url, headers=headers, json=data, timeout=10.0)
+    ic(response.headers)
     operation_url = response.headers["Operation-Location"]
 
     # Holds the URI used to retrieve the recognized text.
@@ -72,20 +82,20 @@ async def get_text_info(name: str, client: AsyncClient):
     # The recognized text isn't immediately available, so poll to wait for completion.
     analysis = {}
     poll = True
-    while (poll):
+    while poll:
         response_final = await client.get(operation_url, headers=headers, timeout=10.0)
         analysis = response_final.json()
 
         await asyncio.sleep(1)
 
-        if ("analyzeResult" in analysis):
+        if "analyzeResult" in analysis:
             poll = False
-        if ("status" in analysis and analysis['status'] == 'failed'):
+        if "status" in analysis and analysis['status'] == 'failed':
             poll = False
         ic("Still waiting for Azure")
 
     polygons = []
-    if ("analyzeResult" in analysis):
+    if "analyzeResult" in analysis:
         # Extract the recognized text, with bounding boxes.
         polygons = [(line["boundingBox"], line["text"])
                     for line in analysis["analyzeResult"]["readResults"][0]["lines"]]
@@ -96,31 +106,33 @@ async def get_text_info(name: str, client: AsyncClient):
 async def get_image_info(image: UploadFile):
     async with httpx.AsyncClient() as client:
         try:
-            name = image.filename
-            image = Image.open(io.BytesIO(await image.read()))
-            image.save(f"static/{name}")
-
-            text_info = await get_text_info(name, client)
-            image_info = {
-                "width": image.width,
-                "height": image.height,
-                "format": image.format,
-                "mode": image.mode,
-            }
-
-            conf = 0.5
-
-            detected_objects = predict_and_print(conf, image)
-
-            response = {
-                "model_path": model_path,
-                "image_info": image_info,
-                "detected_objects": detected_objects,
-                "text_info": text_info
-            }
-
-            return response
+            return await process_get_image_info(image, client)
         except Exception as e:
             ic(e)
             content = {"message": "Something went wrong!"}
             return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=content)
+
+
+async def process_get_image_info(uploaded_file: UploadFile, client: AsyncClient):
+    image: Image = Image.open(io.BytesIO(await uploaded_file.read()))
+
+    text_info = await get_text_info(uploaded_file, image, client)
+
+    prediction_info = get_prediction_info(conf, image)
+
+    response = {
+        "model_info": {
+            "model": model_path,
+            "confidence": conf
+        },
+        "image_info": {
+            "width": image.width,
+            "height": image.height,
+            "format": image.format,
+            "mode": image.mode,
+        },
+        "prediction_info": prediction_info,
+        "text_info": text_info
+    }
+
+    return response
