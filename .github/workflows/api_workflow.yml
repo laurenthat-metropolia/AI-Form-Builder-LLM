@@ -98,16 +98,16 @@ jobs:
         - name: "Kubernetes: Deploy"
           run: |
             export IMAGE_TAG=ericaskari/draw2form-api:${{needs.Version.outputs.version}}
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[0].value = env(APP_OAUTH2_CLIENT_ID)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[1].value = env(APP_OAUTH2_CLIENT_SECRET)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[2].value = env(APP_OAUTH2_CALLBACK_URL)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[3].value = env(APP_JWT_SECRET)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[4].value = env(APP_SESSION_SECRET)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[5].value = env(APP_ANDROID_SHA256_CERT_FINGERPRINT)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[6].value = env(APP_JWT_ISSUER)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[7].value = env(APP_JWT_AUDIENCE)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[8].value = env(APP_DATABASE_URL)' deployment.yml
-            kubectl apply --filename ./deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[0].value = env(APP_OAUTH2_CLIENT_ID)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[1].value = env(APP_OAUTH2_CLIENT_SECRET)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[2].value = env(APP_OAUTH2_CALLBACK_URL)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[3].value = env(APP_JWT_SECRET)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[4].value = env(APP_SESSION_SECRET)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[5].value = env(APP_ANDROID_SHA256_CERT_FINGERPRINT)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[6].value = env(APP_JWT_ISSUER)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[7].value = env(APP_JWT_AUDIENCE)' api/deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[8].value = env(APP_DATABASE_URL)' api/deployment.yml
+            kubectl apply --filename api/deployment.yml
       
 
