@@ -1,7 +1,7 @@
 name: API Deployment
 on:
   push:
-    branches: [ backend-api ]
+    branches: [ main ]
 permissions: write-all
 
 jobs:

@@ -1,28 +1,28 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: "app-draw2form"
+  name: "app-draw2form-llm"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-draw2form
-  namespace: app-draw2form
+  name: deployment-draw2form-llm
+  namespace: app-draw2form-llm
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: deployment-draw2form
+      app.kubernetes.io/name: deployment-draw2form-llm
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: deployment-draw2form
+        app.kubernetes.io/name: deployment-draw2form-llm
     spec:
       containers:
         - image: ericaskari/llm-wireframe:1.0.28
           ports:
             - containerPort: 8000
-          name: draw2form-api
+          name: draw2form-llm-api
           resizePolicy:
             - resourceName: cpu
               restartPolicy: RestartContainer
@@ -40,38 +40,38 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-draw2form
-  namespace: app-draw2form
+  name: service-draw2form-llm
+  namespace: app-draw2form-llm
 spec:
   ports:
     - port: 8000
       protocol: TCP
       targetPort: 8000
   selector:
-    app.kubernetes.io/name: deployment-draw2form
+    app.kubernetes.io/name: deployment-draw2form-llm
   sessionAffinity: None
   type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-draw2form
-  namespace: app-draw2form
+  name: ingress-draw2form-llm
+  namespace: app-draw2form-llm
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 20mb
 spec:
   tls:
     - hosts:
-        - draw2form.ericaskari.com
+        - draw2form-llm.ericaskari.com
       secretName: ericaskari-com-tls-secret
   rules:
-    - host: draw2form.ericaskari.com
+    - host: draw2form-llm.ericaskari.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: service-draw2form
+                name: service-draw2form-llm
                 port:
                   number: 8000
