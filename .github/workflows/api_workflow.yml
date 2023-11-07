@@ -68,8 +68,8 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ericaskari/llm-wireframe:latest,ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
-          cache-from: type=registry,ref=ericaskari/llm-wireframe:latest
+          tags: ericaskari/draw2form-api:latest,ericaskari/draw2form-api:${{needs.Version.outputs.version}}
+          cache-from: type=registry,ref=ericaskari/draw2form-api:latest
           cache-to: type=inline
 
 
