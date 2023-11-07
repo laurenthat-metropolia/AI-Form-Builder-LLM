@@ -1,0 +1,14 @@
+name: API Deployment
+on:
+  push:
+    branches: [ backend-api ]
+permissions: write-all
+
+jobs:
+  Version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Pull Source Code"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
