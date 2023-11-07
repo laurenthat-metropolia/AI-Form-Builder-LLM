@@ -10,6 +10,8 @@ export function configSession(app: Express) {
             genid: function (req: any) {
                 return randomUUID(); // use UUIDs for session IDs
             },
+            resave: true,
+            saveUninitialized: true,
             secret: environment.APP_SESSION_SECRET,
         }),
     );
