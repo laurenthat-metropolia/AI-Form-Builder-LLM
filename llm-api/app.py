@@ -60,7 +60,7 @@ def predict_and_print(confidence, image_data):
 
 async  def get_text_info(name):
     image_url = f"https://draw2form-llm.ericaskari.com/static/{name}"
-
+    ic(image_url)
     data = {'url': image_url}
     response = requests.post(text_recognition_url, headers=headers, json=data)
     response.raise_for_status()
