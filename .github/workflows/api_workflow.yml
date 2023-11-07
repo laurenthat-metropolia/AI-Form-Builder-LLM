@@ -8,7 +8,12 @@ jobs:
   Version:
     runs-on: ubuntu-latest
     steps:
-      - name: "Git Pull Source Code"
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
         with:
-          fetch-depth: 0
+          node-version: 18
+      - run: npm ci
+      - run: npm test
+
+
+
