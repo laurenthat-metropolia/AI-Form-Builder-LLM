@@ -17,3 +17,6 @@ yolov8s.pt
 llm-api/static
 azure.py
 runs
+
+yolov8n.pt
+yolov8s.pt
