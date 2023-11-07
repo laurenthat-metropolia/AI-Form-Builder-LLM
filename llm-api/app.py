@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-app.mount("static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 model_path = "models/model-v2-e5-2023-11-06-08-20.pt"
 model = YOLO(model_path)
 load_dotenv()
