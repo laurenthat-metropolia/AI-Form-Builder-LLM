@@ -72,28 +72,6 @@ jobs:
           cache-from: type=registry,ref=ericaskari/llm-wireframe:latest
           cache-to: type=inline
 
-    Deploy:
-      runs-on: ubuntu-latest
-      needs: [ BuildPushDocker, Version ]
-      steps:
-        - name: "Git: Pull Source Code"
-          uses: actions/checkout@v3
-        - name: "Configure: kubectl"
-          uses: ./.github/workflows/configure-kubectl
-          with:
-            KUBE_CONFIG_BASE64: ${{ secrets.KUBE_CONFIG_BASE64 }}
-        - name: "Configure: yq"
-          uses: dcarbone/install-yq-action@v1.1.1
-        - name: "Kubernetes: Deploy"
-          run: |
-            export IMAGE_TAG=ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment.yml
-            kubectl apply --filename ./deployment.yml
-        - name: "Git: Commit"
-          uses: stefanzweifel/git-auto-commit-action@v5
-          with:
-            commit_message: "[skip ci] Deployed to Production environment ${{ needs.BuildPushDocker.outputs.image }}"
-  #  Train
 
 
 
