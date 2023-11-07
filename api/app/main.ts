@@ -392,8 +392,8 @@ app.use((async (err, req: Request, res: Response, next): Promise<void> => {
         message: err.message,
     });
 }) satisfies ErrorRequestHandler<any>);
+*/
 
 app.listen(8000, '0.0.0.0', (): void => {
     console.log('Started listening on port 8000');
 });
-*/
