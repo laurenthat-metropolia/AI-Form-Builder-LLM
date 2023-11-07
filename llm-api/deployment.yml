@@ -20,6 +20,11 @@ spec:
     spec:
       containers:
         - image: ericaskari/draw2form-llm-api:1.0.28
+          env:
+            - name: COMPUTER_VISION_KEY
+              value: value
+            - name: COMPUTER_VISION_ENDPOINT
+              value: https://seb.cognitiveservices.azure.com/
           ports:
             - containerPort: 8000
           name: draw2form-llm-api
