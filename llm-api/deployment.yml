@@ -19,14 +19,14 @@ spec:
         app.kubernetes.io/name: deployment-draw2form-llm
     spec:
       containers:
-        - image: ericaskari/draw2form-llm-api:1.0.28
+        - image: ericaskari/draw2form-llm-api:latest
           env:
             - name: COMPUTER_VISION_KEY
-              value: value
+              value: abdfe882e1a04e31ad5b339291413466
             - name: COMPUTER_VISION_ENDPOINT
               value: https://seb.cognitiveservices.azure.com/
             - name: APP_SERVER_ADDR
-              value: https://draw2form.ericaskari.com
+              value: https://draw2form-llm.ericaskari.com
           ports:
             - containerPort: 8000
           name: draw2form-llm-api
@@ -38,11 +38,11 @@ spec:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "1000m"
+              memory: "2Gi"
+              cpu: "2000m"
             limits:
-              memory: "1Gi"
-              cpu: "1000m"
+              memory: "2Gi"
+              cpu: "2000m"
 ---
 apiVersion: v1
 kind: Service
