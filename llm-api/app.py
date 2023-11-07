@@ -12,6 +12,7 @@ from ultralytics import YOLO
 from fastapi import FastAPI, File, UploadFile, status
 from PIL import Image
 from fastapi.responses import JSONResponse
+import asyncio
 
 app = FastAPI()
 
@@ -78,7 +79,8 @@ async  def get_text_info(name):
 
         print(json.dumps(analysis, indent=4))
 
-        time.sleep(1)
+        await asyncio.sleep(1)
+
         if ("analyzeResult" in analysis):
             poll = False
         if ("status" in analysis and analysis['status'] == 'failed'):
