@@ -9,73 +9,127 @@ generator client {
 }
 
 model User {
-  id                 String       @id @default(uuid())
-  email              String       @unique
-  name               String
-  picture            String?
-  cards              Card[]
-  connections        Connection[] @relation("Connection_user")
-  reverseConnections Connection[] @relation("Connection_reverseConnections")
-  shares             Share[]
+  id             String           @id @default(uuid())
+  email          String           @unique
+  name           String
+  picture        String?
+  forms          Form[]
+  FormSubmission FormSubmission[]
 }
 
-model Card {
-  id              String           @id @default(uuid())
-  title           String
-  value           String
-  picture         String?
-  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+model Form {
+  id              String             @id @default(uuid())
+  name            String
+  available       Boolean
+  owner           User               @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId         String
-  connectionCards ConnectionCard[]
-  shareCards      ShareCard[]
+  textfields      FormTextfield[]
+  checkboxes      FormCheckbox[]
+  toggleSwitches  FormToggleSwitch[]
+  images          FormImage[]
+  buttons         FormButton[]
+  labels          FormLabel[]
+  formSubmissinos FormSubmission[]
 }
 
-model Connection {
-  id              String           @id @default(uuid())
-  user            User             @relation("Connection_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  //  User who scans the code
-  userId          String
-  //  User who shared their code.
-  connectedUser   User             @relation("Connection_reverseConnections", fields: [connectedUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  connectedUserId String
-  connectionCards ConnectionCard[]
+model FormSubmission {
+  id                   String                     @id @default(uuid())
+  name                 String
+  public               Boolean
+  owner                User                       @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId              String
+  form                 Form                       @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId               String
+  textfieldResponses   FormTextfieldResponse[]
+  checkboxResponse     FormCheckboxResponse[]
+  toggleSwitchResponse FormToggleSwitchResponse[]
 
-  @@unique([userId, connectedUserId])
+  @@unique([formId, ownerId])
 }
 
-model ConnectionCard {
-  id           String     @id @default(uuid())
-  card         Card       @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  cardId       String
-  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  connectionId String
-
-  @@unique([cardId, connectionId])
+model FormTextfield {
+  id        String                  @id @default(uuid())
+  form      Form                    @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId    String
+  responses FormTextfieldResponse[]
 }
 
-model Share {
-  id     String      @id @default(uuid())
-  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String
-  cards  ShareCard[]
-  tags   Tag[]
+model FormTextfieldResponse {
+  id           String         @id @default(uuid())
+  submission   FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  submissionId String
+  textfield    FormTextfield  @relation(fields: [textfieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  textfieldId  String
+  value        String
+
+  @@unique([textfieldId, submissionId])
 }
 
-model ShareCard {
+model FormCheckbox {
+  id        String                 @id @default(uuid())
+  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId    String
+  order     Int
+  responses FormCheckboxResponse[]
+}
+
+model FormCheckboxResponse {
+  id           String         @id @default(uuid())
+  submission   FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  submissionId String
+  checkbox     FormCheckbox   @relation(fields: [checkboxId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  checkboxId   String
+  value        String
+
+  @@unique([checkboxId, submissionId])
+}
+
+model FormToggleSwitch {
+  id        String                     @id @default(uuid())
+  form      Form                       @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId    String
+  order     Int
+  responses FormToggleSwitchResponse[]
+}
+
+model FormToggleSwitchResponse {
+  id             String           @id @default(uuid())
+  submission     FormSubmission   @relation(fields: [submissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  submissionId   String
+  toggleSwitch   FormToggleSwitch @relation(fields: [toggleSwitchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  toggleSwitchId String
+  value          String
+
+  @@unique([toggleSwitchId, submissionId])
+}
+
+model FormImage {
   id      String @id @default(uuid())
-  share   Share  @relation(fields: [shareId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  shareId String
-  card    Card   @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  cardId  String
-
-  @@unique([cardId, shareId])
+  form    Form   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId  String
+  order   Int
+  imageId String
 }
 
-model Tag {
-  id      String @id @default(uuid())
-  share   Share  @relation(fields: [shareId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  shareId String
-  tagId   String @unique
+model FormButton {
+  id     String @id @default(uuid())
+  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId String
+  order  Int
+  type   String
+}
 
-  @@unique([shareId, tagId])
+model FormLabel {
+  id     String @id @default(uuid())
+  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId String
+  order  Int
+  value  String
+}
+
+model ImageEvent {
+  id      String @id @default(uuid())
+  imageId String
+  event   String // dataset_response_received, chatgpt_response_received, text_response_received
+  payload String
 }
