@@ -9,6 +9,7 @@ ui-pics/*
 
 dataset.zip
 *.cache
-yolov8n.pt
 dataset
 .env
+yolov8n.pt
+yolov8s.pt
