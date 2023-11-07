@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  draw2form--api:
+    container_name: draw2form--api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: 'no'
+    ports:
+      - '8000:8000'
