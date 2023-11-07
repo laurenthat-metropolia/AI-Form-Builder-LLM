@@ -14,15 +14,6 @@ jobs:
           node-version: 18
       - run: cd api && npm ci
       - run: cd api && npm run build
-      - name: "Docker: Build And Push Image"
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: ericaskari/llm-wireframe:latest,ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
-          cache-from: type=registry,ref=ericaskari/llm-wireframe:latest
-          cache-to: type=inline
 
     BuildPushDocker:
       runs-on: ubuntu-latest
