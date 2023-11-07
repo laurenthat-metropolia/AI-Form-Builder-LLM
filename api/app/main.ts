@@ -9,7 +9,7 @@ import { config as configJWT, requiresAccessToken } from './strategies/passport-
 import { configSession } from './configurations/configSession.js';
 import { configParsers } from './configurations/configParsers.js';
 import { environment } from './configurations/environment.js';
-import { Card, ConnectionCard, Tag, User } from '@prisma/client';
+import {User, Form, FormSubmission, FormButton, FormCheckbox, FormTextfield, FormImage, FormLabel, FormCheckboxResponse, FormTextfieldResponse, FormToggleSwitchResponse, FormToggleSwitch } from '@prisma/client';
 import { prisma } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
 import morgan from 'morgan';
@@ -63,8 +63,9 @@ app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
             id: (req.user as User).id,
         },
         include: {
-            cards: true,
-            connections: {
+            forms: true,
+
+ /*           connections: {
                 include: {
                     user: true,
                     connectedUser: true,
@@ -85,12 +86,14 @@ app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
                     },
                 },
             },
+
             shares: {
                 include: {
                     tags: true,
-                    cards: true,
+                    forms: true,
                 },
             },
+  */
         },
     });
     res.status(200).send(response);
@@ -116,12 +119,24 @@ app.put('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
     return;
 });
 
-app.post('/card', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+/*
+app.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
-    const body: Card = req.body as Card;
-    const response = await prisma.card.create({
+    const body: Form = req.body as Form;
+    const formSubmission : FormSubmission = req.body as FormSubmission;
+    const response = await prisma.form.create({
         data: {
             ownerId: user.id,
+            name: body.name.trim(),
+            available:body.available,
+            owner:body.user.trim(),
+            textfields:
+            checkboxes:
+            toggleSwitches:
+            images:
+            buttons:
+            labels:
+            formSubmissinos:
             title: body.title.trim(),
             value: body.value.trim(),
             picture: body.picture?.trim() ?? null,
@@ -130,25 +145,25 @@ app.post('/card', requiresAccessToken, async (req: Request, res: Response): Prom
     res.status(200).send(response);
     return;
 });
-app.put('/card/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
     const id: string = req.params.id as string;
-    const body: Card = req.body as Card;
-    const card = await prisma.card.findFirst({
+    const body: Form = req.body as Form;
+    const form = await prisma.form.findFirst({
         where: {
             id,
             ownerId: user.id,
         },
     });
-    if (card === null) {
+    if (form === null) {
         res.status(400).send({
             message: 'Not Found.',
         });
         return;
     }
-    const response = await prisma.card.update({
+    const response = await prisma.form.update({
         where: {
-            id: card.id,
+            id: form.id,
         },
         data: {
             title: body.title ?? card.title,
@@ -184,7 +199,7 @@ app.post('/share', requiresAccessToken, async (req: Request, res: Response): Pro
     const shareCards = await Promise.all(
         body.map(async (cardId) => {
             // Only user's own card
-            await prisma.card.findFirstOrThrow({
+            await prisma.form.findFirstOrThrow({
                 where: {
                     id: cardId,
                     ownerId: user.id,
@@ -214,12 +229,12 @@ app.post('/share', requiresAccessToken, async (req: Request, res: Response): Pro
     return;
 });
 
-/**
+/!**
  *
  * @param user User who scans the code.
  * @param shareId User who shared their QR code or card.
  * @param res this function is responsible to respond.
- */
+ *!/
 async function onScan(user: User, shareId: string, res: Response): Promise<void> {
     const share = await prisma.share.findFirst({
         where: {
@@ -381,3 +396,4 @@ app.use((async (err, req: Request, res: Response, next): Promise<void> => {
 app.listen(8000, '0.0.0.0', (): void => {
     console.log('Started listening on port 8000');
 });
+*/
