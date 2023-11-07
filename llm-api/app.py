@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("static", StaticFiles(directory="static"), name="static")
 model_path = "models/model-v2-e5-2023-11-06-08-20.pt"
 model = YOLO(model_path)
 load_dotenv()
@@ -59,7 +59,7 @@ def predict_and_print(confidence, image_data):
     return detected_objects
 
 async  def get_text_info(name):
-    image_url = f"https://draw2form.ericaskari.com/statics/{name}"
+    image_url = f"https://draw2form-llm.ericaskari.com/static/{name}"
 
     data = {'url': image_url}
     response = requests.post(text_recognition_url, headers=headers, json=data)
