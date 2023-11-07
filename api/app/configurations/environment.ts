@@ -12,4 +12,5 @@ export const environment = cleanEnv(process.env, {
     APP_JWT_AUDIENCE: host(),
     APP_SESSION_SECRET: str(),
     APP_ANDROID_SHA256_CERT_FINGERPRINT: str(),
+    APP_DATABASE_URL: str()
 });

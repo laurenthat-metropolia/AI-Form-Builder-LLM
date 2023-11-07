@@ -81,7 +81,7 @@ jobs:
       - name: "Kubernetes: Deploy"
         run: |
           export IMAGE_TAG=ericaskari/llm-wireframe:${{needs.Version.outputs.version}}
-          yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment.yml
+          yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment.yml          
           kubectl apply --filename ./deployment.yml
       - name: "Git: Commit"
         uses: stefanzweifel/git-auto-commit-action@v5
