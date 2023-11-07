@@ -12,4 +12,8 @@ dataset.zip
 dataset
 .env
 yolov8n.pt
+yolov8n-seg.pt
 yolov8s.pt
+llm-api/static
+azure.py
+runs
