@@ -25,6 +25,8 @@ spec:
               value: value
             - name: COMPUTER_VISION_ENDPOINT
               value: https://seb.cognitiveservices.azure.com/
+            - name: APP_SERVER_ADDR
+              value: https://draw2form.ericaskari.com
           ports:
             - containerPort: 8000
           name: draw2form-llm-api
