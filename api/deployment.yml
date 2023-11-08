@@ -24,23 +24,23 @@ spec:
           imagePullPolicy: Always
           env:
             - name: APP_OAUTH2_CLIENT_ID
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_OAUTH2_CLIENT_ID
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CLIENT_ID
             - name: APP_OAUTH2_CLIENT_SECRET
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_OAUTH2_CLIENT_SECRET
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CLIENT_SECRET
             - name: APP_OAUTH2_CALLBACK_URL
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_OAUTH2_CALLBACK_URL
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CALLBACK_URL
             - name: APP_JWT_SECRET
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_JWT_SECRET
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_SECRET
             - name: APP_SESSION_SECRET
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_SESSION_SECRET
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_SESSION_SECRET
             - name: APP_ANDROID_SHA256_CERT_FINGERPRINT
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_ANDROID_SHA256_CERT_FINGERPRINT
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_ANDROID_SHA256_CERT_FINGERPRINT
             - name: APP_JWT_ISSUER
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_JWT_ISSUER
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_ISSUER
             - name: APP_JWT_AUDIENCE
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_JWT_AUDIENCE
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_AUDIENCE
             - name: APP_DATABASE_URL
-              value: op://Metropolia/deployment-draw2form-linkup-$APP_ENV/infra/APP_DATABASE_URL
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_DATABASE_URL
 ---
 apiVersion: v1
 kind: Service
