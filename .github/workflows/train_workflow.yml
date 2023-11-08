@@ -22,6 +22,21 @@ on:
         type: number
         required: true
         default: 224
+      projectName:
+        description: Roboflow Project Name
+        type: string
+        required: true
+        default: draw2form
+      workspace:
+        description: Roboflow Workspace
+        type: string
+        required: true
+        default: personal-lvfkr
+      modelFormat:
+        description: Roboflow Model Format
+        type: string
+        required: true
+        default: yolov8
 jobs:
   Train:
     runs-on: self-hosted
@@ -31,6 +46,9 @@ jobs:
       APP_EPOCHS: ${{ github.event.inputs.epochs }}
       APP_IMAGE_BASE: ${{ github.event.inputs.baseModel }}
       APP_IMAGE_SIZE: ${{ github.event.inputs.imgsz }}
+      APP_ROBOFLOW_PROJECT_NAME: ${{ github.event.inputs.projectName }}
+      APP_ROBOFLOW_WORKSPACE: ${{ github.event.inputs.workspace }}
+      APP_ROBOFLOW_MODEL_FORMAT: ${{ github.event.inputs.modelFormat }}
     steps:
       - name: "Git: Pull Source Code"
         uses: actions/checkout@v3
