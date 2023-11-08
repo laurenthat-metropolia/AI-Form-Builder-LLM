@@ -112,26 +112,29 @@ app.post('/form', requiresAccessToken, async (req: Request, res: Response): Prom
             formButtons: FormButton[];
             formLabels: FormLabel[];
         };
+        const formData = {
+            ownerId: user.id,
+            name: body.form.name.trim(),
+            available: body.form.available ?? false,
+            checkboxes: body.checkboxes.length > 0 ? body.checkboxes : null,
+            formTextFields: body.formTextFields.length > 0 ? body.formTextFields : null,
+            formToggleSwitches: body.formToggleSwitches.length > 0 ? body.formToggleSwitches : null,
+            formImages: body.formImages.length > 0 ? body.formImages : null,
+            formButtons: body.formButtons.length > 0 ? body.formButtons : null,
+            formLabels: body.formLabels.length > 0 ? body.formLabels : null,
+        };
 
         const formResponse = await prisma.form.create({
             data: {
-                ownerId: user.id,
-                name: body.form.name.trim(),
-                available: body.form.available,
-                checkboxes: {
-                    createMany: {
-                        data: body.checkboxes.map((checkbox) => {
-                            return {
-                                order: checkbox.order,
-                            };
-                        }),
-                    },
-                },
-                textfields: { createMany: { data: body.formTextFields } },
-                toggleSwitches: { createMany: { data: body.formToggleSwitches } },
-                buttons: { createMany: { data: body.formButtons } },
-                images: { createMany: { data: body.formImages } },
-                labels: { createMany: { data: body.formLabels } },
+                ...formData,
+                checkboxes: formData.checkboxes ? { createMany: { data: formData.checkboxes } } : undefined,
+                textfields: formData.formTextFields ? { createMany: { data: formData.formTextFields } } : undefined,
+                toggleSwitches: formData.formToggleSwitches
+                    ? { createMany: { data: formData.formToggleSwitches } }
+                    : undefined,
+                buttons: formData.formButtons ? { createMany: { data: formData.formButtons } } : undefined,
+                images: formData.formImages ? { createMany: { data: formData.formImages } } : undefined,
+                labels: formData.formLabels ? { createMany: { data: formData.formLabels } } : undefined,
             },
         });
 
