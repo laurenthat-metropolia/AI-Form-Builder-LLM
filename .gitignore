@@ -20,3 +20,6 @@ runs
 
 yolov8n.pt
 yolov8s.pt
+deployment.injected.yml
+op-update.sh
+op-update-llm.sh
