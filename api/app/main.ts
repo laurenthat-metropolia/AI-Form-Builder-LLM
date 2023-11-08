@@ -9,7 +9,16 @@ import { config as configJWT, requiresAccessToken } from './strategies/passport-
 import { configSession } from './configurations/configSession.js';
 import { configParsers } from './configurations/configParsers.js';
 import { environment } from './configurations/environment.js';
-import {User, Form, FormSubmission, FormButton, FormCheckbox, FormTextfield, FormImage, FormLabel, FormCheckboxResponse, FormTextfieldResponse, FormToggleSwitchResponse, FormToggleSwitch } from '@prisma/client';
+import {
+    User,
+    Form,
+    FormButton,
+    FormCheckbox,
+    FormTextfield,
+    FormImage,
+    FormLabel,
+    FormToggleSwitch,
+} from '@prisma/client';
 import { prisma } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
 import morgan from 'morgan';
@@ -44,13 +53,15 @@ configGoogleOAuth2Routes(app);
  * https://www.branch.io/resources/blog/how-to-open-an-android-app-from-the-browser/
  * https://developer.android.com/training/app-links/verify-android-applinks
  */
+
 app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
     res.json([
         {
             relation: ['delegate_permission/common.handle_all_urls'],
             target: {
                 namespace: 'android_app',
-                package_name: 'com.sbma.linkup',
+                //need to change the package name
+                package_name: 'com.draw2form.ai',
                 sha256_cert_fingerprints: environment.APP_ANDROID_SHA256_CERT_FINGERPRINT.split(','),
             },
         },
@@ -64,36 +75,6 @@ app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
         },
         include: {
             forms: true,
-
- /*           connections: {
-                include: {
-                    user: true,
-                    connectedUser: true,
-                    connectionCards: {
-                        include: {
-                            card: true,
-                        },
-                    },
-                },
-            },
-            reverseConnections: {
-                include: {
-                    user: true,
-                    connectionCards: {
-                        include: {
-                            card: true,
-                        },
-                    },
-                },
-            },
-
-            shares: {
-                include: {
-                    tags: true,
-                    forms: true,
-                },
-            },
-  */
         },
     });
     res.status(200).send(response);
@@ -119,259 +100,150 @@ app.put('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
     return;
 });
 
-/*
 app.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const body: Form = req.body as Form;
-    const formSubmission : FormSubmission = req.body as FormSubmission;
-    const response = await prisma.form.create({
-        data: {
-            ownerId: user.id,
-            name: body.name.trim(),
-            available:body.available,
-            owner:body.user.trim(),
-            textfields:
-            checkboxes:
-            toggleSwitches:
-            images:
-            buttons:
-            labels:
-            formSubmissinos:
-            title: body.title.trim(),
-            value: body.value.trim(),
-            picture: body.picture?.trim() ?? null,
-        },
-    });
-    res.status(200).send(response);
-    return;
-});
-app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const id: string = req.params.id as string;
-    const body: Form = req.body as Form;
-    const form = await prisma.form.findFirst({
-        where: {
-            id,
-            ownerId: user.id,
-        },
-    });
-    if (form === null) {
-        res.status(400).send({
-            message: 'Not Found.',
-        });
-        return;
-    }
-    const response = await prisma.form.update({
-        where: {
-            id: form.id,
-        },
-        data: {
-            title: body.title ?? card.title,
-            value: body.value ?? card.value,
-            picture: body.value ?? card.picture,
-        },
-    });
-    res.status(200).send(response);
-    return;
-});
-app.delete('/card/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const id: string = req.params.id as string;
-    const response = await prisma.card.delete({
-        where: {
-            id: id,
-            ownerId: user.id,
-        },
-    });
-    res.status(200).send(response);
-    return;
-});
+    try {
+        const user: User = req.user as User;
+        const body = req.body as {
+            form: Form;
+            checkboxes: FormCheckbox[];
+            formTextFields: FormTextfield[];
+            formToggleSwitches: FormToggleSwitch[];
+            formImages: FormImage[];
+            formButtons: FormButton[];
+            formLabels: FormLabel[];
+        };
 
-app.post('/share', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const body: string[] = req.body as string[];
-
-    const share = await prisma.share.create({
-        data: {
-            userId: user.id,
-        },
-    });
-    const shareCards = await Promise.all(
-        body.map(async (cardId) => {
-            // Only user's own card
-            await prisma.form.findFirstOrThrow({
-                where: {
-                    id: cardId,
-                    ownerId: user.id,
-                },
-            });
-            return prisma.shareCard.create({
-                data: {
-                    cardId: cardId,
-                    shareId: share.id,
-                },
-            });
-        }),
-    );
-
-    const response = await prisma.share.findFirstOrThrow({
-        where: {
-            id: share.id,
-        },
-        include: {
-            tags: true,
-            cards: true,
-            user: true,
-        },
-    });
-
-    res.status(200).send(response);
-    return;
-});
-
-/!**
- *
- * @param user User who scans the code.
- * @param shareId User who shared their QR code or card.
- * @param res this function is responsible to respond.
- *!/
-async function onScan(user: User, shareId: string, res: Response): Promise<void> {
-    const share = await prisma.share.findFirst({
-        where: {
-            id: shareId,
-        },
-        include: {
-            tags: true,
-            cards: true,
-        },
-    });
-    if (share === null) {
-        res.status(400).send({
-            message: 'Not Found.',
-        });
-        return;
-    }
-    const shareCards = await prisma.shareCard.findMany({
-        where: {
-            shareId: share.id,
-        },
-    });
-    if (share.userId === user.id) {
-        res.status(400).send(
-            "Looks like you've fallen into a QR code loop! We'll break the cycle for you - scan someone else's code to escape the matrix!",
-        );
-        return;
-    }
-    const existingConnection = await prisma.connection.findFirst({
-        where: {
-            userId: user.id,
-            connectedUserId: share.userId,
-        },
-    });
-    const connection =
-        existingConnection ??
-        (await prisma.connection.create({
+        const formResponse = await prisma.form.create({
             data: {
-                userId: user.id,
-                connectedUserId: share.userId,
-            },
-        }));
-
-    const connectionCards = await Promise.all(
-        shareCards.map(async (connectCard) => {
-            const card: ConnectionCard | null = await prisma.connectionCard.findFirst({
-                where: {
-                    cardId: connectCard.cardId,
-                    connectionId: connection.id,
+                ownerId: user.id,
+                name: body.form.name.trim(),
+                available: body.form.available,
+                checkboxes: {
+                    createMany: {
+                        data: body.checkboxes.map((checkbox) => {
+                            return {
+                                order: checkbox.order,
+                            };
+                        }),
+                    },
                 },
-            });
-            return card
-                ? new Promise<ConnectionCard>((resolve) => resolve(card))
-                : prisma.connectionCard.create({
-                      data: {
-                          cardId: connectCard.cardId,
-                          connectionId: connection.id,
-                      },
-                  });
-        }),
-    );
-    const response = await prisma.connection.findFirstOrThrow({
-        where: {
-            id: connection.id,
-        },
-        include: {
-            connectionCards: true,
-        },
-    });
-    res.status(200).send(response);
-}
-
-app.post('/share/:id/scan', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const id = req.params.id.trim();
-
-    await onScan(user, id, res);
-});
-
-app.post('/tag', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const body: Tag = req.body as Tag;
-    const response = await prisma.tag.create({
-        data: {
-            shareId: body.shareId,
-            tagId: body.tagId,
-        },
-    });
-    res.status(200).send(response);
-    return;
-});
-
-app.post('/tag/:id/scan', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const id = req.params.id;
-
-    const response = await prisma.tag.findFirst({
-        where: {
-            tagId: id,
-        },
-    });
-    if (response === null) {
-        res.status(400).send({
-            message: 'Not Found.',
+                textfields: { createMany: { data: body.formTextFields } },
+                toggleSwitches: { createMany: { data: body.formToggleSwitches } },
+                buttons: { createMany: { data: body.formButtons } },
+                images: { createMany: { data: body.formImages } },
+                labels: { createMany: { data: body.formLabels } },
+            },
         });
-        return;
+
+        res.status(200).json(formResponse);
+    } catch (error) {
+        console.error('Error creating Form:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-    await onScan(user, response.shareId, res);
 });
 
-app.delete('/tag/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const id = req.params.id;
+app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const user: User = req.user as User;
+        const formId = req.params.id;
+        const body = req.body as {
+            form: Form;
+            checkboxes: FormCheckbox[];
+            formTextFields: FormTextfield[];
+            formToggleSwitches: FormToggleSwitch[];
+            formImages: FormImage[];
+            formButtons: FormButton[];
+            formLabels: FormLabel[];
+        };
 
-    const tag = await prisma.tag.findFirst({
+        const existingForm = await prisma.form.findFirst({
+            where: {
+                id: formId,
+                ownerId: user.id,
+            },
+            include: {
+                checkboxes: true,
+                textfields: true,
+                buttons: true,
+                images: true,
+                labels: true,
+                toggleSwitches: true,
+            },
+        });
+        if (existingForm === null) {
+            res.status(400).send({
+                message: 'Not Found.',
+            });
+            return;
+        }
+
+        const formResponse = await prisma.form.update({
+            where: { id: formId },
+            data: {
+                name: body.form.name ? body.form.name.trim() : existingForm.name,
+                available: body.form.available ? body.form.available : false,
+                checkboxes: {
+                    updateMany: {
+                        where: { id: { in: body.checkboxes.map((checkbox) => checkbox.id) } },
+                        data: body.checkboxes.map((checkbox) => {
+                            const existingCheckbox = existingForm.checkboxes.find((cb) => cb.order);
+                            return {
+                                id: checkbox.id,
+                                order: checkbox.order !== undefined ? checkbox.order : existingCheckbox,
+                            };
+                        }),
+                    },
+                },
+                textfields: {
+                    updateMany: {
+                        where: { id: { in: body.formTextFields.map((textfield) => textfield.id) } },
+                        data: body.formTextFields.map((textfield) => {
+                            const existingTextfield = existingForm.textfields.find((tf) => {
+                                tf.formId;
+                            });
+                        }),
+                    },
+                },
+                toggleSwitches: {
+                    updateMany: {
+                        where: { id: { in: body.formToggleSwitches.map((toggleSwitch) => toggleSwitch.id) } },
+                        data: body.formToggleSwitches,
+                    },
+                },
+                buttons: {
+                    updateMany: {
+                        where: { id: { in: body.formButtons.map((button) => button.id) } },
+                        data: body.formButtons,
+                    },
+                },
+                images: {
+                    updateMany: {
+                        where: { id: { in: body.formImages.map((image) => image.id) } },
+                        data: body.formImages,
+                    },
+                },
+                labels: {
+                    updateMany: {
+                        where: { id: { in: body.formLabels.map((label) => label.id) } },
+                        data: body.formLabels,
+                    },
+                },
+            },
+        });
+
+        res.status(200).json(formResponse);
+    } catch (error) {
+        console.error('Error updating Form:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+app.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+    const user: User = req.user as User;
+    const id: string = req.params.id as string;
+    const response = await prisma.form.delete({
         where: {
             id: id,
-        },
-        include: {
-            share: true,
-        },
-    });
-    if (tag === null) {
-        res.status(400).send({
-            message: 'Not Found.',
-        });
-        return;
-    }
-    if (tag.share.userId !== user.id) {
-        res.status(400).send({
-            message: 'This tag is not available.',
-        });
-        return;
-    }
-
-    const response = await prisma.tag.delete({
-        where: {
-            id,
+            ownerId: user.id,
         },
     });
     res.status(200).send(response);
@@ -392,7 +264,6 @@ app.use((async (err, req: Request, res: Response, next): Promise<void> => {
         message: err.message,
     });
 }) satisfies ErrorRequestHandler<any>);
-*/
 
 app.listen(8000, '0.0.0.0', (): void => {
     console.log('Started listening on port 8000');
