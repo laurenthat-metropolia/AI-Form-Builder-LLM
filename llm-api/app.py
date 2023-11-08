@@ -9,18 +9,25 @@ from dotenv import load_dotenv
 from httpx import AsyncClient, Response
 from icecream import ic
 from fastapi.staticfiles import StaticFiles
+from roboflow import Roboflow
 from ultralytics import YOLO
 from fastapi import FastAPI, File, UploadFile, status
 from PIL import Image
 from fastapi.responses import JSONResponse
 
+apikey = os.getenv("APP_ROBOFLOW_API_KEY")  # ****
+rf = Roboflow(api_key=apikey)
+project = rf.workspace().project("html-merged-comps")
+model = project.version(4).model
+model_path = "models/model-v2-e5-2023-11-06-08-20.pt"
+# model = YOLO(model_path)
+conf = 0.5
+
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-model_path = "models/model-v2-e5-2023-11-06-08-20.pt"
-conf = 0.5
 
-model = YOLO(model_path)
 load_dotenv()
 
 server_address = os.environ['APP_SERVER_ADDR']
@@ -34,43 +41,38 @@ text_recognition_url = f"{endpoint}vision/v3.1/read/analyze"
 headers = {'Ocp-Apim-Subscription-Key': subscription_key}
 
 
-def get_prediction_info(confidence, image_data):
+def get_prediction_info(image_url):
     # Perform object detection on the image data
-    results = model.predict(image_data, conf=confidence)
-
+    results = model.predict(image_url, confidence=40, overlap=30).json()
+    ic(results)
     # Loop through the detected objects and print the possibilities
-    ic(len(results))
-    detected_objects = []
+    # ic(len(results))
+    # detected_objects = []
 
-    for result in results:
-        for box in result.boxes:
-            for i, class_conf in enumerate(box.cls):
-                class_id = result.names[class_conf.item()]
-                coordinates = box.xyxy[i].tolist()
-                coordinates = [round(x) for x in coordinates]
+    # for result in results:
+    #     for box in result.boxes:
+    #         for i, class_conf in enumerate(box.cls):
+    #             class_id = result.names[class_conf.item()]
+    #             coordinates = box.xyxy[i].tolist()
+    #             coordinates = [round(x) for x in coordinates]
+    #
+    #             probability = round(box.conf[i].item(), 2)
+    #
+    #             # x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
+    #
+    #             detected_objects.append({
+    #                 "type": class_id,
+    #                 "probability": probability,
+    #                 "coordinates": coordinates
+    #             })
+    #            # print("Detected objects")
+    #            # print(detected_objects)
 
-                probability = round(box.conf[i].item(), 2)
-
-                # x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
-
-                detected_objects.append({
-                    "type": class_id,
-                    "probability": probability,
-                    "coordinates": coordinates
-                })
-                # print("Detected objects")
-                # print(detected_objects)
-
-    return detected_objects
+    return results
 
 
-async def get_text_info(uploaded_file: UploadFile, image: Image, client: AsyncClient):
-    extension = pathlib.Path(uploaded_file.filename).suffix
-    name = f'{uuid4()}{extension}'
-    image.save(f"static/{name}")
-
-    image_url = f"{server_address}/static/{name}"
-    data = {'url': image_url}
+async def get_text_info(local_image_url: str, client: AsyncClient):
+    data = {'url': f"{server_address}/{local_image_url}"}
     ic(data)
     response: Response = await client.post(text_recognition_url, headers=headers, json=data, timeout=10.0)
     ic(response.headers)
@@ -116,21 +118,17 @@ async def get_image_info(image: UploadFile):
 async def process_get_image_info(uploaded_file: UploadFile, client: AsyncClient):
     image: Image = Image.open(io.BytesIO(await uploaded_file.read()))
 
-    text_info = await get_text_info(uploaded_file, image, client)
+    extension = pathlib.Path(uploaded_file.filename).suffix
+    name = f'{uuid4()}{extension}'
+    image.save(f"static/{name}")
 
-    prediction_info = get_prediction_info(conf, image)
+    image_url = f"static/{name}"
+
+    text_info = await get_text_info(image_url, client)
+
+    prediction_info = get_prediction_info(image_url)
 
     response = {
-        "model_info": {
-            "model": model_path,
-            "confidence": conf
-        },
-        "image_info": {
-            "width": image.width,
-            "height": image.height,
-            "format": image.format,
-            "mode": image.mode,
-        },
         "prediction_info": prediction_info,
         "text_info": text_info
     }

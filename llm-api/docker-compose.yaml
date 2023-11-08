@@ -1,10 +1,12 @@
 version: "3.8"
 services:
-  draw2form--api:
-    container_name: draw2form--api
+  draw2form--api2:
+    container_name: draw2form--api2
     build:
       context: .
       dockerfile: Dockerfile
     restart: 'no'
+    env_file:
+      - .env
     ports:
       - '8000:8000'
