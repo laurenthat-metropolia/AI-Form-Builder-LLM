@@ -2,7 +2,7 @@ FROM ultralytics/ultralytics:8.0.158-python
 
 WORKDIR /src
 
-RUN pip3 install fastapi uvicorn opencv-python-headless numpy icecream python-multipart python-dotenv httpx
+RUN pip3 install fastapi uvicorn opencv-python-headless numpy icecream python-multipart python-dotenv httpx roboflow
 
 
 COPY app.py app.py

@@ -27,6 +27,8 @@ spec:
               value: https://seb.cognitiveservices.azure.com/
             - name: APP_SERVER_ADDR
               value: https://draw2form-llm.ericaskari.com
+            - name: APP_ROBOFLOW_API_KEY
+              value: value
           ports:
             - containerPort: 8000
           name: draw2form-llm-api
