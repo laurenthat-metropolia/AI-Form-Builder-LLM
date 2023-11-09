@@ -133,6 +133,10 @@ jobs:
         APP_JWT_ISSUER: ${{ secrets.APP_JWT_ISSUER }}
         APP_JWT_AUDIENCE: ${{ secrets.APP_JWT_AUDIENCE }}
         APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
+        COMPUTER_VISION_KEY: ${{ secrets.COMPUTER_VISION_KEY }}
+        COMPUTER_VISION_ENDPOINT: https://seb.cognitiveservices.azure.com/
+        APP_SERVER_ADDR: https://draw2form-llm.ericaskari.com
+        APP_ROBOFLOW_API_KEY: ${{ secrets.APP_ROBOFLOW_API_KEY }}
         APP_OPENAI_API_KEY: ${{ secrets.APP_OPENAI_API_KEY }}
 
       steps:
@@ -161,6 +165,8 @@ jobs:
             export IMAGE_TAG=ericaskari/draw2form-llm-api:${{needs.Version.outputs.version}}
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(COMPUTER_VISION_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[1].value = env(COMPUTER_VISION_ENDPOINT)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[2].value = env(APP_SERVER_ADDR)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[3].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
 
             export IMAGE_TAG=ericaskari/draw2form-chatgpt-api:${{needs.Version.outputs.version}}

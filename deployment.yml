@@ -24,35 +24,35 @@ spec:
           imagePullPolicy: Always
           env:
             - name: APP_OAUTH2_CLIENT_ID
-              value: op://Metropolia/deployment-draw2form-/infra/APP_OAUTH2_CLIENT_ID
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OAUTH2_CLIENT_ID
             - name: APP_OAUTH2_CLIENT_SECRET
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CLIENT_SECRET
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OAUTH2_CLIENT_SECRET
             - name: APP_OAUTH2_CALLBACK_URL
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CALLBACK_URL
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OAUTH2_CALLBACK_URL
             - name: APP_JWT_SECRET
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_SECRET
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_JWT_SECRET
             - name: APP_SESSION_SECRET
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_SESSION_SECRET
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_SESSION_SECRET
             - name: APP_ANDROID_SHA256_CERT_FINGERPRINT
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_ANDROID_SHA256_CERT_FINGERPRINT
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_ANDROID_SHA256_CERT_FINGERPRINT
             - name: APP_JWT_ISSUER
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_ISSUER
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_JWT_ISSUER
             - name: APP_JWT_AUDIENCE
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_AUDIENCE
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_JWT_AUDIENCE
             - name: APP_DATABASE_URL
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_DATABASE_URL
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_DATABASE_URL
         - image: ericaskari/draw2form-llm-api:latest
           name: draw2form-llm-api
           imagePullPolicy: Always
           env:
             - name: COMPUTER_VISION_KEY
-              value: abdfe882e1a04e31ad5b339291413466
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/COMPUTER_VISION_KEY
             - name: COMPUTER_VISION_ENDPOINT
-              value: https://seb.cognitiveservices.azure.com/
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/COMPUTER_VISION_ENDPOINT
             - name: APP_SERVER_ADDR
-              value: https://draw2form-llm.ericaskari.com
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_SERVER_ADDR
             - name: APP_ROBOFLOW_API_KEY
-              value: value
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ROBOFLOW_API_KEY
           resizePolicy:
             - resourceName: cpu
               restartPolicy: RestartContainer
@@ -70,7 +70,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: APP_OPENAI_API_KEY
-              value: value
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/chatgpt-api/APP_OPENAI_API_KEY
 ---
 apiVersion: v1
 kind: Service
