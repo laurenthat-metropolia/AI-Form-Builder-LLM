@@ -24,7 +24,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: APP_OAUTH2_CLIENT_ID
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CLIENT_ID
+              value: op://Metropolia/deployment-draw2form-/infra/APP_OAUTH2_CLIENT_ID
             - name: APP_OAUTH2_CLIENT_SECRET
               value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_OAUTH2_CLIENT_SECRET
             - name: APP_OAUTH2_CALLBACK_URL
@@ -41,6 +41,36 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_JWT_AUDIENCE
             - name: APP_DATABASE_URL
               value: op://Metropolia/deployment-draw2form-$APP_ENV/infra/APP_DATABASE_URL
+        - image: ericaskari/draw2form-llm-api:latest
+          name: draw2form-llm-api
+          imagePullPolicy: Always
+          env:
+            - name: COMPUTER_VISION_KEY
+              value: abdfe882e1a04e31ad5b339291413466
+            - name: COMPUTER_VISION_ENDPOINT
+              value: https://seb.cognitiveservices.azure.com/
+            - name: APP_SERVER_ADDR
+              value: https://draw2form-llm.ericaskari.com
+            - name: APP_ROBOFLOW_API_KEY
+              value: value
+          resizePolicy:
+            - resourceName: cpu
+              restartPolicy: RestartContainer
+            - resourceName: memory
+              restartPolicy: RestartContainer
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "2000m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+        - image: ericaskari/draw2form-chatgpt-api:latest
+          name: draw2form-chatgpt-api
+          imagePullPolicy: Always
+          env:
+            - name: APP_OPENAI_API_KEY
+              value: value
 ---
 apiVersion: v1
 kind: Service
@@ -52,11 +82,16 @@ spec:
     - port: 8000
       protocol: TCP
       targetPort: 8000
+    - port: 8001
+      protocol: TCP
+      targetPort: 8001
+    - port: 8002
+      protocol: TCP
+      targetPort: 8002
   selector:
     app.kubernetes.io/name: deployment-draw2form
   sessionAffinity: None
   type: ClusterIP
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -79,3 +114,17 @@ spec:
                 name: service-draw2form
                 port:
                   number: 8000
+          - path: /llm
+            pathType: Prefix
+            backend:
+              service:
+                name: service-draw2form
+                port:
+                  number: 8001
+          - path: /chatgpt
+            pathType: Prefix
+            backend:
+              service:
+                name: service-draw2form
+                port:
+                  number: 8002

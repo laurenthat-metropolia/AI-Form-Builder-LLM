@@ -271,3 +271,11 @@ app.use((async (err, req: Request, res: Response, next): Promise<void> => {
 app.listen(8000, '0.0.0.0', (): void => {
     console.log('Started listening on port 8000');
 });
+process.on('SIGTERM', function() {
+    console.log('\ncaught SIGTERM, stopping gracefully');
+    process.exit(1);
+});
+process.on('SIGINT', function() {
+    console.log('\ncaught SIGINT, stopping gracefully');
+    process.exit();
+});
