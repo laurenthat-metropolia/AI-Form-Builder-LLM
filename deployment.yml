@@ -79,15 +79,18 @@ metadata:
   namespace: app-draw2form
 spec:
   ports:
-    - port: 8000
-      protocol: TCP
+    - name: api-port
+      port: 8000
       targetPort: 8000
-    - port: 8001
       protocol: TCP
+    - name: llm-port
+      port: 8001
       targetPort: 8001
-    - port: 8002
       protocol: TCP
+    - name: chatgpt-port
+      port: 8002
       targetPort: 8002
+      protocol: TCP
   selector:
     app.kubernetes.io/name: deployment-draw2form
   sessionAffinity: None
