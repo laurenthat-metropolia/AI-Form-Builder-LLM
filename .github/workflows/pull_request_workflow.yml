@@ -53,6 +53,6 @@ jobs:
           context: chatgpt-api
           file: chatgpt-api/Dockerfile
           push: false
-          tags: ericaskari/draw2form-chatgpt-api:latest,ericaskari/draw2form-chatgpt-api:${{needs.Version.outputs.version}}
+          tags: ericaskari/draw2form-chatgpt-api:latest
           cache-from: type=registry,ref=ericaskari/draw2form-chatgpt-api:latest
           cache-to: type=inline
