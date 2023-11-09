@@ -18,15 +18,18 @@ app.use(
 // Parsing capabilities for body of request.
 configParsers(app);
 
+const router = express.Router()
 
-app.get('/', async (req: Request, res: Response): Promise<void> => {
+app.use('/chatgpt', router);
+
+router.get('/', async (req: Request, res: Response): Promise<void> => {
     res.status(404).send({
         message: "Did you mean to send a POST request instead of GET?"
     });
     return;
 });
 
-app.post('/', async (req: Request, res: Response): Promise<void> => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
     res.status(501).send({
         message: "CHATGPT NOT IMPLEMENTED YET."
     });
@@ -34,7 +37,7 @@ app.post('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Define a global error handler middleware
-app.use((async (err, req: Request, res: Response, next): Promise<void> => {
+router.use((async (err, req: Request, res: Response, next): Promise<void> => {
     // Handle the error here
     console.error(err);
 

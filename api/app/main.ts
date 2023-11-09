@@ -48,6 +48,10 @@ configJWT();
 // adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
 
+const router = express.Router()
+
+app.use('/api', router);
+
 /**
  * Required by Android
  * https://www.branch.io/resources/blog/how-to-open-an-android-app-from-the-browser/
@@ -68,7 +72,7 @@ app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
     ]);
 });
 
-app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const response = await prisma.user.findFirst({
         where: {
             id: (req.user as User).id,
@@ -81,7 +85,7 @@ app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
     return;
 });
 
-app.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
     const body: User = req.body as User;
     const response = await prisma.user.update({
@@ -100,7 +104,7 @@ app.put('/profile', requiresAccessToken, async (req: Request, res: Response): Pr
     return;
 });
 
-app.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
         const user: User = req.user as User;
         const body = req.body as {
@@ -145,7 +149,7 @@ app.post('/form', requiresAccessToken, async (req: Request, res: Response): Prom
     }
 });
 
-app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
         const user: User = req.user as User;
         const formId = req.params.id;
@@ -240,7 +244,7 @@ app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): P
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-app.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
     const id: string = req.params.id as string;
     const response = await prisma.form.delete({

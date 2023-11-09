@@ -7,6 +7,9 @@ kubectl.sha256
 ui-pics/*
 !ui-pics/.gitkeep
 
+llm-api/static/*
+!llm-api/static/.gitkeep
+
 dataset.zip
 *.cache
 dataset
@@ -14,7 +17,6 @@ dataset
 yolov8n.pt
 yolov8n-seg.pt
 yolov8s.pt
-llm-api/static
 azure.py
 runs
 

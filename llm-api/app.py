@@ -28,8 +28,10 @@ local_model_name = "2023-11-08-22-40-best-e50.pt"
 local_model = YOLO(f"models/{local_model_name}")
 
 app = FastAPI()
+subapi = FastAPI()
+app.mount("/llm", subapi)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+subapi.mount("/static", StaticFiles(directory="static"), name="static")
 
 load_dotenv()
 
@@ -149,7 +151,14 @@ async def predict_text_azure(local_image_url: str, client: AsyncClient):
         }
 
 
-@app.post('/image-info')
+
+@subapi.get('/image-info')
+async def get_image_info():
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content="Did you mean to send a POST request?")
+
+
+
+@subapi.post('/image-info')
 async def get_image_info(
         image: UploadFile,
         local_confidence: int = 50,
@@ -207,3 +216,6 @@ def convert_from_cv2_to_image(img: np.ndarray) -> Image:
 def convert_from_image_to_cv2(img: Image) -> np.ndarray:
     # return np.asarray(img)
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+
+
