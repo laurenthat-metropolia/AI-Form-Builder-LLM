@@ -173,6 +173,6 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[2].image = env(IMAGE_TAG)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[2].env[0].value = env(APP_OPENAI_API_KEY)' deployment.yml
 
-            #kubectl apply --filename deployment.yml
+            kubectl apply --filename deployment.yml
       
 
