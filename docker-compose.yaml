@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  draw2form--llm:
+    container_name: draw2form--llm
+    build:
+      context: llm-api
+      dockerfile: Dockerfile
+    restart: 'no'
+    env_file:
+      - .env
+    ports:
+      - '8001:8001'

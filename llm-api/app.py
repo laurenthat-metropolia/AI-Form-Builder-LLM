@@ -19,14 +19,6 @@ from fastapi import FastAPI, File, UploadFile, status
 from PIL import Image
 from fastapi.responses import JSONResponse
 
-roboflow_apikey = os.getenv("APP_ROBOFLOW_API_KEY")  # ****
-roboflow_instance = Roboflow(api_key=roboflow_apikey)
-roboflow_project = roboflow_instance.workspace().project("html-merged-comps")
-roboflow_model = roboflow_project.version(4).model
-
-local_model_name = "2023-11-08-22-40-best-e50.pt"
-local_model = YOLO(f"models/{local_model_name}")
-
 app = FastAPI()
 subapi = FastAPI()
 app.mount("/llm", subapi)
@@ -43,57 +35,74 @@ computer_vision_text_recognition_url = f"{computer_vision_endpoint}vision/v3.1/r
 computer_vision_headers = {'Ocp-Apim-Subscription-Key': computer_vision_subscription_key}
 
 
-def predict_roboflow(image_url, confidence: int = 40, overlap: int = 30):
-    prediction = roboflow_model.predict(image_url, confidence=confidence, overlap=overlap)
+class RoboflowModel:
+    def __init__(self, project_name: str, project_version: int,
+                 roboflow_apikey: str = os.getenv("APP_ROBOFLOW_API_KEY")):
+        self.project_name = project_name
+        self.project_version = project_version
+        self.roboflow_instance = Roboflow(api_key=roboflow_apikey)
+        self.roboflow_project = self.roboflow_instance.workspace().project(project_name)
+        self.roboflow_model = self.roboflow_project.version(project_version).model
 
-    extension = pathlib.Path(image_url).suffix
-    preview_url = f'static/{uuid4()}{extension}'
-    prediction.save(preview_url)
+    def predict(self, image_url, confidence: int = 40, overlap: int = 30):
+        prediction = self.roboflow_model.predict(image_url, confidence=confidence, overlap=overlap)
 
-    results = prediction.json()
-    results['preview_url'] = f"{server_address}/{preview_url}"
-    return results
+        extension = pathlib.Path(image_url).suffix
+        preview_url = f'static/{uuid4()}{extension}'
+        prediction.save(preview_url)
+
+        results = prediction.json()
+        results['model_name'] = self.project_name
+        results['model_version'] = self.project_version
+        results['preview_url'] = f"{server_address}/{preview_url}"
+        return results
 
 
-def predict_local(image_data: Image, confidence: int = 50):
-    # Perform object detection on the image data
-    results = local_model.predict(image_data, conf=confidence / 100)
-    preview_image = convert_from_image_to_cv2(image_data)
+class LocalModel:
+    def __init__(self, local_model_name):
+        self.local_model_name = local_model_name
+        self.local_model = YOLO(f"models/{local_model_name}")
 
-    # Loop through the detected objects and print the possibilities
-    ic(len(results))
-    detected_objects = []
+    def predict(self, image_data: Image, confidence: int = 50):
+        # Perform object detection on the image data
+        results = self.local_model.predict(image_data, conf=confidence / 100)
+        preview_image = convert_from_image_to_cv2(image_data)
 
-    for result in results:
-        for box in result.boxes:
-            for i, class_conf in enumerate(box.cls):
-                class_id = result.names[class_conf.item()]
-                coordinates = box.xyxy[i].tolist()
-                coordinates = [round(x) for x in coordinates]
+        # Loop through the detected objects and print the possibilities
+        ic(len(results))
+        detected_objects = []
 
-                probability = round(box.conf[i].item(), 2)
+        for result in results:
+            for box in result.boxes:
+                for i, class_conf in enumerate(box.cls):
+                    class_id = result.names[class_conf.item()]
+                    coordinates = box.xyxy[i].tolist()
+                    coordinates = [round(x) for x in coordinates]
 
-                x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
-                cv2.rectangle(preview_image, (x_min, y_min), (x_max, y_max), (0, 0, 0), 1)
-                # Add label with class and probability
-                label = f"{class_id}: {probability}"
-                cv2.putText(preview_image, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1)
+                    probability = round(box.conf[i].item(), 2)
 
-                detected_objects.append({
-                    "type": class_id,
-                    "probability": probability,
-                    "coordinates": coordinates
-                })
-                # print("Detected objects")
-                # print(detected_objects)
+                    x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
+                    cv2.rectangle(preview_image, (x_min, y_min), (x_max, y_max), (0, 0, 0), 1)
+                    # Add label with class and probability
+                    label = f"{class_id}: {probability}"
+                    cv2.putText(preview_image, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0),
+                                1)
 
-    preview_url = f'static/{uuid4()}.jpg'
-    cv2.imwrite(preview_url, preview_image)
-    return {
-        "model_name": local_model_name,
-        "predictions": detected_objects,
-        "preview_url": f"{server_address}/{preview_url}"
-    }
+                    detected_objects.append({
+                        "type": class_id,
+                        "probability": probability,
+                        "coordinates": coordinates
+                    })
+                    # print("Detected objects")
+                    # print(detected_objects)
+
+        preview_url = f'static/{uuid4()}.jpg'
+        cv2.imwrite(preview_url, preview_image)
+        return {
+            "model_name": self.local_model_name,
+            "predictions": detected_objects,
+            "preview_url": f"{server_address}/{preview_url}"
+        }
 
 
 async def predict_text_azure(local_image_url: str, client: AsyncClient):
@@ -137,10 +146,10 @@ async def predict_text_azure(local_image_url: str, client: AsyncClient):
 
             points = [(coordinates[i], coordinates[i + 1]) for i in range(0, len(coordinates), 2)]
             points = np.array(points, np.int32).reshape((-1, 1, 2))
-            cv2.polylines(preview_image, [points], isClosed=True, color=(138,54,15), thickness=1)
+            cv2.polylines(preview_image, [points], isClosed=True, color=(138, 54, 15), thickness=1)
             x, y = points[-1][0][0], points[-1][0][1]
             label = f"{text}"
-            cv2.putText(preview_image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (138,54,15), 1)
+            cv2.putText(preview_image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (138, 54, 15), 1)
 
         preview_url = f'static/{uuid4()}.jpg'
         cv2.imwrite(preview_url, preview_image)
@@ -151,11 +160,9 @@ async def predict_text_azure(local_image_url: str, client: AsyncClient):
         }
 
 
-
-@subapi.get('/image-info')
-async def get_image_info():
-    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content="Did you mean to send a POST request?")
-
+roboflow_model_d1 = RoboflowModel(project_name="html-merged-comps", project_version=4)
+local_model_d1 = LocalModel("2023-11-08-22-40-best-e50.pt")
+local_model_d2 = LocalModel("2023-11-10-6-38-best-e50-initial-model.pt")
 
 
 @subapi.post('/image-info')
@@ -196,13 +203,15 @@ async def process_get_image_info(
     image_url = f"static/{name}"
 
     text_prediction = await predict_text_azure(image_url, client)
-    roboflow_prediction = predict_roboflow(image_url, confidence=roboflow_confidence, overlap=roboflow_overlap)
-    local_prediction = predict_local(image, confidence=local_confidence)
+    roboflow_prediction = roboflow_model_d1.predict(image_url, confidence=roboflow_confidence, overlap=roboflow_overlap)
+    local_prediction_d1 = local_model_d1.predict(image, confidence=local_confidence)
+    local_prediction_d2 = local_model_d2.predict(image, confidence=local_confidence)
 
     response = {
         "roboflow_prediction": roboflow_prediction,
-        "local_prediction": local_prediction,
-        "text_prediction": text_prediction
+        "local_prediction_d1": local_prediction_d1,
+        "local_prediction_d2": local_prediction_d2,
+        "text_prediction": text_prediction,
     }
 
     return response
@@ -216,6 +225,3 @@ def convert_from_cv2_to_image(img: np.ndarray) -> Image:
 def convert_from_image_to_cv2(img: Image) -> np.ndarray:
     # return np.asarray(img)
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-
-
-
