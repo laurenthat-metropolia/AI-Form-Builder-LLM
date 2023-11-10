@@ -1,12 +1,22 @@
 version: "3.8"
 services:
-  draw2form--llm:
-    container_name: draw2form--llm
+#  draw2form--llm:
+#    container_name: draw2form--llm
+#    build:
+#      context: llm-api
+#      dockerfile: Dockerfile
+#    restart: 'no'
+#    env_file:
+#      - .env
+#    ports:
+#      - '8001:8001'
+  draw2form--chatgpt:
+    container_name: draw2form--chatgpt
     build:
-      context: llm-api
+      context: chatgpt-api
       dockerfile: Dockerfile
     restart: 'no'
     env_file:
       - .env
     ports:
-      - '8001:8001'
+      - '8002:8002'
