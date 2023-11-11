@@ -7,7 +7,7 @@ RUN pip3 install fastapi uvicorn opencv-python-headless numpy icecream python-mu
 
 COPY app.py app.py
 COPY models models
-COPY static static
+COPY images images
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001"]
 # uvicorn app:app --port 8001 --reload
 EXPOSE 8001
