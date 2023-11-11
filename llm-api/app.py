@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import requests
 from dotenv import load_dotenv
+from icecream import ic
 from roboflow import Roboflow
 from ultralytics import YOLO
 from fastapi import FastAPI, status
@@ -143,10 +144,8 @@ async def get_image_info(
                     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
 
             prediction = model.predict(image_path, confidence=confidence, overlap=overlap)
-
-            response = prediction
-
-        return response
+            ic(prediction)
+            return JSONResponse(status_code=status.HTTP_200_OK, content=prediction)
     except Exception as e:
         print(e)
         content = {"message": "Something went wrong!"}

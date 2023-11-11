@@ -4,7 +4,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 import path from 'path';
 import { environment } from './environment.js';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 export interface UploadedFile {
     id: string;
@@ -38,13 +38,12 @@ export function configUpload() {
 
     const upload = multer({ storage });
 
-    const uploadImageMiddleware = upload.single('image');
-
-    const requireImageToBeUploaded = (req: Request, res: Response, next: NextFunction) => {
+    const uploadImageMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+        return upload.single('image')(req, res, next);
+    };
+    const requireImageToBeUploaded: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
         if (!req.file) {
-            res.sendStatus(400).json({
-                message: 'Image is required.',
-            });
+            throw new Error('Image is required');
         } else {
             next();
         }

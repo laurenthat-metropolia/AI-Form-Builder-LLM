@@ -53,6 +53,12 @@ export function configAzureVision() {
                 'Ocp-Apim-Subscription-Key': apiKey,
             },
         });
+        console.log(`Azure Api | sendImageUrlForTextRecognition:  status: ${response.status}`);
+
+        const hasGoodStatus = [200, 201, 202].includes(response.status);
+        if (!hasGoodStatus) {
+            return null;
+        }
         if (!response.headers.has('Operation-Location')) {
             return null;
         } else {
@@ -68,12 +74,12 @@ export function configAzureVision() {
                 'Ocp-Apim-Subscription-Key': apiKey,
             },
         });
-        console.log(response.status);
-
-        const analysis = (await response.json()) as AzureVisionOperationResponse;
-        console.log({ analysis });
-
-        return analysis;
+        console.log(`Azure Api | checkForTextRecognitionResults:  status: ${response.status}`);
+        const hasGoodStatus = [200, 201, 202].includes(response.status);
+        if (!hasGoodStatus) {
+            return null;
+        }
+        return (await response.json()) as AzureVisionOperationResponse;
     };
 
     const recognizeText = async (imageUrl: string) => {
@@ -83,10 +89,16 @@ export function configAzureVision() {
         }
 
         let result = await checkForTextRecognitionResults(operationUrl);
+        if (!result) {
+            return null;
+        }
 
         while (result.status === 'running') {
             await wait(1000);
             result = await checkForTextRecognitionResults(operationUrl);
+            if (!result) {
+                return null;
+            }
         }
 
         const lines = result.analyzeResult.readResults

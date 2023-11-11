@@ -8,7 +8,6 @@ import {
 import { config as configJWT, requiresAccessToken } from './strategies/passport-jwt.service.js';
 import { configSession } from './configurations/configSession.js';
 import { configParsers } from './configurations/configParsers.js';
-import { environment } from './configurations/environment.js';
 import {
     User,
     Form,
@@ -21,20 +20,31 @@ import {
 } from '@prisma/client';
 import { prisma } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
-import morgan from 'morgan';
 import { configUpload } from './configurations/configUpload.js';
 import { configAzureVision } from './configurations/configAzureVision.js';
 import { configSwagger } from './configurations/configSwagger.js';
+import { configAndroid } from './configurations/configAndroid.js';
+import { configLogging } from './configurations/configLogging.js';
+import { configOpenAi } from './configurations/configOpenAi.js';
+import { configObjectDetection } from './configurations/configObjectDetection.js';
+
+// Upload Functionality
+const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile } = configUpload();
+
+// Image to Text Functionality
+const { recognizeText } = configAzureVision();
+
+// ChatGPT API
+const { openAI } = configOpenAi();
+
+// Objects Detection Functionality
+const { recognizeObjects } = configObjectDetection();
+
 // Express App
 const app = express();
 
-app.use(
-    morgan(':method :status :url :response-time', {
-        skip: function (req, res) {
-            return res.statusCode < 400;
-        },
-    }),
-);
+// Loggers
+configLogging(app);
 
 // Session is required by passport.js
 configSession(app);
@@ -42,6 +52,7 @@ configSession(app);
 // Parsing capabilities for body of request.
 configParsers(app);
 
+// Swagger UI
 configSwagger(app);
 
 // https://www.passportjs.org/packages/passport-google-oauth2/
@@ -50,36 +61,15 @@ configGoogleOAuth2();
 // https://www.passportjs.org/packages/passport-jwt/
 configJWT();
 
-// adding required routes for authentication for this strategy
+// Adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
 
-// adding upload
-const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile } = configUpload();
-const { recognizeText } = configAzureVision();
+// Adding required routes to open Android app with link
+configAndroid(app);
 
 const router = express.Router();
 
 app.use('/api', router);
-
-/**
- * Required by Android
- * https://www.branch.io/resources/blog/how-to-open-an-android-app-from-the-browser/
- * https://developer.android.com/training/app-links/verify-android-applinks
- */
-
-app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
-    res.json([
-        {
-            relation: ['delegate_permission/common.handle_all_urls'],
-            target: {
-                namespace: 'android_app',
-                //need to change the package name
-                package_name: 'com.draw2form.ai',
-                sha256_cert_fingerprints: environment.APP_ANDROID_SHA256_CERT_FINGERPRINT.split(','),
-            },
-        },
-    ]);
-});
 
 router.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const response = await prisma.user.findFirst({
@@ -101,21 +91,8 @@ router.post(
     async (req: Request, res: Response): Promise<void> => {
         const image = transformUploadedFile(req.file);
         const textRecognition = await recognizeText(image.url);
-
-        res.status(200).send({ image, textRecognition });
-        return;
-    },
-);
-
-router.post(
-    '/debug/text',
-    requiresAccessToken,
-    uploadImageMiddleware,
-    requireImageToBeUploaded,
-    async (req: Request, res: Response): Promise<void> => {
-        const image = transformUploadedFile(req.file);
-        const textRecognition = await recognizeText(image.url);
-        res.status(200).send({ image, textRecognition });
+        const predictions = await recognizeObjects(image.url);
+        res.status(200).send({ image, textRecognition, predictions });
         return;
     },
 );
