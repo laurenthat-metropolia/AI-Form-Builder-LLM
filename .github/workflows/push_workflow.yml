@@ -1,7 +1,7 @@
 name: Deployment
 on:
   push:
-    branches: [ main ]
+    branches: [ main, features/upload-api ]
 permissions: write-all
 
 jobs:
