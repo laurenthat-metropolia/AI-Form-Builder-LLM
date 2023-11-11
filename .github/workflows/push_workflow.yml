@@ -9,11 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with:
-            node-version: 18
-      - run: cd api && npm ci
-      - run: cd api && npm run build
       - name: "Git: Pull Source Code"
         uses: actions/checkout@v3
         with:
