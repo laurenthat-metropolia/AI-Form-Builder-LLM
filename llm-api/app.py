@@ -29,12 +29,6 @@ load_dotenv()
 
 server_address = os.environ['APP_SERVER_ADDR']
 
-computer_vision_subscription_key = os.environ['COMPUTER_VISION_KEY']
-computer_vision_endpoint = os.environ['COMPUTER_VISION_ENDPOINT']
-computer_vision_text_recognition_url = f"{computer_vision_endpoint}vision/v3.1/read/analyze"
-computer_vision_headers = {'Ocp-Apim-Subscription-Key': computer_vision_subscription_key}
-
-
 class RoboflowModel:
     def __init__(self, project_name: str, project_version: int,
                  roboflow_apikey: str = os.getenv("APP_ROBOFLOW_API_KEY")):
@@ -104,62 +98,6 @@ class LocalModel:
             "preview_url": f"{server_address}/{preview_url}"
         }
 
-
-async def predict_text_azure(local_image_url: str, client: AsyncClient):
-    data = {'url': f"{server_address}/{local_image_url}"}
-    ic(data)
-    response: Response = await client.post(computer_vision_text_recognition_url, headers=computer_vision_headers,
-                                           json=data, timeout=10.0)
-    ic(response.headers)
-    operation_url = response.headers["Operation-Location"]
-
-    # Holds the URI used to retrieve the recognized text.
-    # operation_url = response.headers["Operation-Location"]
-
-    # The recognized text isn't immediately available, so poll to wait for completion.
-    analysis = {}
-    poll = True
-    while poll:
-        response_final = await client.get(operation_url, headers=computer_vision_headers, timeout=10.0)
-        analysis = response_final.json()
-
-        await asyncio.sleep(1)
-
-        if "analyzeResult" in analysis:
-            poll = False
-        if "status" in analysis and analysis['status'] == 'failed':
-            poll = False
-        ic("Still waiting for Azure")
-
-    predictions = []
-    if "analyzeResult" in analysis:
-        lines = analysis["analyzeResult"]["readResults"][0]["lines"]
-        preview_image = cv2.imread(local_image_url)
-
-        for line in lines:
-            coordinates = line["boundingBox"]
-            text = line["text"]
-            predictions.append({
-                "text": text,
-                "coordinates": coordinates
-            })
-
-            points = [(coordinates[i], coordinates[i + 1]) for i in range(0, len(coordinates), 2)]
-            points = np.array(points, np.int32).reshape((-1, 1, 2))
-            cv2.polylines(preview_image, [points], isClosed=True, color=(138, 54, 15), thickness=1)
-            x, y = points[-1][0][0], points[-1][0][1]
-            label = f"{text}"
-            cv2.putText(preview_image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (138, 54, 15), 1)
-
-        preview_url = f'static/{uuid4()}.jpg'
-        cv2.imwrite(preview_url, preview_image)
-
-        return {
-            "predictions": predictions,
-            "preview_url": f"{server_address}/{preview_url}"
-        }
-
-
 roboflow_model_d1 = RoboflowModel(project_name="html-merged-comps", project_version=4)
 local_model_d1 = LocalModel("2023-11-08-22-40-best-e50.pt")
 local_model_d2 = LocalModel("2023-11-10-6-38-best-e50-initial-model.pt")
@@ -202,7 +140,6 @@ async def process_get_image_info(
 
     image_url = f"static/{name}"
 
-    text_prediction = await predict_text_azure(image_url, client)
     roboflow_prediction = roboflow_model_d1.predict(image_url, confidence=roboflow_confidence, overlap=roboflow_overlap)
     local_prediction_d1 = local_model_d1.predict(image, confidence=local_confidence)
     local_prediction_d2 = local_model_d2.predict(image, confidence=local_confidence)
@@ -210,8 +147,7 @@ async def process_get_image_info(
     response = {
         "roboflow_prediction": roboflow_prediction,
         "local_prediction_d1": local_prediction_d1,
-        "local_prediction_d2": local_prediction_d2,
-        "text_prediction": text_prediction,
+        "local_prediction_d2": local_prediction_d2
     }
 
     return response

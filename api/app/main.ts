@@ -22,6 +22,8 @@ import {
 import { prisma } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
 import morgan from 'morgan';
+import { configUpload } from './configurations/configUpload.js';
+import { configAzureVision } from './configurations/configAzureVision.js';
 // Express App
 const app = express();
 
@@ -48,7 +50,11 @@ configJWT();
 // adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
 
-const router = express.Router()
+// adding upload
+const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile } = configUpload();
+const { recognizeText } = configAzureVision();
+
+const router = express.Router();
 
 app.use('/api', router);
 
@@ -84,6 +90,32 @@ router.get('/profile', requiresAccessToken, async (req: Request, res: Response):
     res.status(200).send(response);
     return;
 });
+router.post(
+    '/upload',
+    requiresAccessToken,
+    uploadImageMiddleware,
+    requireImageToBeUploaded,
+    async (req: Request, res: Response): Promise<void> => {
+        const image = transformUploadedFile(req.file);
+        const textRecognition = await recognizeText(image.url);
+
+        res.status(200).send({ image, textRecognition });
+        return;
+    },
+);
+
+router.post(
+    '/debug/text',
+    requiresAccessToken,
+    uploadImageMiddleware,
+    requireImageToBeUploaded,
+    async (req: Request, res: Response): Promise<void> => {
+        const image = transformUploadedFile(req.file);
+        const textRecognition = await recognizeText(image.url);
+        res.status(200).send({ image, textRecognition });
+        return;
+    },
+);
 
 router.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
@@ -275,11 +307,11 @@ app.use((async (err, req: Request, res: Response, next): Promise<void> => {
 app.listen(8000, '0.0.0.0', (): void => {
     console.log('Started listening on port 8000');
 });
-process.on('SIGTERM', function() {
+process.on('SIGTERM', function () {
     console.log('\ncaught SIGTERM, stopping gracefully');
     process.exit(1);
 });
-process.on('SIGINT', function() {
+process.on('SIGINT', function () {
     console.log('\ncaught SIGINT, stopping gracefully');
     process.exit();
 });

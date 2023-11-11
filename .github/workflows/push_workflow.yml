@@ -1,7 +1,7 @@
 name: Deployment
 on:
   push:
-    branches: [ main, features/chatgpt ]
+    branches: [ main ]
 permissions: write-all
 
 jobs:
@@ -71,30 +71,6 @@ jobs:
           tags: ericaskari/draw2form-api:latest,ericaskari/draw2form-api:${{needs.Version.outputs.version}}
           cache-from: type=registry,ref=ericaskari/draw2form-api:latest
           cache-to: type=inline
-  BuildPushDockerChatGPT:
-    runs-on: ubuntu-latest
-    needs: [ Version ]
-    steps:
-      - name: "Git: Pull Source Code"
-        uses: actions/checkout@v3
-      - name: "Docker: Set up QEMU"
-        uses: docker/setup-qemu-action@v3
-      - name: "Docker: Set up Buildx"
-        uses: docker/setup-buildx-action@v3
-      - name: "Docker: Login Docker Hub"
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: "Docker: Build And Push Image"
-        uses: docker/build-push-action@v5
-        with:
-          context: chatgpt-api
-          file: chatgpt-api/Dockerfile
-          push: true
-          tags: ericaskari/draw2form-chatgpt-api:latest,ericaskari/draw2form-chatgpt-api:${{needs.Version.outputs.version}}
-          cache-from: type=registry,ref=ericaskari/draw2form-chatgpt-api:latest
-          cache-to: type=inline
   BuildPushDockerLLM:
     runs-on: ubuntu-latest
     needs: [ Version ]
@@ -122,7 +98,7 @@ jobs:
 
   Deploy:
       runs-on: ubuntu-latest
-      needs: [ Version, BuildPushDockerAPI, BuildPushDockerChatGPT, BuildPushDockerLLM ]
+      needs: [ Version, BuildPushDockerAPI, BuildPushDockerLLM ]
       env:
         APP_OAUTH2_CLIENT_ID: ${{ secrets.APP_OAUTH2_CLIENT_ID }}
         APP_OAUTH2_CLIENT_SECRET: ${{ secrets.APP_OAUTH2_CLIENT_SECRET }}
@@ -137,7 +113,11 @@ jobs:
         COMPUTER_VISION_ENDPOINT: https://seb.cognitiveservices.azure.com/
         APP_SERVER_ADDR: https://draw2form-llm.ericaskari.com
         APP_ROBOFLOW_API_KEY: ${{ secrets.APP_ROBOFLOW_API_KEY }}
+        APP_OPENAI_ORGANIZATION: ${{ secrets.APP_OPENAI_ORGANIZATION }}
         APP_OPENAI_API_KEY: ${{ secrets.APP_OPENAI_API_KEY }}
+        APP_S3_ENDPOINT: minio.databases.svc.cluster.local:9000
+        APP_S3_ACCESS_KEY: minio
+        APP_S3_SECRET_KEY: ${{ secrets.APP_S3_SECRET_KEY }}
 
       steps:
         - name: "Git: Pull Source Code"
@@ -161,17 +141,18 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[6].value = env(APP_JWT_ISSUER)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[7].value = env(APP_JWT_AUDIENCE)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[8].value = env(APP_DATABASE_URL)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[9].value = env(APP_S3_ENDPOINT)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[10].value = env(APP_S3_ACCESS_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[11].value = env(APP_S3_SECRET_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[12].value = env(APP_COMPUTER_VISION_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[13].value = env(APP_COMPUTER_VISION_ENDPOINT)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[14].value = env(APP_OPENAI_API_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[15].value = env(APP_OPENAI_ORGANIZATION)' deployment.yml
             
             export IMAGE_TAG=ericaskari/draw2form-llm-api:${{needs.Version.outputs.version}}
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(COMPUTER_VISION_KEY)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[1].value = env(COMPUTER_VISION_ENDPOINT)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[2].value = env(APP_SERVER_ADDR)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[3].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
-
-            export IMAGE_TAG=ericaskari/draw2form-chatgpt-api:${{needs.Version.outputs.version}}
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[2].image = env(IMAGE_TAG)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[2].env[0].value = env(APP_OPENAI_API_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(APP_SERVER_ADDR)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[1].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
 
             kubectl apply --filename deployment.yml
       
