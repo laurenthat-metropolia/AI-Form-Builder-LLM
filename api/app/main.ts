@@ -24,6 +24,7 @@ import { ErrorRequestHandler } from 'express-serve-static-core';
 import morgan from 'morgan';
 import { configUpload } from './configurations/configUpload.js';
 import { configAzureVision } from './configurations/configAzureVision.js';
+import { configSwagger } from './configurations/configSwagger.js';
 // Express App
 const app = express();
 
@@ -40,6 +41,8 @@ configSession(app);
 
 // Parsing capabilities for body of request.
 configParsers(app);
+
+configSwagger(app);
 
 // https://www.passportjs.org/packages/passport-google-oauth2/
 configGoogleOAuth2();
