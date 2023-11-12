@@ -17,7 +17,7 @@ export function configUpload() {
         endpoint: environment.APP_S3_ENDPOINT,
         forcePathStyle: true,
         tls: environment.NODE_ENV === 'development',
-
+        region: 'eu-west-1',
         credentials: {
             accessKeyId: environment.APP_S3_ACCESS_KEY,
             secretAccessKey: environment.APP_S3_SECRET_KEY,

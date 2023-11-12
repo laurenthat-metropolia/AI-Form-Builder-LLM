@@ -2,7 +2,6 @@ import OpenAI from 'openai';
 import { environment } from './environment.js';
 import { DetectionResponse } from './configObjectDetection.js';
 import { TextDetectionResponse } from './configAzureVision.js';
-import * as fs from 'fs';
 
 export function configOpenAi() {
     const openAI = new OpenAI({
@@ -76,18 +75,8 @@ model FormLabel {
             };
             const chatCompletion = await openAI.chat.completions.create(body);
             const content = chatCompletion.choices[0]?.message?.content;
-            const parsedContent = content ? JSON.parse(content) : null;
 
-            console.log(content);
-            fs.writeFileSync(
-                '../output.json',
-                JSON.stringify({
-                    objects,
-                    texts,
-                    parsedContent,
-                }),
-            );
-            return content;
+            return content ? JSON.parse(content) : null;
         } catch (e) {
             console.log(e);
             return null;
@@ -99,17 +88,3 @@ model FormLabel {
         generateFormStructure: generateFormStructure,
     };
 }
-
-// router.get('/', async (req: Request, res: Response) => {
-//     const body: OpenAI.ChatCompletionCreateParams = {
-//         messages: [{ role: 'user', content: 'Say this is a test' }],
-//         model: 'gpt-3.5-turbo',
-//     };
-//     const chatCompletion = await openai.chat.completions.create(body);
-//
-//     res.send({
-//         input: body,
-//         output: chatCompletion,
-//     });
-//     return;
-// });

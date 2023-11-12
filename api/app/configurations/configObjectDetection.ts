@@ -12,29 +12,35 @@ export type DetectionResponse = {
 }[];
 
 export function configObjectDetection() {
-    const api = 'http://localhost:8001/llm/predict';
+    const api = 'http://127.0.0.1:8001/llm/predict';
 
     const recognizeObjects = async (
         imageUrl: string,
         model: string = 'roboflow',
     ): Promise<DetectionResponse | null> => {
-        const url = new URL(api);
-        url.searchParams.set('image_url', imageUrl);
-        url.searchParams.set('model_name', model);
-        const response = await fetch(url.href, {
-            method: 'post',
-            body: null,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        try {
+            const url = new URL(api);
+            url.searchParams.set('image_url', imageUrl);
+            url.searchParams.set('model_name', model);
+            const response = await fetch(url.href, {
+                method: 'post',
+                body: null,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
 
-        const hasGoodStatus = [200, 201, 202].includes(response.status);
-        if (!hasGoodStatus) {
+            console.log(`LLM Api | checkForTextRecognitionResults:  status: ${response.status}`);
+            const hasGoodStatus = [200, 201, 202].includes(response.status);
+            if (!hasGoodStatus) {
+                return null;
+            }
+
+            return (await response.json()) as DetectionResponse;
+        } catch (e) {
+            console.error(e);
             return null;
         }
-
-        return (await response.json()) as DetectionResponse;
     };
 
     return {
