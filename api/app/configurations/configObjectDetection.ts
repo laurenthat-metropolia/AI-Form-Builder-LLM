@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-type DetectionResponse = {
+export type DetectionResponse = {
     x: number;
     y: number;
     width: number;
@@ -38,6 +38,6 @@ export function configObjectDetection() {
     };
 
     return {
-        recognizeObjects,
+        recognizeObjects: recognizeObjects,
     };
 }

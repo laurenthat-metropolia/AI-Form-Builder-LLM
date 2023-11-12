@@ -1,6 +1,11 @@
 import { environment } from './environment.js';
 import fetch from 'node-fetch';
 
+export type TextDetectionResponse = {
+    text: string;
+    boundingBox: number[];
+}[];
+
 type AzureVisionOperationResponse =
     | {
           status: 'running';
@@ -82,7 +87,7 @@ export function configAzureVision() {
         return (await response.json()) as AzureVisionOperationResponse;
     };
 
-    const recognizeText = async (imageUrl: string) => {
+    const recognizeText = async (imageUrl: string): Promise<TextDetectionResponse | null> => {
         const operationUrl = await sendImageUrlForTextRecognition(imageUrl);
         if (!operationUrl) {
             return null;

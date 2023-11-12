@@ -7,7 +7,7 @@ import { environment } from './environment.js';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 export interface UploadedFile {
-    id: string;
+    key: string;
     url: string;
 }
 
@@ -55,7 +55,7 @@ export function configUpload() {
         }
         const s3File = file as any;
         return {
-            id: s3File.key,
+            key: s3File.key,
             url: `https://draw2form.ericaskari.com/files/${s3File.key}`,
         };
     };

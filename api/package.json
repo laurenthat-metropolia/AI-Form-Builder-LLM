@@ -9,7 +9,8 @@
     "start": "NODE_ENV=development npx ts-node --esm --project tsconfig.json app/main.ts",
     "watch": "nodemon --watch './**/*' -e '*' --exec 'npm run start'",
     "watch:op": "APP_ENV=local op run --no-masking --env-file=.env.op npm run watch",
-    "db:migrate": "APP_ENV=local op run --no-masking --env-file=.env.op npx prisma migrate deploy",
+    "op:db:migrate:dev": "APP_ENV=local op run --no-masking --env-file=.env.op npx prisma migrate dev",
+    "op:db:migrate:deploy": "APP_ENV=local op run --no-masking --env-file=.env.op npx prisma migrate deploy",
     "watch:deploy": "cat deployment.yml  | APP_ENV=prod op inject > deployment.injected.yml && nodemon --watch './**/*' -e '*'  --delay 2.5 --exec 'npm run docker:build && npm run docker:push && npm run docker:deploy'"
   },
   "keywords": [],

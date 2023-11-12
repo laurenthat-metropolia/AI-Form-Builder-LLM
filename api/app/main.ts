@@ -18,7 +18,7 @@ import {
     FormLabel,
     FormToggleSwitch,
 } from '@prisma/client';
-import { prisma } from './databases/userDatabase.js';
+import { prisma, UserDatabase } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
 import { configUpload } from './configurations/configUpload.js';
 import { configAzureVision } from './configurations/configAzureVision.js';
@@ -27,6 +27,7 @@ import { configAndroid } from './configurations/configAndroid.js';
 import { configLogging } from './configurations/configLogging.js';
 import { configOpenAi } from './configurations/configOpenAi.js';
 import { configObjectDetection } from './configurations/configObjectDetection.js';
+import { ImageEvents } from './enums.js';
 
 // Upload Functionality
 const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile } = configUpload();
@@ -35,10 +36,13 @@ const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile }
 const { recognizeText } = configAzureVision();
 
 // ChatGPT API
-const { openAI } = configOpenAi();
+const { openAI, generateFormStructure } = configOpenAi();
 
 // Objects Detection Functionality
 const { recognizeObjects } = configObjectDetection();
+
+// Database Helpers
+const { upsertImageEvent } = UserDatabase;
 
 // Express App
 const app = express();
@@ -78,6 +82,12 @@ router.get('/profile', requiresAccessToken, async (req: Request, res: Response):
         },
         include: {
             forms: true,
+            uploads: {
+                include: {
+                    events: true,
+                },
+            },
+            formSubmission: true,
         },
     });
     res.status(200).send(response);
@@ -89,11 +99,44 @@ router.post(
     uploadImageMiddleware,
     requireImageToBeUploaded,
     async (req: Request, res: Response): Promise<void> => {
+        const user: User = req.user as User;
         const image = transformUploadedFile(req.file);
-        const textRecognition = await recognizeText(image.url);
-        const predictions = await recognizeObjects(image.url);
-        res.status(200).send({ image, textRecognition, predictions });
-        return;
+
+        // Upload Image
+        const uploadedFile = await prisma.uploadedFile.create({
+            data: {
+                url: image.url,
+                key: image.key,
+                ownerId: user.id,
+            },
+        });
+        // Send the response
+        res.status(200).send(uploadedFile);
+
+        const objectDetectionResponse = await recognizeObjects(uploadedFile.url);
+        await upsertImageEvent(
+            uploadedFile.id,
+            ImageEvents.OBJECT_DETECTION_COMPLETED,
+            objectDetectionResponse ? JSON.stringify(objectDetectionResponse) : null,
+        );
+
+        const textDetectionResponse = await recognizeText(image.url);
+        await upsertImageEvent(
+            uploadedFile.id,
+            ImageEvents.TEXT_DETECTION_COMPLETED,
+            textDetectionResponse ? JSON.stringify(textDetectionResponse) : null,
+        );
+        if (objectDetectionResponse && textDetectionResponse) {
+            const structureGenerationResponse = await generateFormStructure(
+                objectDetectionResponse,
+                textDetectionResponse,
+            );
+            await upsertImageEvent(
+                uploadedFile.id,
+                ImageEvents.STRUCTURE_GENERATION_COMPLETED,
+                structureGenerationResponse ? JSON.stringify(structureGenerationResponse) : null,
+            );
+        }
     },
 );
 
