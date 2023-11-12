@@ -104,8 +104,6 @@ jobs:
         APP_JWT_ISSUER: ${{ secrets.APP_JWT_ISSUER }}
         APP_JWT_AUDIENCE: ${{ secrets.APP_JWT_AUDIENCE }}
         APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
-        COMPUTER_VISION_KEY: ${{ secrets.COMPUTER_VISION_KEY }}
-        COMPUTER_VISION_ENDPOINT: https://seb.cognitiveservices.azure.com/
         APP_SERVER_ADDR: https://draw2form-llm.ericaskari.com
         APP_ROBOFLOW_API_KEY: ${{ secrets.APP_ROBOFLOW_API_KEY }}
         APP_OPENAI_ORGANIZATION: ${{ secrets.APP_OPENAI_ORGANIZATION }}
@@ -114,6 +112,7 @@ jobs:
         APP_S3_ACCESS_KEY: minio
         APP_S3_SECRET_KEY: ${{ secrets.APP_S3_SECRET_KEY }}
         APP_COMPUTER_VISION_KEY: ${{ secrets.APP_COMPUTER_VISION_KEY }}
+        APP_COMPUTER_VISION_ENDPOINT: https://seb.cognitiveservices.azure.com/
         NODE_ENV: production
 
       steps:
