@@ -48,7 +48,7 @@ configJWT();
 // adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
 
-const router = express.Router()
+const router = express.Router();
 
 app.use('/api', router);
 
@@ -72,7 +72,7 @@ app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
     ]);
 });
 
-router.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const response = await prisma.user.findFirst({
         where: {
             id: (req.user as User).id,
@@ -85,7 +85,37 @@ router.get('/profile', requiresAccessToken, async (req: Request, res: Response):
     return;
 });
 
-router.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+app.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const user = req.user as User;
+        const body = req.body;
+        console.log('Received Body:', body);
+        const formResponse = await prisma.form.create({
+            data: {
+                ownerId: user.id,
+                name: body.form.name?.trim(),
+                available: body.form.available ?? false,
+            },
+            include: {
+                checkboxes: true,
+                textfields: true,
+                toggleSwitches: true,
+                buttons: true,
+                labels: true,
+                images: true,
+            },
+        });
+
+        console.log('Created Form:', formResponse);
+
+        res.status(200).json(formResponse);
+    } catch (error) {
+        console.error('Error creating Form:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
     const body: User = req.body as User;
     const response = await prisma.user.update({
@@ -103,53 +133,30 @@ router.put('/profile', requiresAccessToken, async (req: Request, res: Response):
     res.status(200).send(response);
     return;
 });
-
-router.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+app.get('/form/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
-        const user: User = req.user as User;
-        const body = req.body as {
-            form: Form;
-            checkboxes: FormCheckbox[];
-            formTextFields: FormTextfield[];
-            formToggleSwitches: FormToggleSwitch[];
-            formImages: FormImage[];
-            formButtons: FormButton[];
-            formLabels: FormLabel[];
-        };
-        const formData = {
-            ownerId: user.id,
-            name: body.form.name.trim(),
-            available: body.form.available ?? false,
-            checkboxes: body.checkboxes.length > 0 ? body.checkboxes : null,
-            formTextFields: body.formTextFields.length > 0 ? body.formTextFields : null,
-            formToggleSwitches: body.formToggleSwitches.length > 0 ? body.formToggleSwitches : null,
-            formImages: body.formImages.length > 0 ? body.formImages : null,
-            formButtons: body.formButtons.length > 0 ? body.formButtons : null,
-            formLabels: body.formLabels.length > 0 ? body.formLabels : null,
-        };
-
-        const formResponse = await prisma.form.create({
-            data: {
-                ...formData,
-                checkboxes: formData.checkboxes ? { createMany: { data: formData.checkboxes } } : undefined,
-                textfields: formData.formTextFields ? { createMany: { data: formData.formTextFields } } : undefined,
-                toggleSwitches: formData.formToggleSwitches
-                    ? { createMany: { data: formData.formToggleSwitches } }
-                    : undefined,
-                buttons: formData.formButtons ? { createMany: { data: formData.formButtons } } : undefined,
-                images: formData.formImages ? { createMany: { data: formData.formImages } } : undefined,
-                labels: formData.formLabels ? { createMany: { data: formData.formLabels } } : undefined,
+        const formId = req.params.formId;
+        const form = await prisma.form.findUnique({
+            where: {
+                id: formId,
+            },
+            include: {
+                checkboxes: true,
+                textfields: true,
+                toggleSwitches: true,
+                images: true,
+                buttons: true,
+                labels: true,
             },
         });
 
-        res.status(200).json(formResponse);
+        res.status(200).json(form);
     } catch (error) {
-        console.error('Error creating Form:', error);
+        console.error('Error retrieving form:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-router.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
         const user: User = req.user as User;
         const formId = req.params.id;
@@ -244,7 +251,7 @@ router.put('/form/:id', requiresAccessToken, async (req: Request, res: Response)
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-router.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+app.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
     const id: string = req.params.id as string;
     const response = await prisma.form.delete({
@@ -254,6 +261,7 @@ router.delete('/form/:id', requiresAccessToken, async (req: Request, res: Respon
         },
     });
     res.status(200).send(response);
+    console.log('Deletion successful');
     return;
 });
 
@@ -275,11 +283,11 @@ app.use((async (err, req: Request, res: Response, next): Promise<void> => {
 app.listen(8000, '0.0.0.0', (): void => {
     console.log('Started listening on port 8000');
 });
-process.on('SIGTERM', function() {
+process.on('SIGTERM', function () {
     console.log('\ncaught SIGTERM, stopping gracefully');
     process.exit(1);
 });
-process.on('SIGINT', function() {
+process.on('SIGINT', function () {
     console.log('\ncaught SIGINT, stopping gracefully');
     process.exit();
 });
