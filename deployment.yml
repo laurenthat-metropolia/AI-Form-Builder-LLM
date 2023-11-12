@@ -55,12 +55,12 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_API_KEY
             - name: APP_OPENAI_ORGANIZATION
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_ORGANIZATION
+            - name: NODE_ENV
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/NODE_ENV
         - image: ericaskari/draw2form-llm-api:latest
           name: draw2form-llm-api
           imagePullPolicy: Always
           env:
-            - name: APP_SERVER_ADDR
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_SERVER_ADDR
             - name: APP_ROBOFLOW_API_KEY
               value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ROBOFLOW_API_KEY
           resizePolicy:

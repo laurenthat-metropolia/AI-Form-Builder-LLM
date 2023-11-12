@@ -113,6 +113,7 @@ jobs:
         APP_S3_ENDPOINT: minio.databases.svc.cluster.local:9000
         APP_S3_ACCESS_KEY: minio
         APP_S3_SECRET_KEY: ${{ secrets.APP_S3_SECRET_KEY }}
+        NODE_ENV: production
 
       steps:
         - name: "Git: Pull Source Code"
@@ -143,11 +144,11 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[13].value = env(APP_COMPUTER_VISION_ENDPOINT)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[14].value = env(APP_OPENAI_API_KEY)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[15].value = env(APP_OPENAI_ORGANIZATION)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[16].value = env(NODE_ENV)' deployment.yml
             
             export IMAGE_TAG=ericaskari/draw2form-llm-api:${{needs.Version.outputs.version}}
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(APP_SERVER_ADDR)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[1].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
 
             kubectl apply --filename deployment.yml
       
