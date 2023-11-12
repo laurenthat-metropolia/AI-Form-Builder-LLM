@@ -72,52 +72,62 @@ export function configAzureVision() {
     };
 
     const checkForTextRecognitionResults = async (operationUrl: string) => {
-        const response = await fetch(operationUrl, {
-            method: 'get',
-            headers: {
-                'Content-Type': 'application/json',
-                'Ocp-Apim-Subscription-Key': apiKey,
-            },
-        });
-        console.log(`Azure Api | checkForTextRecognitionResults:  status: ${response.status}`);
-        const hasGoodStatus = [200, 201, 202].includes(response.status);
-        if (!hasGoodStatus) {
+        try {
+            const response = await fetch(operationUrl, {
+                method: 'get',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Ocp-Apim-Subscription-Key': apiKey,
+                },
+            });
+            console.log(`Azure Api | checkForTextRecognitionResults:  status: ${response.status}`);
+            const hasGoodStatus = [200, 201, 202].includes(response.status);
+            if (!hasGoodStatus) {
+                return null;
+            }
+            return (await response.json()) as AzureVisionOperationResponse;
+        } catch (e) {
+            console.error(e);
             return null;
         }
-        return (await response.json()) as AzureVisionOperationResponse;
     };
 
     const recognizeText = async (imageUrl: string): Promise<TextDetectionResponse | null> => {
-        const operationUrl = await sendImageUrlForTextRecognition(imageUrl);
-        if (!operationUrl) {
-            return null;
-        }
+        try {
+            const operationUrl = await sendImageUrlForTextRecognition(imageUrl);
+            if (!operationUrl) {
+                return null;
+            }
 
-        let result = await checkForTextRecognitionResults(operationUrl);
-        if (!result) {
-            return null;
-        }
-
-        while (result.status === 'running') {
-            await wait(1000);
-            result = await checkForTextRecognitionResults(operationUrl);
+            let result = await checkForTextRecognitionResults(operationUrl);
             if (!result) {
                 return null;
             }
+
+            while (result.status === 'running') {
+                await wait(1000);
+                result = await checkForTextRecognitionResults(operationUrl);
+                if (!result) {
+                    return null;
+                }
+            }
+
+            const lines = result.analyzeResult.readResults
+                .map((readResult) => {
+                    return readResult.lines;
+                })
+                .flat();
+
+            return lines.map((line) => {
+                return {
+                    text: line.text,
+                    boundingBox: line.boundingBox,
+                };
+            });
+        } catch (e) {
+            console.error(e);
+            return null;
         }
-
-        const lines = result.analyzeResult.readResults
-            .map((readResult) => {
-                return readResult.lines;
-            })
-            .flat();
-
-        return lines.map((line) => {
-            return {
-                text: line.text,
-                boundingBox: line.boundingBox,
-            };
-        });
     };
 
     return {
