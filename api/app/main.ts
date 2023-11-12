@@ -93,6 +93,25 @@ router.get('/profile', requiresAccessToken, async (req: Request, res: Response):
     res.status(200).send(response);
     return;
 });
+
+router.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+    const user: User = req.user as User;
+    const body: User = req.body as User;
+    const response = await prisma.user.update({
+        where: {
+            id: user.id,
+        },
+        data: {
+            ...user,
+            ...body,
+            id: user.id,
+            email: user.email,
+        },
+    });
+
+    res.status(200).send(response);
+    return;
+});
 router.post(
     '/upload',
     requiresAccessToken,
@@ -140,66 +159,56 @@ router.post(
     },
 );
 
-router.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const body: User = req.body as User;
-    const response = await prisma.user.update({
-        where: {
-            id: user.id,
-        },
-        data: {
-            ...user,
-            ...body,
-            id: user.id,
-            email: user.email,
-        },
-    });
-
-    res.status(200).send(response);
-    return;
-});
-
 router.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
-        const user: User = req.user as User;
-        const body = req.body as {
-            form: Form;
-            checkboxes: FormCheckbox[];
-            formTextFields: FormTextfield[];
-            formToggleSwitches: FormToggleSwitch[];
-            formImages: FormImage[];
-            formButtons: FormButton[];
-            formLabels: FormLabel[];
-        };
-        const formData = {
-            ownerId: user.id,
-            name: body.form.name.trim(),
-            available: body.form.available ?? false,
-            checkboxes: body.checkboxes.length > 0 ? body.checkboxes : null,
-            formTextFields: body.formTextFields.length > 0 ? body.formTextFields : null,
-            formToggleSwitches: body.formToggleSwitches.length > 0 ? body.formToggleSwitches : null,
-            formImages: body.formImages.length > 0 ? body.formImages : null,
-            formButtons: body.formButtons.length > 0 ? body.formButtons : null,
-            formLabels: body.formLabels.length > 0 ? body.formLabels : null,
-        };
-
+        const user = req.user as User;
+        const body = req.body;
+        console.log('Received Body:', body);
         const formResponse = await prisma.form.create({
             data: {
-                ...formData,
-                checkboxes: formData.checkboxes ? { createMany: { data: formData.checkboxes } } : undefined,
-                textfields: formData.formTextFields ? { createMany: { data: formData.formTextFields } } : undefined,
-                toggleSwitches: formData.formToggleSwitches
-                    ? { createMany: { data: formData.formToggleSwitches } }
-                    : undefined,
-                buttons: formData.formButtons ? { createMany: { data: formData.formButtons } } : undefined,
-                images: formData.formImages ? { createMany: { data: formData.formImages } } : undefined,
-                labels: formData.formLabels ? { createMany: { data: formData.formLabels } } : undefined,
+                ownerId: user.id,
+                name: body.form.name?.trim(),
+                available: body.form.available ?? false,
+            },
+            include: {
+                checkboxes: true,
+                textfields: true,
+                toggleSwitches: true,
+                buttons: true,
+                labels: true,
+                images: true,
             },
         });
+
+        console.log('Created Form:', formResponse);
 
         res.status(200).json(formResponse);
     } catch (error) {
         console.error('Error creating Form:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.get('/form/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const formId = req.params.formId;
+        const form = await prisma.form.findUnique({
+            where: {
+                id: formId,
+            },
+            include: {
+                checkboxes: true,
+                textfields: true,
+                toggleSwitches: true,
+                images: true,
+                buttons: true,
+                labels: true,
+            },
+        });
+
+        res.status(200).json(form);
+    } catch (error) {
+        console.error('Error retrieving form:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -309,6 +318,7 @@ router.delete('/form/:id', requiresAccessToken, async (req: Request, res: Respon
         },
     });
     res.status(200).send(response);
+    console.log('Deletion successful');
     return;
 });
 
