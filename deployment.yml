@@ -41,16 +41,26 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_JWT_AUDIENCE
             - name: APP_DATABASE_URL
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_DATABASE_URL
+            - name: APP_S3_ENDPOINT
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_S3_ENDPOINT
+            - name: APP_S3_ACCESS_KEY
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_S3_ACCESS_KEY
+            - name: APP_S3_SECRET_KEY
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_S3_SECRET_KEY
+            - name: APP_COMPUTER_VISION_KEY
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_COMPUTER_VISION_KEY
+            - name: APP_COMPUTER_VISION_ENDPOINT
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_COMPUTER_VISION_ENDPOINT
+            - name: APP_OPENAI_API_KEY
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_API_KEY
+            - name: APP_OPENAI_ORGANIZATION
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_ORGANIZATION
+            - name: NODE_ENV
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/NODE_ENV
         - image: ericaskari/draw2form-llm-api:latest
           name: draw2form-llm-api
           imagePullPolicy: Always
           env:
-            - name: COMPUTER_VISION_KEY
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/COMPUTER_VISION_KEY
-            - name: COMPUTER_VISION_ENDPOINT
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/COMPUTER_VISION_ENDPOINT
-            - name: APP_SERVER_ADDR
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_SERVER_ADDR
             - name: APP_ROBOFLOW_API_KEY
               value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ROBOFLOW_API_KEY
           resizePolicy:
@@ -65,12 +75,14 @@ spec:
             limits:
               memory: "2Gi"
               cpu: "2000m"
-        - image: ericaskari/draw2form-chatgpt-api:latest
-          name: draw2form-chatgpt-api
+        - image: ericaskari/hss-proxy:latest
+          name: draw2form-files-api
           imagePullPolicy: Always
           env:
-            - name: APP_OPENAI_API_KEY
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/chatgpt-api/APP_OPENAI_API_KEY
+            - name: PROXY_PASS_SERVER
+              value: minio.databases.svc.cluster.local:9000/draw2form
+            - name: PROXY_PASS_LOCATION
+              value: /files
 ---
 apiVersion: v1
 kind: Service
@@ -87,9 +99,9 @@ spec:
       port: 8001
       targetPort: 8001
       protocol: TCP
-    - name: chatgpt-port
-      port: 8002
-      targetPort: 8002
+    - name: files-port
+      port: 80
+      targetPort: 80
       protocol: TCP
   selector:
     app.kubernetes.io/name: deployment-draw2form
@@ -117,6 +129,7 @@ spec:
                 name: service-draw2form
                 port:
                   number: 8000
+
           - path: /llm
             pathType: Prefix
             backend:
@@ -124,11 +137,10 @@ spec:
                 name: service-draw2form
                 port:
                   number: 8001
-          - path: /chatgpt
+          - path: /files
             pathType: Prefix
             backend:
               service:
                 name: service-draw2form
                 port:
-                  number: 8002
-
+                  number: 80

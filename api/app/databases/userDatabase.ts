@@ -1,8 +1,41 @@
 import { GoogleProfile } from '../interfaces/googleProfile.js';
-import { PrismaClient, User } from '@prisma/client';
+import { ImageEvent, PrismaClient, User } from '@prisma/client';
+import { ImageEvents } from '../enums.js';
 
 export const prisma = new PrismaClient();
 
+async function upsertImageEvent(
+    fileId: string,
+    event: keyof typeof ImageEvents,
+    data: string | null,
+): Promise<ImageEvent> {
+    const payload: string | null = data ? JSON.stringify(data) : null;
+    const imageEvent = await prisma.imageEvent.findFirst({
+        where: {
+            fileId,
+            event,
+        },
+    });
+    if (!imageEvent) {
+        return prisma.imageEvent.create({
+            data: {
+                fileId,
+                event,
+                payload,
+            },
+        });
+    } else {
+        return prisma.imageEvent.update({
+            where: {
+                id: imageEvent.id,
+            },
+            data: {
+                event,
+                payload,
+            },
+        });
+    }
+}
 async function syncUserByGoogleProfile(googleProfile: GoogleProfile): Promise<User> {
     const user = await prisma.user.findFirst({
         where: {
@@ -33,4 +66,5 @@ async function syncUserByGoogleProfile(googleProfile: GoogleProfile): Promise<Us
 
 export const UserDatabase = {
     syncUserByGoogleProfile: syncUserByGoogleProfile,
+    upsertImageEvent: upsertImageEvent,
 };

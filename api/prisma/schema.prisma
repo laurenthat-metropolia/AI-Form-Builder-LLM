@@ -14,7 +14,8 @@ model User {
   name           String
   picture        String?
   forms          Form[]
-  FormSubmission FormSubmission[]
+  formSubmission FormSubmission[]
+  uploads        UploadedFile[]
 }
 
 model Form {
@@ -128,8 +129,20 @@ model FormLabel {
 }
 
 model ImageEvent {
-  id      String @id @default(uuid())
-  imageId String
-  event   String // dataset_response_received, chatgpt_response_received, text_response_received
-  payload String
+  id      String       @id @default(uuid())
+  event   String
+  payload String?
+  file    UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fileId  String
+
+  @@unique([fileId, event])
+}
+
+model UploadedFile {
+  id      String       @id @default(uuid())
+  owner   User         @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+  key     String
+  url     String
+  events  ImageEvent[]
 }

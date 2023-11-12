@@ -1,21 +1,14 @@
 import os
-import io
 
 import cv2
-import httpx
-import asyncio
-import pathlib
-
-from uuid import uuid4
 
 import numpy as np
+import requests
 from dotenv import load_dotenv
-from httpx import AsyncClient, Response
 from icecream import ic
-from fastapi.staticfiles import StaticFiles
 from roboflow import Roboflow
 from ultralytics import YOLO
-from fastapi import FastAPI, File, UploadFile, status
+from fastapi import FastAPI, status
 from PIL import Image
 from fastapi.responses import JSONResponse
 
@@ -23,16 +16,7 @@ app = FastAPI()
 subapi = FastAPI()
 app.mount("/llm", subapi)
 
-subapi.mount("/static", StaticFiles(directory="static"), name="static")
-
 load_dotenv()
-
-server_address = os.environ['APP_SERVER_ADDR']
-
-computer_vision_subscription_key = os.environ['COMPUTER_VISION_KEY']
-computer_vision_endpoint = os.environ['COMPUTER_VISION_ENDPOINT']
-computer_vision_text_recognition_url = f"{computer_vision_endpoint}vision/v3.1/read/analyze"
-computer_vision_headers = {'Ocp-Apim-Subscription-Key': computer_vision_subscription_key}
 
 
 class RoboflowModel:
@@ -46,16 +30,23 @@ class RoboflowModel:
 
     def predict(self, image_url, confidence: int = 40, overlap: int = 30):
         prediction = self.roboflow_model.predict(image_url, confidence=confidence, overlap=overlap)
-
-        extension = pathlib.Path(image_url).suffix
-        preview_url = f'static/{uuid4()}{extension}'
-        prediction.save(preview_url)
-
         results = prediction.json()
-        results['model_name'] = self.project_name
-        results['model_version'] = self.project_version
-        results['preview_url'] = f"{server_address}/{preview_url}"
-        return results
+        prediction_results = results['predictions']
+
+        output = []
+        for prediction_result in prediction_results:
+            del prediction_result['image_path']
+            del prediction_result['prediction_type']
+            x1 = prediction_result.get('x')
+            y1 = prediction_result.get('y')
+            x2 = x1 + prediction_result.get('width')
+            y2 = y1 + prediction_result.get('height')
+            prediction_result['coordinates'] = [x1, y1, x2, y2]
+            output.append(prediction_result)
+
+        sorted_output = sorted(output, key=lambda x: x["y"])
+
+        return sorted_output
 
 
 class LocalModel:
@@ -63,158 +54,102 @@ class LocalModel:
         self.local_model_name = local_model_name
         self.local_model = YOLO(f"models/{local_model_name}")
 
-    def predict(self, image_data: Image, confidence: int = 50):
+    def predict(self, image_path: Image, confidence: int = 40, overlap: int = 30):
+        image_data: Image = Image.open(image_path)
+
         # Perform object detection on the image data
         results = self.local_model.predict(image_data, conf=confidence / 100)
-        preview_image = convert_from_image_to_cv2(image_data)
-
         # Loop through the detected objects and print the possibilities
-        ic(len(results))
         detected_objects = []
 
         for result in results:
             for box in result.boxes:
                 for i, class_conf in enumerate(box.cls):
-                    class_id = result.names[class_conf.item()]
+                    class_id = int(class_conf.item())
+                    prediction_class = result.names[class_id]
                     coordinates = box.xyxy[i].tolist()
                     coordinates = [round(x) for x in coordinates]
 
-                    probability = round(box.conf[i].item(), 2)
-
-                    x_min, y_min, x_max, y_max = [int(coord) for coord in coordinates]
-                    cv2.rectangle(preview_image, (x_min, y_min), (x_max, y_max), (0, 0, 0), 1)
-                    # Add label with class and probability
-                    label = f"{class_id}: {probability}"
-                    cv2.putText(preview_image, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0),
-                                1)
+                    confidence = round(box.conf[i].item(), 2)
+                    x1, y1, x2, y2 = coordinates
+                    x = min(x1, x2)
+                    y = min(y1, y2)
+                    width = abs(x2 - x1)
+                    height = abs(y2 - y1)
 
                     detected_objects.append({
-                        "type": class_id,
-                        "probability": probability,
+                        "x": x,
+                        "y": y,
+                        "width": width,
+                        "height": height,
+                        "confidence": confidence,
+                        "class": prediction_class,
+                        "class_id": class_id,
                         "coordinates": coordinates
                     })
-                    # print("Detected objects")
-                    # print(detected_objects)
 
-        preview_url = f'static/{uuid4()}.jpg'
-        cv2.imwrite(preview_url, preview_image)
-        return {
-            "model_name": self.local_model_name,
-            "predictions": detected_objects,
-            "preview_url": f"{server_address}/{preview_url}"
-        }
+        sorted_output = sorted(detected_objects, key=lambda x: x["y"])
+        return sorted_output
 
 
-async def predict_text_azure(local_image_url: str, client: AsyncClient):
-    data = {'url': f"{server_address}/{local_image_url}"}
-    ic(data)
-    response: Response = await client.post(computer_vision_text_recognition_url, headers=computer_vision_headers,
-                                           json=data, timeout=10.0)
-    ic(response.headers)
-    operation_url = response.headers["Operation-Location"]
-
-    # Holds the URI used to retrieve the recognized text.
-    # operation_url = response.headers["Operation-Location"]
-
-    # The recognized text isn't immediately available, so poll to wait for completion.
-    analysis = {}
-    poll = True
-    while poll:
-        response_final = await client.get(operation_url, headers=computer_vision_headers, timeout=10.0)
-        analysis = response_final.json()
-
-        await asyncio.sleep(1)
-
-        if "analyzeResult" in analysis:
-            poll = False
-        if "status" in analysis and analysis['status'] == 'failed':
-            poll = False
-        ic("Still waiting for Azure")
-
-    predictions = []
-    if "analyzeResult" in analysis:
-        lines = analysis["analyzeResult"]["readResults"][0]["lines"]
-        preview_image = cv2.imread(local_image_url)
-
-        for line in lines:
-            coordinates = line["boundingBox"]
-            text = line["text"]
-            predictions.append({
-                "text": text,
-                "coordinates": coordinates
-            })
-
-            points = [(coordinates[i], coordinates[i + 1]) for i in range(0, len(coordinates), 2)]
-            points = np.array(points, np.int32).reshape((-1, 1, 2))
-            cv2.polylines(preview_image, [points], isClosed=True, color=(138, 54, 15), thickness=1)
-            x, y = points[-1][0][0], points[-1][0][1]
-            label = f"{text}"
-            cv2.putText(preview_image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (138, 54, 15), 1)
-
-        preview_url = f'static/{uuid4()}.jpg'
-        cv2.imwrite(preview_url, preview_image)
-
-        return {
-            "predictions": predictions,
-            "preview_url": f"{server_address}/{preview_url}"
-        }
+def download_image(image_url: str, file_path: str):
+    # Send an HTTP GET request to the image URL
+    response = requests.get(image_url)
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Open a binary file with the specified file name to write the image content
+        with open(file_path, 'wb') as file:
+            file.write(response.content)
+            print(f'Image downloaded as {file_path} successfully.')
+            return True
+    else:
+        print('Failed to download the image. Status code:', response.status_code)
+        return False
 
 
 roboflow_model_d1 = RoboflowModel(project_name="html-merged-comps", project_version=4)
 local_model_d1 = LocalModel("2023-11-08-22-40-best-e50.pt")
 local_model_d2 = LocalModel("2023-11-10-6-38-best-e50-initial-model.pt")
 
+models = {
+    "roboflow": roboflow_model_d1,
+    "2023-11-08-22-40-best-e50": local_model_d1,
+    "2023-11-10-6-38-best-e50-initial-model": local_model_d2
+}
 
-@subapi.post('/image-info')
+
+@subapi.post('/predict')
 async def get_image_info(
-        image: UploadFile,
-        local_confidence: int = 50,
-        roboflow_confidence: int = 40,
-        roboflow_overlap: int = 30
+        model_name: str,
+        image_url: str,
+        confidence: int = 40,
+        overlap: int = 30
 ):
-    async with httpx.AsyncClient() as client:
-        try:
-            return await process_get_image_info(
-                image,
-                client,
-                local_confidence=local_confidence,
-                roboflow_confidence=roboflow_confidence,
-                roboflow_overlap=roboflow_overlap
-            )
-        except Exception as e:
-            ic(e)
-            content = {"message": "Something went wrong!"}
-            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=content)
+    try:
+        if models.get(model_name) is None:
+            content = {"message": f"Model '{model_name}' does not exist."}
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
+        else:
+            print(f"Model '{model_name}' exists.")
 
+            model = models.get(model_name)
 
-async def process_get_image_info(
-        uploaded_file: UploadFile,
-        client: AsyncClient,
-        local_confidence: int,
-        roboflow_confidence: int,
-        roboflow_overlap: int
-):
-    image: Image = Image.open(io.BytesIO(await uploaded_file.read()))
+            image_name = os.path.basename(image_url)
+            image_path = f"{os.getcwd()}/images/{image_name}"
+            exists = os.path.exists(image_path)
 
-    extension = pathlib.Path(uploaded_file.filename).suffix
-    name = f'{uuid4()}{extension}'
-    image.save(f"static/{name}")
+            if not exists:
+                if not download_image(image_url, image_path):
+                    content = {"message": f"Image '{image_url}' cannot be downloaded."}
+                    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
 
-    image_url = f"static/{name}"
-
-    text_prediction = await predict_text_azure(image_url, client)
-    roboflow_prediction = roboflow_model_d1.predict(image_url, confidence=roboflow_confidence, overlap=roboflow_overlap)
-    local_prediction_d1 = local_model_d1.predict(image, confidence=local_confidence)
-    local_prediction_d2 = local_model_d2.predict(image, confidence=local_confidence)
-
-    response = {
-        "roboflow_prediction": roboflow_prediction,
-        "local_prediction_d1": local_prediction_d1,
-        "local_prediction_d2": local_prediction_d2,
-        "text_prediction": text_prediction,
-    }
-
-    return response
+            prediction = model.predict(image_path, confidence=confidence, overlap=overlap)
+            ic(prediction)
+            return JSONResponse(status_code=status.HTTP_200_OK, content=prediction)
+    except Exception as e:
+        print(e)
+        content = {"message": "Something went wrong!"}
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=content)
 
 
 def convert_from_cv2_to_image(img: np.ndarray) -> Image:

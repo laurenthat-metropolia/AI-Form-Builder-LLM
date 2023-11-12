@@ -8,7 +8,6 @@ import {
 import { config as configJWT, requiresAccessToken } from './strategies/passport-jwt.service.js';
 import { configSession } from './configurations/configSession.js';
 import { configParsers } from './configurations/configParsers.js';
-import { environment } from './configurations/environment.js';
 import {
     User,
     Form,
@@ -19,19 +18,37 @@ import {
     FormLabel,
     FormToggleSwitch,
 } from '@prisma/client';
-import { prisma } from './databases/userDatabase.js';
+import { prisma, UserDatabase } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
-import morgan from 'morgan';
+import { configUpload } from './configurations/configUpload.js';
+import { configAzureVision } from './configurations/configAzureVision.js';
+import { configSwagger } from './configurations/configSwagger.js';
+import { configAndroid } from './configurations/configAndroid.js';
+import { configLogging } from './configurations/configLogging.js';
+import { configOpenAi } from './configurations/configOpenAi.js';
+import { configObjectDetection } from './configurations/configObjectDetection.js';
+import { ImageEvents } from './enums.js';
+
+// Upload Functionality
+const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile } = configUpload();
+
+// Image to Text Functionality
+const { recognizeText } = configAzureVision();
+
+// ChatGPT API
+const { openAI, generateFormStructure } = configOpenAi();
+
+// Objects Detection Functionality
+const { recognizeObjects } = configObjectDetection();
+
+// Database Helpers
+const { upsertImageEvent } = UserDatabase;
+
 // Express App
 const app = express();
 
-app.use(
-    morgan(':method :status :url :response-time', {
-        skip: function (req, res) {
-            return res.statusCode < 400;
-        },
-    }),
-);
+// Loggers
+configLogging(app);
 
 // Session is required by passport.js
 configSession(app);
@@ -39,53 +56,110 @@ configSession(app);
 // Parsing capabilities for body of request.
 configParsers(app);
 
+// Swagger UI
+configSwagger(app);
+
 // https://www.passportjs.org/packages/passport-google-oauth2/
 configGoogleOAuth2();
 
 // https://www.passportjs.org/packages/passport-jwt/
 configJWT();
 
-// adding required routes for authentication for this strategy
+// Adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
+
+// Adding required routes to open Android app with link
+configAndroid(app);
 
 const router = express.Router();
 
 app.use('/api', router);
 
-/**
- * Required by Android
- * https://www.branch.io/resources/blog/how-to-open-an-android-app-from-the-browser/
- * https://developer.android.com/training/app-links/verify-android-applinks
- */
-
-app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
-    res.json([
-        {
-            relation: ['delegate_permission/common.handle_all_urls'],
-            target: {
-                namespace: 'android_app',
-                //need to change the package name
-                package_name: 'com.draw2form.ai',
-                sha256_cert_fingerprints: environment.APP_ANDROID_SHA256_CERT_FINGERPRINT.split(','),
-            },
-        },
-    ]);
-});
-
-app.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const response = await prisma.user.findFirst({
         where: {
             id: (req.user as User).id,
         },
         include: {
             forms: true,
+            uploads: {
+                include: {
+                    events: true,
+                },
+            },
+            formSubmission: true,
         },
     });
     res.status(200).send(response);
     return;
 });
 
-app.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+    const user: User = req.user as User;
+    const body: User = req.body as User;
+    const response = await prisma.user.update({
+        where: {
+            id: user.id,
+        },
+        data: {
+            ...user,
+            ...body,
+            id: user.id,
+            email: user.email,
+        },
+    });
+
+    res.status(200).send(response);
+    return;
+});
+router.post(
+    '/upload',
+    requiresAccessToken,
+    uploadImageMiddleware,
+    requireImageToBeUploaded,
+    async (req: Request, res: Response): Promise<void> => {
+        const user: User = req.user as User;
+        const image = transformUploadedFile(req.file);
+
+        // Upload Image
+        const uploadedFile = await prisma.uploadedFile.create({
+            data: {
+                url: image.url,
+                key: image.key,
+                ownerId: user.id,
+            },
+        });
+        // Send the response
+        res.status(200).send(uploadedFile);
+
+        const objectDetectionResponse = await recognizeObjects(uploadedFile.url);
+        await upsertImageEvent(
+            uploadedFile.id,
+            ImageEvents.OBJECT_DETECTION_COMPLETED,
+            objectDetectionResponse ? JSON.stringify(objectDetectionResponse) : null,
+        );
+
+        const textDetectionResponse = await recognizeText(image.url);
+        await upsertImageEvent(
+            uploadedFile.id,
+            ImageEvents.TEXT_DETECTION_COMPLETED,
+            textDetectionResponse ? JSON.stringify(textDetectionResponse) : null,
+        );
+        if (objectDetectionResponse && textDetectionResponse) {
+            const structureGenerationResponse = await generateFormStructure(
+                objectDetectionResponse,
+                textDetectionResponse,
+            );
+            await upsertImageEvent(
+                uploadedFile.id,
+                ImageEvents.STRUCTURE_GENERATION_COMPLETED,
+                structureGenerationResponse ? JSON.stringify(structureGenerationResponse) : null,
+            );
+        }
+    },
+);
+
+router.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
         const user = req.user as User;
         const body = req.body;
@@ -115,25 +189,7 @@ app.post('/form', requiresAccessToken, async (req: Request, res: Response): Prom
     }
 });
 
-app.put('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user as User;
-    const body: User = req.body as User;
-    const response = await prisma.user.update({
-        where: {
-            id: user.id,
-        },
-        data: {
-            ...user,
-            ...body,
-            id: user.id,
-            email: user.email,
-        },
-    });
-
-    res.status(200).send(response);
-    return;
-});
-app.get('/form/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/form/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
         const formId = req.params.formId;
         const form = await prisma.form.findUnique({
@@ -156,7 +212,8 @@ app.get('/form/:formId', requiresAccessToken, async (req: Request, res: Response
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+
+router.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {
         const user: User = req.user as User;
         const formId = req.params.id;
@@ -251,7 +308,7 @@ app.put('/form/:id', requiresAccessToken, async (req: Request, res: Response): P
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-app.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+router.delete('/form/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const user: User = req.user as User;
     const id: string = req.params.id as string;
     const response = await prisma.form.delete({
