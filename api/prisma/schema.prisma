@@ -68,6 +68,7 @@ model FormTextfieldResponse {
 
 model FormCheckbox {
   id        String                 @id @default(uuid())
+  label     String
   form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   formId    String
   order     Int
@@ -87,6 +88,7 @@ model FormCheckboxResponse {
 
 model FormToggleSwitch {
   id        String                     @id @default(uuid())
+  label     String
   form      Form                       @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   formId    String
   order     Int
@@ -114,6 +116,7 @@ model FormImage {
 
 model FormButton {
   id     String @id @default(uuid())
+  label  String
   form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   formId String
   order  Int
