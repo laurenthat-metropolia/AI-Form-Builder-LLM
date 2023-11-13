@@ -6,7 +6,7 @@ import { UserDatabase } from '../databases/userDatabase.js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { environment } from '../configurations/environment.js';
-import { Express } from 'express';
+import { Express, Request, Response } from 'express';
 
 const continueWithAppTemplate = readFileSync(
     resolve(process.cwd(), 'app', 'templates', 'continue-with-app.html'),
@@ -40,9 +40,9 @@ export function config() {
 }
 
 export function configRoutes(app: Express) {
-    app.get('/auth/google', passport.authenticate('google'));
+    app.get('/api/auth/google', passport.authenticate('google'));
 
-    app.get('/auth/google/callback', passport.authenticate('google'), async (req: any, res: any) => {
+    app.get('/api/auth/google/callback', passport.authenticate('google'), async (req: any, res: Response) => {
         const googleProfile = req.user as GoogleProfile;
         const user = await UserDatabase.syncUserByGoogleProfile(googleProfile);
         const token = generateAccessToken(user);

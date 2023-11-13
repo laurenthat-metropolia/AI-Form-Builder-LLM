@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider, Router } from 'react-router-dom';
 import { Upload } from './pages/Upload';
 import { UploadDetails } from './pages/UploadDetails';
+import { AndroidLinkLoginMissingApp } from './android/auth/login/AndroidLinkLoginMissingApp';
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 const router = createBrowserRouter([
     {
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
                 element: <UploadDetails />,
             },
         ],
+    },
+    {
+        path: '/android/auth/login',
+        element: <AndroidLinkLoginMissingApp />,
     },
 ]);
 
