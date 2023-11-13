@@ -13,9 +13,8 @@ export const Upload = () => {
             const formData = new FormData();
             formData.append('image', file);
             try {
-                const url = 'http://localhost:8000/api/preview/upload';
-                // const url = '/api/preview/upload'
-                // You can write the URL of your server or any other endpoint used for file upload
+                const env = process.env.NODE_ENV;
+                const url = env === 'development' ? `http://localhost:8000/api/preview/upload` : `/api/preview/upload`;
                 const result = await fetch(url, {
                     method: 'POST',
                     body: formData,

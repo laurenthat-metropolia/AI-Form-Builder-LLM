@@ -11,6 +11,7 @@ import { ApiImageEvents, ApiUploadedFile } from '../types';
 import { Spinner } from '../components/Spinner';
 
 export const UploadDetails = () => {
+    console.log();
     const { id } = useParams();
     const [uploadedFile, setUploadedFile] = useState<ApiUploadedFile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -21,9 +22,11 @@ export const UploadDetails = () => {
         const interval = setInterval(() => {
             (async () => {
                 try {
-                    const url = `http://localhost:8000/api/preview/upload/${id}`;
-                    // const url = `/api/preview/upload/${id}`
-                    // You can write the URL of your server or any other endpoint used for file upload
+                    const env = process.env.NODE_ENV;
+                    const url =
+                        env === 'development'
+                            ? `http://localhost:8000/api/preview/upload/${id}`
+                            : `/api/preview/upload/${id}`;
                     const result = await fetch(url);
 
                     const data: ApiUploadedFile = await result.json();
