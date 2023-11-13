@@ -96,7 +96,10 @@ jobs:
     needs: [ Version ]
     steps:
       - name: "Git: Pull Source Code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
       - name: "Docker: Set up QEMU"
         uses: docker/setup-qemu-action@v3
       - name: "Docker: Set up Buildx"
@@ -106,6 +109,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - run: npm install --prefix web
+      - run: npm run build:production --prefix web
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
