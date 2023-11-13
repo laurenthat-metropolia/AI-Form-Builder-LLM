@@ -138,7 +138,8 @@ async def get_image_info(
             image_path = f"{os.getcwd()}/images/{image_name}"
 
             print(f"Downloading Image ${image_url}.")
-            download_url = image_url.replace("https://draw2form.ericaskari.com", "http://localhost:80")
+#             download_url = image_url.replace("https://draw2form.ericaskari.com", "http://localhost:80")
+            download_url = image_url
             if not download_image(download_url, image_path):
                 content = {"message": f"Image '{image_url}' cannot be downloaded."}
                 return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)

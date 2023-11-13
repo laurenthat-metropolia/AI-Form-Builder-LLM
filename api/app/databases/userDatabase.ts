@@ -64,6 +64,17 @@ async function syncUserByGoogleProfile(googleProfile: GoogleProfile): Promise<Us
     return updatedUser;
 }
 
+export const fetchPopulatedUploadedFile = async (id: string) => {
+    return prisma.uploadedFile.findFirst({
+        where: {
+            id: id,
+        },
+        include: {
+            events: true,
+        },
+    });
+};
+
 export const UserDatabase = {
     syncUserByGoogleProfile: syncUserByGoogleProfile,
     upsertImageEvent: upsertImageEvent,

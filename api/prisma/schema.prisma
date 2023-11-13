@@ -143,8 +143,8 @@ model ImageEvent {
 
 model UploadedFile {
   id      String       @id @default(uuid())
-  owner   User         @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  ownerId String
+  owner   User?        @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String?
   key     String
   url     String
   events  ImageEvent[]
