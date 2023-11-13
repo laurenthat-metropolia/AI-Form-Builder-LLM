@@ -137,14 +137,14 @@ spec:
               service:
                 name: service-draw2form
                 port:
-                  number: 8000
-          - path: /web
+                  number: 8443
+          - path: /api
             pathType: Prefix
             backend:
               service:
                 name: service-draw2form
                 port:
-                  number: 8443
+                  number: 8000
           - path: /llm
             pathType: Prefix
             backend:

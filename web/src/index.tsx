@@ -7,27 +7,22 @@ import { createBrowserRouter, RouterProvider, Router } from 'react-router-dom';
 import { Upload } from './pages/Upload';
 import { UploadDetails } from './pages/UploadDetails';
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-const router = createBrowserRouter(
-    [
-        {
-            path: '/',
-            element: <App />,
-            children: [
-                {
-                    path: '/upload',
-                    element: <Upload />,
-                },
-                {
-                    path: '/upload/:id',
-                    element: <UploadDetails />,
-                },
-            ],
-        },
-    ],
+const router = createBrowserRouter([
     {
-        basename: '/web',
+        path: '/',
+        element: <App />,
+        children: [
+            {
+                path: '/upload',
+                element: <Upload />,
+            },
+            {
+                path: '/upload/:id',
+                element: <UploadDetails />,
+            },
+        ],
     },
-);
+]);
 
 root.render(
     <React.StrictMode>

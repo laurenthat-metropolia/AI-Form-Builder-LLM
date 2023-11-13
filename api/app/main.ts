@@ -22,7 +22,6 @@ import {
 import { fetchPopulatedUploadedFile, prisma, UserDatabase } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
 import { configSwagger } from './configurations/configSwagger.js';
-import { configAndroid } from './configurations/configAndroid.js';
 import { configLogging } from './configurations/configLogging.js';
 import { previewController } from './controllers/preview.controller.js';
 import {
@@ -61,9 +60,6 @@ configJWT();
 
 // Adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
-
-// Adding required routes to open Android app with link
-configAndroid(app);
 
 const router = express.Router();
 
