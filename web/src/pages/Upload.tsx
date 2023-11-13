@@ -28,7 +28,7 @@ export const Upload = () => {
                 console.error(error);
             }
         })();
-    }, [file]);
+    }, [file, navigate]);
     return (
         <div>
             <div className="flex items-center justify-center max-w-md w-full mx-auto mt-10">
