@@ -1,16 +1,7 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
-import { generateAccessToken } from './passport-jwt.service.js';
-import { GoogleProfile, GoogleProfileFromApi, normalizeGoogleProfile } from '../interfaces/googleProfile.js';
-import { UserDatabase } from '../databases/userDatabase.js';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { GoogleProfileFromApi, normalizeGoogleProfile } from '../interfaces/googleProfile.js';
 import { environment } from '../configurations/environment.js';
-import { Express, Request, Response } from 'express';
-
-const continueWithAppTemplate = readFileSync(
-    resolve(process.cwd(), 'app', 'templates', 'continue-with-app.html'),
-).toString();
 
 export function config() {
     passport.use(
@@ -36,27 +27,5 @@ export function config() {
 
     passport.deserializeUser(function (user: any, done) {
         done(null, user);
-    });
-}
-
-export function configRoutes(app: Express) {
-    app.get('/api/auth/google', passport.authenticate('google'));
-
-    app.get('/api/auth/google/callback', passport.authenticate('google'), async (req: any, res: Response) => {
-        const googleProfile = req.user as GoogleProfile;
-        const user = await UserDatabase.syncUserByGoogleProfile(googleProfile);
-        const token = generateAccessToken(user);
-        const params = new URLSearchParams();
-        params.set('token', JSON.stringify(token));
-        params.set('user', JSON.stringify(user));
-        const template = continueWithAppTemplate
-            .replace('[launchLink]', `/android/auth/login?${params.toString()}`)
-            .replace('[accessToken]', token.accessToken);
-
-        res.send(template);
-    });
-
-    app.get('/android/auth/login', (req: any, res: any) => {
-        res.send({ success: 'nothing here on web.' });
     });
 }

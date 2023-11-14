@@ -1,14 +1,12 @@
 import express, { Application, Request, RequestHandler, Response } from 'express';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import {
     requireImageToBeUploaded,
     transformUploadedFile,
     uploadImageMiddleware,
 } from '../configurations/configUpload.js';
 import { fetchPopulatedUploadedFile, prisma, UserDatabase } from '../databases/userDatabase.js';
-import { processUploadedFile } from '../background.service.js';
 import { parseUploadedFile, safeParse } from '../utils.js';
+import { processUploadedFile } from '../services/background.service.js';
 
 export const previewController = () => {
     const router = express.Router();
