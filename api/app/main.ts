@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 
 import {
     config as configGoogleOAuth2,
@@ -18,34 +19,26 @@ import {
     FormLabel,
     FormToggleSwitch,
 } from '@prisma/client';
-import { prisma, UserDatabase } from './databases/userDatabase.js';
+import { fetchPopulatedUploadedFile, prisma, UserDatabase } from './databases/userDatabase.js';
 import { ErrorRequestHandler } from 'express-serve-static-core';
-import { configUpload } from './configurations/configUpload.js';
-import { configAzureVision } from './configurations/configAzureVision.js';
 import { configSwagger } from './configurations/configSwagger.js';
-import { configAndroid } from './configurations/configAndroid.js';
 import { configLogging } from './configurations/configLogging.js';
-import { configOpenAi } from './configurations/configOpenAi.js';
-import { configObjectDetection } from './configurations/configObjectDetection.js';
-import { ImageEvents } from './enums.js';
-
-// Upload Functionality
-const { uploadImageMiddleware, requireImageToBeUploaded, transformUploadedFile } = configUpload();
-
-// Image to Text Functionality
-const { recognizeText } = configAzureVision();
-
-// ChatGPT API
-const { openAI, generateFormStructure } = configOpenAi();
-
-// Objects Detection Functionality
-const { recognizeObjects } = configObjectDetection();
+import { previewController } from './controllers/preview.controller.js';
+import {
+    requireImageToBeUploaded,
+    transformUploadedFile,
+    uploadImageMiddleware,
+} from './configurations/configUpload.js';
+import { processUploadedFile } from './background.service.js';
+import { parseUploadedFile } from './utils.js';
 
 // Database Helpers
 const { upsertImageEvent } = UserDatabase;
 
 // Express App
 const app = express();
+
+app.use(cors()); // include before other routes
 
 // Loggers
 configLogging(app);
@@ -68,12 +61,11 @@ configJWT();
 // Adding required routes for authentication for this strategy
 configGoogleOAuth2Routes(app);
 
-// Adding required routes to open Android app with link
-configAndroid(app);
-
 const router = express.Router();
 
 app.use('/api', router);
+
+app.use('/api/preview', previewController());
 
 router.get('/profile', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     const response = await prisma.user.findFirst({
@@ -132,32 +124,24 @@ router.post(
         // Send the response
         res.status(200).send(uploadedFile);
 
-        const objectDetectionResponse = await recognizeObjects(uploadedFile.url);
-        await upsertImageEvent(
-            uploadedFile.id,
-            ImageEvents.OBJECT_DETECTION_COMPLETED,
-            objectDetectionResponse ? JSON.stringify(objectDetectionResponse) : null,
-        );
-
-        const textDetectionResponse = await recognizeText(image.url);
-        await upsertImageEvent(
-            uploadedFile.id,
-            ImageEvents.TEXT_DETECTION_COMPLETED,
-            textDetectionResponse ? JSON.stringify(textDetectionResponse) : null,
-        );
-        if (objectDetectionResponse && textDetectionResponse) {
-            const structureGenerationResponse = await generateFormStructure(
-                objectDetectionResponse,
-                textDetectionResponse,
-            );
-            await upsertImageEvent(
-                uploadedFile.id,
-                ImageEvents.STRUCTURE_GENERATION_COMPLETED,
-                structureGenerationResponse ? JSON.stringify(structureGenerationResponse) : null,
-            );
-        }
+        processUploadedFile(uploadedFile);
     },
 );
+
+router.get('/upload/:id', requiresAccessToken, async (req: Request, res: Response) => {
+    const user = req.user as User;
+
+    const uploadedFileId = req.params.id;
+    const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
+    if (!uploadedFile || uploadedFile.ownerId !== user.id) {
+        res.status(401).send({
+            message: 'Not Authorized.',
+        });
+        return;
+    }
+    const parsedUploadedFile = parseUploadedFile(uploadedFile);
+    res.status(200).send(parsedUploadedFile);
+});
 
 router.post('/form', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
     try {

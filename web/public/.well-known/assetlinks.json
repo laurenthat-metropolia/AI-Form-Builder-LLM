@@ -1,0 +1,18 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.draw2form.ai",
+      "sha256_cert_fingerprints": [
+        "0B:27:F4:A8:A5:D4:DA:C3:CB:81:88:AB:69:8C:61:6F:9D:3E:14:7A:4C:03:7A:4A:9E:8F:FD:80:81:F4:87:F4",
+        "94:27:8C:68:18:E4:34:08:10:BF:46:B3:C5:84:3D:AF:F3:2A:D0:1F:3B:6A:8A:86:F3:BF:62:68:28:A6:5D:0F",
+        "29:5F:BD:14:A7:10:A6:7B:5D:1B:03:89:F7:5F:64:C0:7F:98:B6:F9:13:AC:26:73:2D:4B:06:C7:04:57:60:1F",
+        "01:FE:0E:89:B6:F2:0D:80:FB:CB:10:E4:D0:31:6A:A6:F8:86:6C:14:08:51:A7:0F:B0:27:C1:D0:4B:49:25:33",
+        "E3:32:6E:7F:56:18:C0:8A:18:B0:BB:C8:12:E8:F9:4B:68:67:F7:B7:1F:5A:44:9E:90:2F:39:D5:62:A1:3A:EF"
+      ]
+    }
+  }
+]

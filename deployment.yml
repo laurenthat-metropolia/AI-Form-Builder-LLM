@@ -63,6 +63,8 @@ spec:
           env:
             - name: APP_ROBOFLOW_API_KEY
               value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ROBOFLOW_API_KEY
+            - name: APP_ENV
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ENV
           resizePolicy:
             - resourceName: cpu
               restartPolicy: RestartContainer
@@ -75,6 +77,9 @@ spec:
             limits:
               memory: "2Gi"
               cpu: "2000m"
+        - image: ericaskari/draw2form-web:latest
+          name: draw2form-web
+          imagePullPolicy: Always
         - image: ericaskari/hss-proxy:latest
           name: draw2form-files-api
           imagePullPolicy: Always
@@ -103,6 +108,10 @@ spec:
       port: 80
       targetPort: 80
       protocol: TCP
+    - name: web-port
+      port: 8443
+      targetPort: 8443
+      protocol: TCP
   selector:
     app.kubernetes.io/name: deployment-draw2form
   sessionAffinity: None
@@ -128,8 +137,14 @@ spec:
               service:
                 name: service-draw2form
                 port:
+                  number: 8443
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: service-draw2form
+                port:
                   number: 8000
-
           - path: /llm
             pathType: Prefix
             backend:

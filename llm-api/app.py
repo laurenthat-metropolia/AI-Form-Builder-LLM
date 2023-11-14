@@ -17,6 +17,11 @@ subapi = FastAPI()
 app.mount("/llm", subapi)
 
 load_dotenv()
+env = os.getenv("APP_ENV", "development")
+is_development = env == "development"
+is_production = not is_development
+
+ic(env)
 
 
 class RoboflowModel:
@@ -138,7 +143,11 @@ async def get_image_info(
             image_path = f"{os.getcwd()}/images/{image_name}"
 
             print(f"Downloading Image ${image_url}.")
-            download_url = image_url.replace("https://draw2form.ericaskari.com", "http://localhost:80")
+            if is_development:
+                download_url = image_url
+            else:
+                download_url = image_url.replace("https://draw2form.ericaskari.com", "http://localhost:80")
+
             if not download_image(download_url, image_path):
                 content = {"message": f"Image '{image_url}' cannot be downloaded."}
                 return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
