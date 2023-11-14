@@ -26,102 +26,104 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
         uploadedFile.events?.map((event) => {
             const parsed = safeParse(event.payload);
             const secondParse = typeof parsed === 'string' ? safeParse(parsed) : parsed;
-            const parsedPayload: any[] = secondParse ?? parsed ?? event.payload;
+            const parsedPayload: any[] = (secondParse ?? parsed ?? event.payload ?? []).filter((x: any) => x);
             switch (event.event) {
                 case ImageEvents.TEXT_DETECTION_COMPLETED:
                     return {
                         ...event,
-                        parsedPayload: secondParse ?? parsed ?? event.payload,
+                        parsedPayload,
                     };
                 case ImageEvents.OBJECT_DETECTION_COMPLETED:
                     return {
                         ...event,
-                        parsedPayload: secondParse ?? parsed ?? event.payload,
+                        parsedPayload,
                     };
                 case ImageEvents.STRUCTURE_GENERATION_COMPLETED:
-                    const safePayload = parsedPayload.map((payload: any) => {
-                        switch (payload.type) {
-                            case 'FormLabel':
-                                return [
-                                    'FormLabel',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        order: payload.order,
-                                        value: payload.value ?? payload.label ?? 'Text',
-                                    } satisfies FormLabel,
-                                    payload,
-                                ];
-                            case 'FormButton':
-                                return [
-                                    'FormButton',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        type: 'submit',
-                                        order: payload.order,
-                                        label: payload.label,
-                                    } satisfies FormButton,
-                                    payload,
-                                ];
+                    const safePayload = parsedPayload
+                        .map((payload: any) => {
+                            switch (payload.type) {
+                                case 'FormLabel':
+                                    return [
+                                        'FormLabel',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            order: payload.order,
+                                            value: payload.value ?? payload.label ?? 'Text',
+                                        } satisfies FormLabel,
+                                        payload,
+                                    ];
+                                case 'FormButton':
+                                    return [
+                                        'FormButton',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            type: 'submit',
+                                            order: payload.order,
+                                            label: payload.label ?? 'Label',
+                                        } satisfies FormButton,
+                                        payload,
+                                    ];
 
-                            case 'FormCheckbox':
-                                return [
-                                    'FormCheckbox',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        order: payload.order,
-                                        label: payload.label,
-                                    } satisfies FormCheckbox,
-                                    payload,
-                                ];
-                            case 'FormToggleSwitch':
-                                return [
-                                    'FormToggleSwitch',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        order: payload.order,
-                                        label: payload.label,
-                                    } satisfies FormToggleSwitch,
-                                    payload,
-                                ];
-                            case 'FormImage':
-                                return [
-                                    'FormImage',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        order: payload.order,
-                                        imageId: '',
-                                    } satisfies FormImage,
-                                    payload,
-                                ];
-                            case 'FormInput': // TODO: Configure chatgpt to not generate this.
-                                return [
-                                    'FormTextfield',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        order: payload.order,
-                                        label: payload.label,
-                                    } satisfies FormTextfield,
-                                    payload,
-                                ];
-                            case 'FormTextfield':
-                                return [
-                                    'FormTextfield',
-                                    {
-                                        id: '',
-                                        formId: '',
-                                        order: payload.order,
-                                        label: payload.label,
-                                    } satisfies FormTextfield,
-                                    payload,
-                                ];
-                        }
-                    });
+                                case 'FormCheckbox':
+                                    return [
+                                        'FormCheckbox',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            order: payload.order,
+                                            label: payload.label ?? 'Label',
+                                        } satisfies FormCheckbox,
+                                        payload,
+                                    ];
+                                case 'FormToggleSwitch':
+                                    return [
+                                        'FormToggleSwitch',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            order: payload.order,
+                                            label: payload.label ?? 'Label',
+                                        } satisfies FormToggleSwitch,
+                                        payload,
+                                    ];
+                                case 'FormImage':
+                                    return [
+                                        'FormImage',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            order: payload.order,
+                                            imageId: '',
+                                        } satisfies FormImage,
+                                        payload,
+                                    ];
+                                case 'FormInput': // TODO: Configure chatgpt to not generate this.
+                                    return [
+                                        'FormTextfield',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            order: payload.order,
+                                            label: payload.label ?? 'Label',
+                                        } satisfies FormTextfield,
+                                        payload,
+                                    ];
+                                case 'FormTextfield':
+                                    return [
+                                        'FormTextfield',
+                                        {
+                                            id: '',
+                                            formId: '',
+                                            order: payload.order ?? 'Label',
+                                            label: payload.label,
+                                        } satisfies FormTextfield,
+                                        payload,
+                                    ];
+                            }
+                        })
+                        .filter((x) => x);
 
                     return {
                         ...event,
@@ -130,7 +132,7 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
             }
             return {
                 ...event,
-                parsedPayload: secondParse ?? parsed ?? event.payload,
+                parsedPayload,
             };
         }) ?? [];
     uploadedFile.events = events;

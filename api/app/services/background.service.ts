@@ -1,9 +1,9 @@
 import { UploadedFile } from '@prisma/client';
-import { recognizeObjects } from './configurations/configObjectDetection.js';
-import { ImageEvents } from './enums.js';
-import { recognizeText } from './configurations/configAzureVision.js';
-import { generateFormStructure } from './configurations/configOpenAi.js';
-import { UserDatabase } from './databases/userDatabase.js';
+import { UserDatabase } from '../databases/userDatabase.js';
+import { recognizeObjects } from '../configurations/configObjectDetection.js';
+import { ImageEvents } from '../enums.js';
+import { recognizeText } from '../configurations/configAzureVision.js';
+import { generateFormStructure } from '../configurations/configOpenAi.js';
 
 export const processUploadedFile = async (uploadedFile: UploadedFile) => {
     const objectDetectionResponse = await recognizeObjects(uploadedFile.url);
