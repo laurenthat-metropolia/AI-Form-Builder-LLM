@@ -1,3 +1,9 @@
+declare global {
+    interface Window {
+        Annotorious: any;
+    }
+}
+
 export interface ApiUser {
     id: string;
     email: string;
@@ -40,6 +46,8 @@ export interface ApiFormTextfield {
     id: string;
     form: ApiForm;
     formId: string;
+    order: number;
+    label: string;
     responses?: ApiFormTextfieldResponse[] | null;
 }
 
@@ -113,14 +121,6 @@ export interface ApiFormLabel {
     value: string;
 }
 
-export interface ApiImageEvent {
-    id: string;
-    event: ApiImageEvents;
-    payload?: string | null;
-    file: ApiUploadedFile;
-    fileId: string;
-}
-
 export interface ApiUploadedFile {
     id: string;
     owner?: ApiUser | null;
@@ -128,6 +128,72 @@ export interface ApiUploadedFile {
     key: string;
     url: string;
     events?: ApiImageEvent[] | null;
+}
+
+export interface ApiUploadedFileWithParsedPayload {
+    id: string;
+    owner?: ApiUser | null;
+    ownerId?: string | null;
+    key: string;
+    url: string;
+    events?: (ApiImageObjectDetectionEvent | ApiImageTextDetectionEvent | ApiFormGenerationEvent)[] | null;
+}
+
+export interface ApiImageEvent {
+    id: string;
+    event: ApiImageEvents;
+    payload?: string | null;
+    file?: ApiUploadedFile;
+    fileId: string;
+}
+
+export interface ApiImageObjectDetectionEvent {
+    id: string;
+    event: 'OBJECT_DETECTION_COMPLETED';
+    payload?: string | null;
+    file?: ApiUploadedFile;
+    fileId: string;
+    parsedPayload:
+        | null
+        | {
+              x: number;
+              y: number;
+              width: number;
+              height: number;
+              confidence: number;
+              class: string;
+              class_id: number;
+              coordinates: [number, number, number, number];
+          }[];
+}
+
+export interface ApiImageTextDetectionEvent {
+    id: string;
+    event: 'TEXT_DETECTION_COMPLETED';
+    payload?: string | null;
+    file?: ApiUploadedFile;
+    fileId: string;
+    parsedPayload:
+        | null
+        | {
+              text: string;
+              boundingBox: number[];
+          }[];
+}
+export interface ApiFormGenerationEvent {
+    id: string;
+    event: 'STRUCTURE_GENERATION_COMPLETED';
+    payload?: string | null;
+    file?: ApiUploadedFile;
+    fileId: string;
+    parsedPayload: (
+        | ['FormTextfield', ApiFormTextfield, any]
+        | ['FormCheckbox', ApiFormCheckbox, any]
+        | ['FormButton', ApiFormButton, any]
+        | ['FormImage', ApiFormImage, any]
+        | ['FormLabel', ApiFormLabel, any]
+        | ['FormToggleSwitch', ApiFormToggleSwitch, any]
+    )[];
 }
 export enum ApiImageEvents {
     /**
