@@ -199,7 +199,7 @@ export const UploadDetails = () => {
                                         className="space-y-8 md:space-y-0 md:space-x-8 rtl:space-x-reverse md:flex md:items-center">
                                         <div className="flex items-center justify-center w-full h-48 bg-gray-300 rounded sm:w-96 dark:bg-gray-700">
                                             <svg
-                                                className="w-10 h-10 text-gray-200 dark:text-gray-600"
+                                                className="w-10 h-10"
                                                 aria-hidden="true"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 fill="currentColor"
@@ -218,7 +218,7 @@ export const UploadDetails = () => {
                                     <div>
                                         <button
                                             type="button"
-                                            className=" bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                            className=" text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 focus:outline-none">
                                             {formField[1].label}
                                         </button>
                                     </div>
@@ -230,7 +230,7 @@ export const UploadDetails = () => {
                                             type="text"
                                             id="first_name"
                                             placeholder={formField[1].label}
-                                            className=" border border-gray-300  text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400  dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            className=" border border-gray-300  text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                                             required
                                         />
                                     </div>
