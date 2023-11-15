@@ -9,13 +9,13 @@ generator client {
 }
 
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
-  name           String
-  picture        String?
-  forms          Form[]
-  formSubmission FormSubmission[]
-  uploads        UploadedFile[]
+  id              String           @id @default(uuid())
+  email           String           @unique
+  name            String
+  picture         String?
+  forms           Form[]
+  formSubmissions FormSubmission[]
+  uploads         UploadedFile[]
 }
 
 model Form {
@@ -24,7 +24,7 @@ model Form {
   available       Boolean
   owner           User               @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId         String
-  textfields      FormTextfield[]
+  textFields      FormTextField[]
   checkboxes      FormCheckbox[]
   toggleSwitches  FormToggleSwitch[]
   images          FormImage[]
@@ -34,38 +34,38 @@ model Form {
 }
 
 model FormSubmission {
-  id                   String                     @id @default(uuid())
-  name                 String
-  public               Boolean
-  owner                User                       @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  ownerId              String
-  form                 Form                       @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  formId               String
-  textfieldResponses   FormTextfieldResponse[]
-  checkboxResponse     FormCheckboxResponse[]
-  toggleSwitchResponse FormToggleSwitchResponse[]
+  id                    String                     @id @default(uuid())
+  name                  String
+  public                Boolean
+  owner                 User                       @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId               String
+  form                  Form                       @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId                String
+  textFieldResponses    FormTextFieldResponse[]
+  checkboxResponses     FormCheckboxResponse[]
+  toggleSwitchResponses FormToggleSwitchResponse[]
 
   @@unique([formId, ownerId])
 }
 
-model FormTextfield {
+model FormTextField {
   id        String                  @id @default(uuid())
   form      Form                    @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   formId    String
   label     String
   order     Int
-  responses FormTextfieldResponse[]
+  responses FormTextFieldResponse[]
 }
 
-model FormTextfieldResponse {
+model FormTextFieldResponse {
   id           String         @id @default(uuid())
   submission   FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   submissionId String
-  textfield    FormTextfield  @relation(fields: [textfieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  textfieldId  String
+  textField    FormTextField  @relation(fields: [textFieldId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  textFieldId  String
   value        String
 
-  @@unique([textfieldId, submissionId])
+  @@unique([textFieldId, submissionId])
 }
 
 model FormCheckbox {
@@ -130,7 +130,7 @@ model FormLabel {
   form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   formId String
   order  Int
-  value  String
+  label  String
 }
 
 model ImageEvent {

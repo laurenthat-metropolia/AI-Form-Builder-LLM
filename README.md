@@ -10,3 +10,7 @@ cd llm-api && uvicorn app:app --port 8001 --reload
 
 ### Start Api
 cd api && npm run watch:op
+
+
+### Start Web
+cd web && npm run start

@@ -6,7 +6,7 @@ import {
     FormCheckbox,
     FormImage,
     FormLabel,
-    FormTextfield,
+    FormTextField,
     FormToggleSwitch,
     User,
 } from '@prisma/client';
@@ -28,7 +28,7 @@ export const formController = () => {
                 },
                 include: {
                     checkboxes: true,
-                    textfields: true,
+                    textFields: true,
                     toggleSwitches: true,
                     buttons: true,
                     labels: true,
@@ -54,7 +54,7 @@ export const formController = () => {
                 },
                 include: {
                     checkboxes: true,
-                    textfields: true,
+                    textFields: true,
                     toggleSwitches: true,
                     images: true,
                     buttons: true,
@@ -76,7 +76,7 @@ export const formController = () => {
             const body = req.body as {
                 form: Form;
                 checkboxes: FormCheckbox[];
-                formTextFields: FormTextfield[];
+                formTextFields: FormTextField[];
                 formToggleSwitches: FormToggleSwitch[];
                 formImages: FormImage[];
                 formButtons: FormButton[];
@@ -90,7 +90,7 @@ export const formController = () => {
                 },
                 include: {
                     checkboxes: true,
-                    textfields: true,
+                    textFields: true,
                     buttons: true,
                     images: true,
                     labels: true,
@@ -121,11 +121,11 @@ export const formController = () => {
                             }),
                         },
                     },
-                    textfields: {
+                    textFields: {
                         updateMany: {
-                            where: { id: { in: body.formTextFields.map((textfield) => textfield.id) } },
-                            data: body.formTextFields.map((textfield) => {
-                                const existingTextfield = existingForm.textfields.find((tf) => {
+                            where: { id: { in: body.formTextFields.map((textField) => textField.id) } },
+                            data: body.formTextFields.map((textField) => {
+                                const existingTextField = existingForm.textFields.find((tf) => {
                                     tf.formId;
                                 });
                             }),
