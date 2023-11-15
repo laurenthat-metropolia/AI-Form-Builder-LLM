@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-export type DetectionResponse = {
+export type ObjectDetectionResponse = {
     x: number;
     y: number;
     width: number;
@@ -16,7 +16,7 @@ const api = 'http://127.0.0.1:8001/llm/predict';
 export const recognizeObjects = async (
     imageUrl: string,
     model: string = 'roboflow',
-): Promise<DetectionResponse | null> => {
+): Promise<ObjectDetectionResponse | null> => {
     try {
         const url = new URL(api);
         url.searchParams.set('image_url', imageUrl);
@@ -35,7 +35,7 @@ export const recognizeObjects = async (
             return null;
         }
 
-        return (await response.json()) as DetectionResponse;
+        return (await response.json()) as ObjectDetectionResponse;
     } catch (e) {
         console.error(e);
         return null;

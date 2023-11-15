@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { environment } from './environment.js';
-import { DetectionResponse } from './configObjectDetection.js';
+import { ObjectDetectionResponse } from './configObjectDetection.js';
 import { TextDetectionResponse } from './configAzureVision.js';
 import { safeParse } from '../utils.js';
 
@@ -9,7 +9,7 @@ export const openAI = new OpenAI({
     apiKey: environment.APP_OPENAI_API_KEY,
 });
 
-export async function generateFormStructure(objects: DetectionResponse, texts: TextDetectionResponse) {
+export async function generateFormStructure(objects: ObjectDetectionResponse, texts: TextDetectionResponse) {
     const tables: string = `
 model FormTextField {
   id        String @id @default(uuid())
@@ -61,8 +61,16 @@ model FormLabel {
                         `Each object should have the following keys:`,
                         `One key should be "type" and it is the name of database table.`,
                         `One key should be "class" and it is the name of the mapped prediction class.`,
-                        `One key should be "order" and it should be the order of the component in the predictions based on coordinates.`,
+                        `One key should be "order" and it should be the order of the component in the predictions based on coordinates and y axis first.`,
                         `One key should be "label" and it should be added only if there is a text prediction in the same line or inside the component..`,
+                        `One key should be "coordinates" and it should be the coordinate of things you think is related to the form component.`,
+                        `For drawing prediction class type "image" use "FormImage"`,
+                        `For drawing prediction class type "input" use "FormTextField"`,
+                        `For drawing prediction class type "checkbox" use "FormCheckbox"`,
+                        `For drawing prediction class type "toggle" use "FormToggleSwitch"`,
+                        `For drawing prediction class type "button" use "FormButton"`,
+                        `And if there is a label in the same row as input then there is high chance that this is the input label.`,
+                        `If there is a text with label of "V", there is a probability that it is a checked checkbox and text prediction just counted it as text "V"`,
                     ].join('\n'),
                 },
                 {

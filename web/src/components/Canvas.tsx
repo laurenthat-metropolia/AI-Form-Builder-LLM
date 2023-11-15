@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 export type CanvasAnnotation =
     | {
           type: 'polygon';
+          color: string;
           payload: {
               label: string;
               points: [number, number][];
@@ -10,6 +11,7 @@ export type CanvasAnnotation =
       }
     | {
           type: 'rect';
+          color: string;
           payload: {
               label: string;
               points: [number, number, number, number];
@@ -53,7 +55,7 @@ export const Canvas = ({ url, annotations }: { url: string; annotations?: Canvas
                 });
 
                 // Set the polygon's stroke color and line width
-                context.strokeStyle = 'blue';
+                context.strokeStyle = annotationsItem.color;
                 context.lineWidth = 2;
 
                 // Start the path
@@ -84,7 +86,7 @@ export const Canvas = ({ url, annotations }: { url: string; annotations?: Canvas
                 const y = normalizedPoints[1];
                 const width = normalizedPoints[2] - x;
                 const height = normalizedPoints[3] - y;
-                context.strokeStyle = 'red';
+                context.strokeStyle = annotationsItem.color;
                 context.lineWidth = 2;
                 context.strokeRect(x, y, width, height);
 

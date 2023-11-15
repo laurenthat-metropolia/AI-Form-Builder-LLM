@@ -118,7 +118,7 @@ export interface ApiFormLabel {
     form: ApiForm;
     formId: string;
     order: number;
-    value: string;
+    label: string;
 }
 
 export interface ApiUploadedFile {
@@ -177,7 +177,7 @@ export interface ApiImageTextDetectionEvent {
         | null
         | {
               text: string;
-              boundingBox: number[];
+              boundingBox: [number, number, number, number];
           }[];
 }
 export interface ApiFormGenerationEvent {

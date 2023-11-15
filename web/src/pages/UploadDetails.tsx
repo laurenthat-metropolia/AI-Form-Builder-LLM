@@ -52,15 +52,6 @@ export const UploadDetails = () => {
         }
         const output: CanvasAnnotation[] = [];
 
-        const normalize = (input: number[]): [number, number][] => {
-            const output: [number, number][] = [];
-
-            for (let i = 0; i < input.length; i += 2) {
-                output.push(input.slice(i, i + 2) as [number, number]);
-            }
-            return output;
-        };
-
         {
             const ev = uploadedFile.events?.find((event) => event.event === 'TEXT_DETECTION_COMPLETED') as
                 | ApiImageTextDetectionEvent
@@ -68,12 +59,12 @@ export const UploadDetails = () => {
 
             const polygons: CanvasAnnotation[] =
                 ev?.parsedPayload?.map(({ text, boundingBox }): CanvasAnnotation => {
-                    const normalized = normalize(boundingBox ?? []);
                     return {
-                        type: 'polygon',
+                        type: 'rect',
+                        color: 'red',
                         payload: {
                             label: text,
-                            points: normalized,
+                            points: boundingBox,
                         },
                     };
                 }) ?? [];
@@ -90,14 +81,10 @@ export const UploadDetails = () => {
                     const className = payload['class'];
                     return {
                         type: 'rect',
+                        color: 'blue',
                         payload: {
                             label: className,
-                            points: [
-                                payload.x - payload.width / 2,
-                                payload.y - payload.height / 2,
-                                payload.coordinates[2] - payload.width / 2,
-                                payload.coordinates[3] - payload.height / 2,
-                            ],
+                            points: payload.coordinates,
                         },
                     };
                 }) ?? [];
@@ -109,6 +96,26 @@ export const UploadDetails = () => {
                 | ApiFormGenerationEvent
                 | undefined;
             console.log(ev?.parsedPayload);
+            const polygons: CanvasAnnotation[] =
+                ev?.parsedPayload
+                    ?.map(([type, field, response]): CanvasAnnotation | null => {
+                        const className = response['class'];
+                        if (!response.coordinates) {
+                            return null;
+                        }
+                        const [x, y, x1, y1] = response.coordinates;
+
+                        return {
+                            type: 'rect',
+                            color: 'black',
+                            payload: {
+                                label: className,
+                                points: [x, y, x1, y1],
+                            },
+                        };
+                    })
+                    .filter((x): x is CanvasAnnotation => x !== null) ?? [];
+            // output.push(...polygons);
             setGeneratedForm((ev?.parsedPayload ?? []).sort((i, v) => (i[1].order > v[1].order ? 1 : -1)));
         }
         setCanvasAnnotations(output);
@@ -211,7 +218,7 @@ export const UploadDetails = () => {
                                 );
 
                             case 'FormLabel':
-                                return <h5 className="text-xl font-bold ">{formField[1].value}</h5>;
+                                return <h5 className="text-xl font-bold ">{formField[1].label}</h5>;
 
                             case 'FormButton':
                                 return (
