@@ -6,11 +6,13 @@ import { recognizeText } from '../configurations/configAzureVision.js';
 import { generateFormStructure } from '../configurations/configOpenAi.js';
 
 export const processUploadedFile = async (uploadedFile: UploadedFile) => {
+    const COORDINATE_ROUNDING_NUMBER = 10;
+
     let objectDetectionResponses = await recognizeObjects(uploadedFile.url);
     if (objectDetectionResponses) {
         objectDetectionResponses = objectDetectionResponses.map((objectDetectionResponse) => {
             objectDetectionResponse.coordinates = objectDetectionResponse.coordinates.map(
-                (coordinate) => Math.round(coordinate / 10) * 10,
+                (coordinate) => Math.round(coordinate / COORDINATE_ROUNDING_NUMBER) * COORDINATE_ROUNDING_NUMBER,
             );
             return objectDetectionResponse;
         });
@@ -30,7 +32,9 @@ export const processUploadedFile = async (uploadedFile: UploadedFile) => {
             const y0 = Math.min(...yCoordinates);
             const x1 = Math.max(...xCoordinates);
             const y1 = Math.max(...yCoordinates);
-            textDetection.boundingBox = [x0, y0, x1, y1].map((c) => Math.round(c / 10) * 10);
+            textDetection.boundingBox = [x0, y0, x1, y1].map(
+                (c) => Math.round(c / COORDINATE_ROUNDING_NUMBER) * COORDINATE_ROUNDING_NUMBER,
+            );
             return textDetection;
         });
     }
