@@ -18,7 +18,7 @@ export const profileController = () => {
                         events: true,
                     },
                 },
-                formSubmission: true,
+                formSubmissions: true,
             },
         });
         res.status(200).send(response);

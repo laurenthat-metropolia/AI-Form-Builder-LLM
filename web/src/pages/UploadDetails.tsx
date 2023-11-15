@@ -13,7 +13,7 @@ import {
     ApiFormGenerationEvent,
     ApiFormImage,
     ApiFormLabel,
-    ApiFormTextfield,
+    ApiFormTextField,
     ApiFormToggleSwitch,
     ApiImageEvent,
     ApiImageEvents,
@@ -37,7 +37,7 @@ export const UploadDetails = () => {
     const [canvasAnnotations, setCanvasAnnotations] = useState<CanvasAnnotation[]>([]);
     const [generatedForm, setGeneratedForm] = useState<
         (
-            | ['FormTextfield', ApiFormTextfield, any]
+            | ['FormTextField', ApiFormTextField, any]
             | ['FormCheckbox', ApiFormCheckbox, any]
             | ['FormButton', ApiFormButton, any]
             | ['FormImage', ApiFormImage, any]
@@ -223,7 +223,7 @@ export const UploadDetails = () => {
                                         </button>
                                     </div>
                                 );
-                            case 'FormTextfield':
+                            case 'FormTextField':
                                 return (
                                     <div>
                                         <input

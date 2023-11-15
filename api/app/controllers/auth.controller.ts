@@ -1,16 +1,7 @@
-import express, { Application, Request, RequestHandler, Response } from 'express';
-import { generateAccessToken, requiresAccessToken } from '../strategies/passport-jwt.service.js';
-import {
-    Form,
-    FormButton,
-    FormCheckbox,
-    FormImage,
-    FormLabel,
-    FormTextfield,
-    FormToggleSwitch,
-    User,
-} from '@prisma/client';
-import { prisma, UserDatabase } from '../databases/userDatabase.js';
+import express, { Response } from 'express';
+import { generateAccessToken } from '../strategies/passport-jwt.service.js';
+
+import { UserDatabase } from '../databases/userDatabase.js';
 import passport from 'passport';
 import { GoogleProfile } from '../interfaces/googleProfile.js';
 import { readFileSync } from 'fs';

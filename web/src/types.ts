@@ -20,7 +20,7 @@ export interface ApiForm {
     available: boolean;
     owner?: ApiUser;
     ownerId: string;
-    textfields?: ApiFormTextfield[] | null;
+    textFields?: ApiFormTextField[] | null;
     checkboxes?: ApiFormCheckbox[] | null;
     toggleSwitches?: ApiFormToggleSwitch[] | null;
     images?: ApiFormImage[] | null;
@@ -37,26 +37,26 @@ export interface ApiFormSubmission {
     ownerId: string;
     form: ApiForm;
     formId: string;
-    textfieldResponses?: ApiFormTextfieldResponse[] | null;
+    textFieldResponses?: ApiFormTextFieldResponse[] | null;
     checkboxResponse?: ApiFormCheckboxResponse[] | null;
     toggleSwitchResponse?: ApiFormToggleSwitchResponse[] | null;
 }
 
-export interface ApiFormTextfield {
+export interface ApiFormTextField {
     id: string;
     form: ApiForm;
     formId: string;
     order: number;
     label: string;
-    responses?: ApiFormTextfieldResponse[] | null;
+    responses?: ApiFormTextFieldResponse[] | null;
 }
 
-export interface ApiFormTextfieldResponse {
+export interface ApiFormTextFieldResponse {
     id: string;
     submission: ApiFormSubmission;
     submissionId: string;
-    textfield: ApiFormTextfield;
-    textfieldId: string;
+    textField: ApiFormTextField;
+    textFieldId: string;
     value: string;
 }
 
@@ -187,7 +187,7 @@ export interface ApiFormGenerationEvent {
     file?: ApiUploadedFile;
     fileId: string;
     parsedPayload: (
-        | ['FormTextfield', ApiFormTextfield, any]
+        | ['FormTextField', ApiFormTextField, any]
         | ['FormCheckbox', ApiFormCheckbox, any]
         | ['FormButton', ApiFormButton, any]
         | ['FormImage', ApiFormImage, any]

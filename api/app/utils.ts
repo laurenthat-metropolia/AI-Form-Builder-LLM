@@ -3,7 +3,7 @@ import {
     FormCheckbox,
     FormImage,
     FormLabel,
-    FormTextfield,
+    FormTextField,
     FormToggleSwitch,
     UploadedFile,
 } from '@prisma/client';
@@ -49,7 +49,7 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                             id: '',
                                             formId: '',
                                             order: payload.order,
-                                            value: payload.value ?? payload.label ?? 'Text',
+                                            label: payload.label ?? payload.label ?? 'Text',
                                         } satisfies FormLabel,
                                         payload,
                                     ];
@@ -101,24 +101,24 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                     ];
                                 case 'FormInput': // TODO: Configure chatgpt to not generate this.
                                     return [
-                                        'FormTextfield',
+                                        'FormTextField',
                                         {
                                             id: '',
                                             formId: '',
                                             order: payload.order,
                                             label: payload.label ?? 'Label',
-                                        } satisfies FormTextfield,
+                                        } satisfies FormTextField,
                                         payload,
                                     ];
-                                case 'FormTextfield':
+                                case 'FormTextField':
                                     return [
-                                        'FormTextfield',
+                                        'FormTextField',
                                         {
                                             id: '',
                                             formId: '',
                                             order: payload.order ?? 'Label',
                                             label: payload.label,
-                                        } satisfies FormTextfield,
+                                        } satisfies FormTextField,
                                         payload,
                                     ];
                             }

@@ -11,7 +11,7 @@ export const openAI = new OpenAI({
 
 export async function generateFormStructure(objects: DetectionResponse, texts: TextDetectionResponse) {
     const tables: string = `
-model FormTextfield {
+model FormTextField {
   id        String @id @default(uuid())
   label     String
 }
@@ -44,7 +44,7 @@ model FormButton {
 model FormLabel {
   id     String @id @default(uuid())
   order  Int
-  value  String
+  label  String
 }
 `;
     const objectsPredictions: string = JSON.stringify(objects);
