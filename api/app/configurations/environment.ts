@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 config();
 export const environment = cleanEnv(process.env, {
     NODE_ENV: str({ choices: ['development', 'production'] }),
+    APP_BUILD_VERSION: str({ default: 'development', devDefault: 'development' }),
     APP_OAUTH2_CLIENT_ID: str(),
     APP_OAUTH2_CLIENT_SECRET: str(),
     APP_OAUTH2_CALLBACK_URL: str(),

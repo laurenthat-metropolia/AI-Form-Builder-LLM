@@ -12,16 +12,19 @@ from fastapi import FastAPI, status
 from PIL import Image
 from fastapi.responses import JSONResponse
 
-app = FastAPI()
-subapi = FastAPI()
-app.mount("/llm", subapi)
 
 load_dotenv()
+version = os.getenv("APP_BUILD_VERSION", "development")
 env = os.getenv("APP_ENV", "development")
 is_development = env == "development"
 is_production = not is_development
 
-ic(env)
+print(f"Starting Version: \"{version}\" Environment: \"{env}\"")
+
+
+app = FastAPI()
+subapi = FastAPI()
+app.mount("/llm", subapi)
 
 
 class RoboflowModel:
