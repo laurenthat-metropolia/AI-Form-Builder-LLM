@@ -42,8 +42,8 @@ class RoboflowModel:
         for prediction_result in prediction_results:
             del prediction_result['image_path']
             del prediction_result['prediction_type']
-            x1 = prediction_result.get('x')
-            y1 = prediction_result.get('y')
+            x1 = prediction_result.get('x') - prediction_result.get('width') / 2
+            y1 = prediction_result.get('y') - prediction_result.get('height') / 2
             x2 = x1 + prediction_result.get('width')
             y2 = y1 + prediction_result.get('height')
             prediction_result['coordinates'] = [x1, y1, x2, y2]
