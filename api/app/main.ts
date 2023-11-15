@@ -13,6 +13,9 @@ import { profileController } from './controllers/profile.controller.js';
 import { formController } from './controllers/form.controller.js';
 import { authController } from './controllers/auth.controller.js';
 import { expressGlobalErrorHandler } from './error.handler.js';
+import { environment } from './configurations/environment.js';
+
+console.log(`Starting Version: \"${environment.APP_BUILD_VERSION}\" Environment: \"${environment.NODE_ENV}\"`);
 
 // Express App
 const app = express();
