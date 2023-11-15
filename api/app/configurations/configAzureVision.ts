@@ -61,6 +61,7 @@ const sendImageUrlForTextRecognition = async (imageUrl: string): Promise<string 
 
     const hasGoodStatus = [200, 201, 202].includes(response.status);
     if (!hasGoodStatus) {
+        console.error(await response.json());
         return null;
     }
     if (!response.headers.has('Operation-Location')) {

@@ -152,7 +152,7 @@ jobs:
         APP_S3_ACCESS_KEY: minio
         APP_S3_SECRET_KEY: ${{ secrets.APP_S3_SECRET_KEY }}
         APP_COMPUTER_VISION_KEY: ${{ secrets.APP_COMPUTER_VISION_KEY }}
-        APP_COMPUTER_VISION_ENDPOINT: https://seb.cognitiveservices.azure.com/
+        APP_COMPUTER_VISION_ENDPOINT: ${{ secrets.APP_COMPUTER_VISION_ENDPOINT }}
         NODE_ENV: production
         APP_ENV: production
 

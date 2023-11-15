@@ -152,7 +152,7 @@ export const UploadDetails = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className="flex gap-6 justify-center py-6">
+            <div className="flex flex-col gap-6 p-6 lg:flex-row lg:justify-center">
                 {[
                     [ApiImageEvents.OBJECT_DETECTION_COMPLETED, 'Object detection'],
                     [ApiImageEvents.TEXT_DETECTION_COMPLETED, 'Text detection'],
@@ -160,7 +160,7 @@ export const UploadDetails = () => {
                 ].map(([eventName, label]) => {
                     const exist = uploadedFile?.events?.find((it) => it.event === eventName);
                     return (
-                        <div key={label} className="flex items-center gap-2">
+                        <div key={label} className="flex items-center gap-2 lg:justify-center  lg:flex-row">
                             <span className="text-2xl">
                                 {exist === undefined && (
                                     <span className="text-gray-700">
