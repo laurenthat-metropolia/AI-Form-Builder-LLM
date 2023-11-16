@@ -26,12 +26,12 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
             case ImageEvents.TEXT_DETECTION_COMPLETED:
                 return {
                     ...event,
-                    safeParsedPayload,
+                    parsedPayload: safeParsedPayload,
                 };
             case ImageEvents.OBJECT_DETECTION_COMPLETED:
                 return {
                     ...event,
-                    safeParsedPayload,
+                    parsedPayload: safeParsedPayload,
                 };
             case ImageEvents.STRUCTURE_GENERATION_COMPLETED:
                 const safePayload = safeParsedPayload
