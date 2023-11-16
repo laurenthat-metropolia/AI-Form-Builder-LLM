@@ -39,16 +39,8 @@ export const uploadController = () => {
     );
 
     router.get('/:id', requiresAccessToken, async (req: Request, res: Response) => {
-        const user = req.user as User;
-
         const uploadedFileId = req.params.id;
         const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
-        if (!uploadedFile || uploadedFile.ownerId !== user.id) {
-            res.status(401).send({
-                message: 'Not Authorized.',
-            });
-            return;
-        }
         const parsedUploadedFile = parseUploadedFile(uploadedFile);
         res.status(200).send(parsedUploadedFile);
     });
