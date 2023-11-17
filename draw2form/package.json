@@ -3,8 +3,9 @@
     "version": "0.0.0",
     "license": "MIT",
     "scripts": {
-        "op:start:api": "APP_ENV=local op run --no-masking --env-file=.env.op nx serve api",
-        "op:start:web": "APP_ENV=local op run --no-masking --env-file=.env.op nx serve web"
+        "op:start:api": "APP_ENV=local op run --no-masking --env-file=.env.api.op nx serve api",
+        "op:start:web": "APP_ENV=local op run --no-masking --env-file=.env.web.op nx serve web",
+        "op:start:llm": "APP_ENV=local op run --no-masking --env-file=.env.llm.op nx serve llm"
     },
     "private": true,
     "devDependencies": {

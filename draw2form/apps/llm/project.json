@@ -1,0 +1,35 @@
+{
+    "name": "llm",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/llm/src",
+    "projectType": "application",
+    "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "defaultConfiguration": "production",
+            "options": {
+                "commands": [
+                    "rm -rf dist/apps/llm",
+                    "mkdir -p dist/apps/llm",
+                    "cp -a apps/llm/src/. dist/apps/llm/"
+                ],
+                "parallel": false
+
+            },
+            "configurations": {
+                "development": {},
+                "production": {}
+            }
+        },
+        "serve": {
+            "executor": "nx:run-commands",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "cwd": "apps/llm/src",
+                "commands": ["uvicorn main:app --port 8001 --reload"],
+                "parallel": false
+            }
+        }
+    },
+    "tags": []
+}

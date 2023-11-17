@@ -63,8 +63,8 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: api
-          file: api/Dockerfile
+          context: dist/apps/api
+          file: apps/api/Dockerfile
           push: true
           tags: ericaskari/draw2form-api:latest,ericaskari/draw2form-api:${{needs.Version.outputs.version}}
           cache-from: type=registry,ref=ericaskari/draw2form-api:latest
@@ -90,8 +90,8 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: llm-api
-          file: llm-api/Dockerfile
+          context: dist/apps/llm
+          file: apps/llm/Dockerfile
           push: true
           tags: ericaskari/draw2form-llm-api:latest,ericaskari/draw2form-llm-api:${{needs.Version.outputs.version}}
           cache-from: type=registry,ref=ericaskari/draw2form-llm-api:latest
@@ -122,8 +122,8 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: web
-          file: web/Dockerfile
+          context: dist/apps/web
+          file: apps/web/Dockerfile
           push: true
           tags: ericaskari/draw2form-web:latest,ericaskari/draw2form-web:${{needs.Version.outputs.version}}
           cache-from: type=registry,ref=ericaskari/draw2form-web:latest
