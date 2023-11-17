@@ -1,15 +1,13 @@
 import fetch from 'node-fetch';
 
-export type ObjectDetectionResponse = {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+export type ObjectDetectionResponseItem = {
     confidence: number;
     class: string;
     class_id: number;
-    coordinates: number[];
-}[];
+    coordinates: [number, number, number, number];
+};
+
+export type ObjectDetectionResponse = ObjectDetectionResponseItem[];
 
 const api = 'http://127.0.0.1:8001/llm/predict';
 
@@ -35,7 +33,17 @@ export const recognizeObjects = async (
             return null;
         }
 
-        return (await response.json()) as ObjectDetectionResponse;
+        const responseBody = (await response.json()) as ObjectDetectionResponse;
+
+        const output: ObjectDetectionResponse = responseBody.map((item) => {
+            return {
+                class: item.class,
+                coordinates: item.coordinates,
+                class_id: item.class_id,
+                confidence: item.confidence,
+            };
+        });
+        return output;
     } catch (e) {
         console.error(e);
         return null;

@@ -1,10 +1,12 @@
 import { environment } from './environment.js';
 import fetch from 'node-fetch';
 
-export type TextDetectionResponse = {
+export type TextDetectionResponseItem = {
     text: string;
-    boundingBox: number[];
-}[];
+    coordinates: [number, number, number, number];
+};
+
+export type TextDetectionResponse = TextDetectionResponseItem[];
 
 type AzureVisionOperationResponse =
     | {
@@ -119,9 +121,16 @@ export const recognizeText = async (imageUrl: string): Promise<TextDetectionResp
             .flat();
 
         return lines.map((line) => {
+            const xCoordinates = line.boundingBox.filter((c, index) => index % 2 === 0);
+            const yCoordinates = line.boundingBox.filter((c, index) => index % 2 !== 0);
+            const x0 = Math.min(...xCoordinates);
+            const y0 = Math.min(...yCoordinates);
+            const x1 = Math.max(...xCoordinates);
+            const y1 = Math.max(...yCoordinates);
+
             return {
                 text: line.text,
-                boundingBox: line.boundingBox,
+                coordinates: [x0, y0, x1, y1],
             };
         });
     } catch (e) {

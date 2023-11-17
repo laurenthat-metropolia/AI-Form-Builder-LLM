@@ -136,7 +136,14 @@ export interface ApiUploadedFileWithParsedPayload {
     ownerId?: string | null;
     key: string;
     url: string;
-    events?: (ApiImageObjectDetectionEvent | ApiImageTextDetectionEvent | ApiFormGenerationEvent)[] | null;
+    events?:
+        | (
+              | ApiImageObjectDetectionEvent
+              | ApiImageTextDetectionEvent
+              | ApiFormGenerationEvent
+              | ApiUnifiedPredictionEvent
+          )[]
+        | null;
 }
 
 export interface ApiImageEvent {
@@ -177,8 +184,17 @@ export interface ApiImageTextDetectionEvent {
         | null
         | {
               text: string;
-              boundingBox: [number, number, number, number];
+              coordinates: [number, number, number, number];
           }[];
+}
+
+export interface ApiUnifiedPredictionEvent {
+    id: string;
+    event: 'PREDICTIONS_UNIFIED';
+    type: string;
+    coordinates: [number, number, number, number];
+    data: any;
+    parsedPayload: UnifiedPrediction[];
 }
 export interface ApiFormGenerationEvent {
     id: string;
@@ -208,4 +224,30 @@ export enum ApiImageEvents {
      * Output ChatGPT
      */
     STRUCTURE_GENERATION_COMPLETED = 'STRUCTURE_GENERATION_COMPLETED',
+    PREDICTIONS_UNIFIED = 'PREDICTIONS_UNIFIED',
 }
+
+export interface UnifiedObjectPrediction {
+    type: 'OBJECT_PREDICTION';
+    data: Omit<
+        {
+            confidence: number;
+            class: string;
+            class_id: number;
+        },
+        'coordinates'
+    >;
+    coordinates: [number, number, number, number];
+}
+export interface UnifiedTextPrediction {
+    type: 'TEXT_PREDICTION';
+    data: Omit<
+        {
+            text: string;
+        },
+        'coordinates'
+    >;
+    coordinates: [number, number, number, number];
+}
+
+export type UnifiedPrediction = UnifiedObjectPrediction | UnifiedTextPrediction;
