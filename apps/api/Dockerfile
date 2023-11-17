@@ -1,0 +1,16 @@
+FROM node:hydrogen as final
+WORKDIR /app
+
+ARG APP_BUILD_VERSION=local-development
+ENV APP_BUILD_VERSION=$APP_BUILD_VERSION
+
+RUN apt update -y && apt install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev -y
+
+COPY dist/apps/api/package.json         package.json
+COPY dist/apps/api/package-lock.json    package-lock.json
+COPY apps/api/prisma                    prisma
+RUN npm install
+
+COPY dist/apps/api                      ./
+COPY apps/api/src/templates             app/templates
+CMD ["app/main.js"]

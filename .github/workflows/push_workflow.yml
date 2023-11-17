@@ -63,7 +63,7 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: dist/apps/api
+          context: .
           file: apps/api/Dockerfile
           push: true
           tags: ericaskari/draw2form-api:latest,ericaskari/draw2form-api:${{needs.Version.outputs.version}}
@@ -90,11 +90,11 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: dist/apps/llm
+          context: .
           file: apps/llm/Dockerfile
           push: true
-          tags: ericaskari/draw2form-llm-api:latest,ericaskari/draw2form-llm-api:${{needs.Version.outputs.version}}
-          cache-from: type=registry,ref=ericaskari/draw2form-llm-api:latest
+          tags: ericaskari/draw2form-llm:latest,ericaskari/draw2form-llm:${{needs.Version.outputs.version}}
+          cache-from: type=registry,ref=ericaskari/draw2form-llm:latest
           cache-to: type=inline
           build-args: |
             APP_BUILD_VERSION=${{needs.Version.outputs.version}}
@@ -122,7 +122,7 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: dist/apps/web
+          context: .
           file: apps/web/Dockerfile
           push: true
           tags: ericaskari/draw2form-web:latest,ericaskari/draw2form-web:${{needs.Version.outputs.version}}
@@ -186,8 +186,8 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[14].value = env(APP_OPENAI_API_KEY)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[15].value = env(APP_OPENAI_ORGANIZATION)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[16].value = env(NODE_ENV)' deployment.yml
-            
-            export IMAGE_TAG=ericaskari/draw2form-llm-api:${{needs.Version.outputs.version}}
+
+            export IMAGE_TAG=ericaskari/draw2form-llm:${{needs.Version.outputs.version}}
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[1].value = env(APP_ENV)' deployment.yml
@@ -195,5 +195,5 @@ jobs:
             export IMAGE_TAG=ericaskari/draw2form-web:${{needs.Version.outputs.version}}
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[2].image = env(IMAGE_TAG)' deployment.yml
             kubectl apply --filename deployment.yml
-      
+
 

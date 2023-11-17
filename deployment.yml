@@ -57,8 +57,8 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_ORGANIZATION
             - name: NODE_ENV
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/NODE_ENV
-        - image: ericaskari/draw2form-llm-api:latest
-          name: draw2form-llm-api
+        - image: ericaskari/draw2form-llm:latest
+          name: draw2form-llm
           imagePullPolicy: Always
           env:
             - name: APP_ROBOFLOW_API_KEY
