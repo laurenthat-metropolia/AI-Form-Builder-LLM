@@ -8,6 +8,10 @@ export const ImageEvents = {
      */
     TEXT_DETECTION_COMPLETED: 'TEXT_DETECTION_COMPLETED',
     /**
+     * ChatGPT Input
+     */
+    PREDICTIONS_UNIFIED: 'PREDICTIONS_UNIFIED',
+    /**
      * Output ChatGPT
      */
     STRUCTURE_GENERATION_COMPLETED: 'STRUCTURE_GENERATION_COMPLETED',

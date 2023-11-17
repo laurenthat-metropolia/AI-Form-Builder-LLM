@@ -15,14 +15,22 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
         return null;
     }
 
+    console.log(uploadedFile);
     const events = (uploadedFile.events ?? []).map((event) => {
-        const parsed = safeParse(event.payload);
+        const name = event.event;
+        const payload = event.payload;
+        console.log({ name, payload });
+
+        const parsed = safeParse(payload);
         const secondParse = typeof parsed === 'string' ? safeParse(parsed) : parsed;
+
         const parsedPayload: any[] = secondParse ?? parsed ?? event.payload ?? [];
 
-        const safeParsedPayload = Array.isArray(parsedPayload) ? parsedPayload.filter((x: any) => x) : parsedPayload;
+        const safeParsedPayload: any[][] = Array.isArray(parsedPayload)
+            ? parsedPayload.filter((x: any) => x)
+            : parsedPayload;
 
-        switch (event.event) {
+        switch (name) {
             case ImageEvents.TEXT_DETECTION_COMPLETED:
                 return {
                     ...event,
@@ -33,18 +41,26 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                     ...event,
                     parsedPayload: safeParsedPayload,
                 };
+            case ImageEvents.OBJECT_DETECTION_COMPLETED:
+                return {
+                    ...event,
+                    parsedPayload: safeParsedPayload,
+                };
             case ImageEvents.STRUCTURE_GENERATION_COMPLETED:
-                const safePayload = safeParsedPayload
-                    .map((payload: any) => {
-                        switch (payload.type) {
+                const safePayload = (JSON.parse(JSON.parse(payload as any)) as any[][]).map((row) => {
+                    console.log({ row });
+
+                    const parsedRow = row.map((rowItem) => {
+                        console.log({ rowItem });
+                        switch (rowItem.type) {
                             case 'FormLabel':
                                 return [
                                     'FormLabel',
                                     {
                                         id: '',
                                         formId: '',
-                                        order: payload.order,
-                                        label: payload.label ?? payload.label ?? 'Text',
+                                        order: rowItem.order,
+                                        label: rowItem.label ?? '',
                                     } satisfies FormLabel,
                                     payload,
                                 ];
@@ -55,20 +71,19 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                         id: '',
                                         formId: '',
                                         type: 'submit',
-                                        order: payload.order,
-                                        label: payload.label ?? 'Label',
+                                        order: rowItem.order,
+                                        label: rowItem.label ?? '',
                                     } satisfies FormButton,
                                     payload,
                                 ];
-
                             case 'FormCheckbox':
                                 return [
                                     'FormCheckbox',
                                     {
                                         id: '',
                                         formId: '',
-                                        order: payload.order,
-                                        label: payload.label ?? 'Label',
+                                        order: rowItem.order,
+                                        label: rowItem.label ?? '',
                                     } satisfies FormCheckbox,
                                     payload,
                                 ];
@@ -78,8 +93,8 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                     {
                                         id: '',
                                         formId: '',
-                                        order: payload.order,
-                                        label: payload.label ?? 'Label',
+                                        order: rowItem.order,
+                                        label: rowItem.label ?? '',
                                     } satisfies FormToggleSwitch,
                                     payload,
                                 ];
@@ -89,7 +104,7 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                     {
                                         id: '',
                                         formId: '',
-                                        order: payload.order,
+                                        order: rowItem.order,
                                         imageId: '',
                                     } satisfies FormImage,
                                     payload,
@@ -100,8 +115,8 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                     {
                                         id: '',
                                         formId: '',
-                                        order: payload.order,
-                                        label: payload.label ?? 'Label',
+                                        order: rowItem.order,
+                                        label: rowItem.label ?? 'Label',
                                     } satisfies FormTextField,
                                     payload,
                                 ];
@@ -111,15 +126,17 @@ export const parseUploadedFile = (uploadedFile: Awaited<ReturnType<typeof fetchP
                                     {
                                         id: '',
                                         formId: '',
-                                        order: payload.order ?? 'Label',
-                                        label: payload.label,
+                                        order: rowItem.order,
+                                        label: rowItem.label ?? 'Label',
                                     } satisfies FormTextField,
                                     payload,
                                 ];
                         }
-                    })
-                    .filter((x) => x);
-
+                    });
+                    console.log({ parsedRow });
+                    return parsedRow;
+                });
+                console.log({ safePayload });
                 return {
                     ...event,
                     parsedPayload: safePayload,
