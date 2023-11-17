@@ -1,0 +1,13 @@
+{
+  "name": "@draw2form/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
+  "devDependencies": {
+    "@nx/express": "^17.1.2",
+    "@nx/js": "17.1.2",
+    "@nx/workspace": "17.1.2",
+    "nx": "17.1.2"
+  }
+}
