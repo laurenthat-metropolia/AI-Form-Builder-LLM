@@ -3,6 +3,9 @@
     "version": "0.0.0",
     "license": "MIT",
     "scripts": {
+        "build:api": "nx build api",
+        "build:web": "nx build web",
+        "build:llm": "nx build llm",
         "op:start:api": "APP_ENV=local op run --no-masking --env-file=apps/api/.env.op nx serve api",
         "op:start:web": "APP_ENV=local op run --no-masking --env-file=apps/web/.env.op nx serve web",
         "op:start:llm": "APP_ENV=local op run --no-masking --env-file=apps/llm/.env.op nx serve llm",
