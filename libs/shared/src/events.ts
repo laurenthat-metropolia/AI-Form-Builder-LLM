@@ -71,3 +71,25 @@ export type IdentifiableImageEvent = Omit<OImageEvent, 'payload' | 'event'> &
               payload: FormComponentsCreatedEventPayload | null;
           }
     );
+
+export const hideImageEventsValue: Record<string, boolean> = Object.keys(ImageEvents).reduce(
+    (p, c) => ({ ...p, [c]: true }),
+    {},
+);
+export const showImageEventsValue: Record<string, boolean> = Object.keys(ImageEvents).reduce(
+    (p, c) => ({ ...p, [c]: false }),
+    {},
+);
+
+export const ImageEventsColors: Record<keyof typeof ImageEvents, string> = {
+    ObjectDetectionResponseReceived: '#ff646b',
+    TextDetectionResponseReceived: '#46ff2a',
+    TextDetectionUnified: '#ffbc52',
+    ObjectDetectionUnified: '#ff70ce',
+    ChatGPTRequestSent: '#27afff',
+    ChatGPTResponseReceived: '#e791a9',
+    ChatGPTResponseProcessed: '#f48686',
+    UnifiedPredictionCoordinatesRounded: '#ffcd33',
+    UnifiedPredictionsLeveledInYAxis: '#19fff5',
+    FormComponentsCreated: '#000000',
+} as const;

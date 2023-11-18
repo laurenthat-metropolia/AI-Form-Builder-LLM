@@ -1,4 +1,10 @@
-import { faCircleCheck, faCircleExclamation, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import {
+    faCircleCheck,
+    faCircleExclamation,
+    faCircleQuestion,
+    faEye,
+    faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -6,7 +12,15 @@ import { useParams } from 'react-router-dom';
 import { Spinner } from '../components/Spinner';
 import { Canvas, CanvasAnnotation } from '../components/Canvas';
 import { JSONTree } from 'react-json-tree';
-import { ImageEvents, SupportedFormComponent, UploadedFileWithIdentifiableImageEvents } from '@draw2form/shared';
+import {
+    hideImageEventsValue,
+    IdentifiableImageEvent,
+    ImageEvents,
+    ImageEventsColors,
+    showImageEventsValue,
+    SupportedFormComponent,
+    UploadedFileWithIdentifiableImageEvents,
+} from '@draw2form/shared';
 
 export const UploadDetails = () => {
     const { id } = useParams();
@@ -14,6 +28,11 @@ export const UploadDetails = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [canvasAnnotations, setCanvasAnnotations] = useState<CanvasAnnotation[]>([]);
     const [generatedForm, setGeneratedForm] = useState<SupportedFormComponent[][]>([]);
+    const [hideCoordinates, setHideCoordinates] = useState<Record<string, boolean>>({});
+
+    const stringToRGBColor = useCallback((str: keyof typeof ImageEvents): string => {
+        return ImageEventsColors[str] ?? 'rgb(74 222 128)';
+    }, []);
 
     const camelPad = useCallback((str: string) => {
         return (
@@ -32,6 +51,64 @@ export const UploadDetails = () => {
         );
     }, []);
 
+    const checkImageEventCoordinateSupport = useCallback((imageEvent: IdentifiableImageEvent) => {
+        return (
+            Array.isArray(imageEvent.payload) && imageEvent.payload.every((it) => Array.isArray(it?.['coordinates']))
+        );
+    }, []);
+
+    const getCoordinateList = useCallback(
+        (imageEvent: IdentifiableImageEvent): [number, number, number, number][] => {
+            if (!checkImageEventCoordinateSupport(imageEvent)) {
+                return [];
+            } else {
+                const payload = imageEvent.payload as { coordinates: [number, number, number, number] }[];
+                return payload.map((it) => it.coordinates);
+            }
+        },
+        [checkImageEventCoordinateSupport],
+    );
+
+    const getImageEventLabel = useCallback(
+        (imageEvent: IdentifiableImageEvent, index: number): string => {
+            if (!checkImageEventCoordinateSupport(imageEvent)) {
+                return '';
+            } else {
+                if (imageEvent.event === ImageEvents.ObjectDetectionResponseReceived) {
+                    const payload = imageEvent.payload ?? [];
+                    return payload[index]?.class ?? '';
+                }
+                if (imageEvent.event === ImageEvents.TextDetectionResponseReceived) {
+                    const payload = imageEvent.payload ?? [];
+                    return payload[index]?.text ?? '';
+                }
+                return '';
+            }
+        },
+        [checkImageEventCoordinateSupport],
+    );
+
+    useEffect(() => {
+        if (!uploadedFile) {
+            return;
+        }
+        const events = uploadedFile.events ?? [];
+        for (let imageEvent of events) {
+            if (imageEvent.event === ImageEvents.FormComponentsCreated) {
+                const payload = imageEvent.payload ?? [];
+                setGeneratedForm(payload);
+            }
+        }
+    }, [uploadedFile]);
+
+    const toggleViewCoordinates = useCallback(
+        (event: string) => {
+            const newValue = structuredClone(hideCoordinates);
+            newValue[event] = !newValue[event];
+            setHideCoordinates(newValue);
+        },
+        [hideCoordinates],
+    );
     useEffect(() => {
         if (!uploadedFile) {
             return;
@@ -41,51 +118,37 @@ export const UploadDetails = () => {
         const output: CanvasAnnotation[] = [];
 
         for (let imageEvent of events) {
-            if (imageEvent.event === ImageEvents.TextDetectionResponseReceived) {
-                const payload = imageEvent.payload ?? [];
+            const hide = hideCoordinates[imageEvent.event] ?? false;
 
-                const polygons: CanvasAnnotation[] =
-                    payload.map(({ text, coordinates }): CanvasAnnotation => {
-                        return {
-                            type: 'rect',
-                            color: 'red',
-                            payload: {
-                                label: text,
-                                points: coordinates,
-                            },
-                        };
-                    }) ?? [];
-                output.push(...polygons);
-                /**
-                 *
-                 *
-                 */
-            } else if (imageEvent.event === ImageEvents.ObjectDetectionUnified) {
-                const payload = imageEvent.payload ?? [];
-                const polygons: CanvasAnnotation[] =
-                    payload?.map(({ type, coordinates, data }: any): CanvasAnnotation => {
-                        return {
-                            type: 'rect',
-                            color: 'cyan',
-                            payload: {
-                                label: 'text',
-                                points: coordinates,
-                            },
-                        };
-                    }) ?? [];
-                output.push(...polygons);
-                /**
-                 *
-                 *
-                 */
-            } else if (imageEvent.event === ImageEvents.FormComponentsCreated) {
-                const payload = imageEvent.payload ?? [];
-                setGeneratedForm(payload);
+            if (hide) {
+                continue;
             }
-        }
 
+            const supportsCoordinates = checkImageEventCoordinateSupport(imageEvent);
+            console.log({ supportsCoordinates });
+
+            if (!supportsCoordinates) {
+                continue;
+            }
+
+            const coordinates = getCoordinateList(imageEvent);
+            console.log({ coordinates });
+            const polygons: CanvasAnnotation[] =
+                coordinates.map((coordinate, index): CanvasAnnotation => {
+                    return {
+                        type: 'rect',
+                        color: stringToRGBColor(imageEvent.event),
+                        payload: {
+                            label: getImageEventLabel(imageEvent, index),
+                            points: coordinate,
+                        },
+                    };
+                }) ?? [];
+            output.push(...polygons);
+        }
+        console.log({ output });
         setCanvasAnnotations(output);
-    }, [uploadedFile]);
+    }, [uploadedFile, hideCoordinates]);
 
     useEffect(() => {
         if (!id) {
@@ -119,11 +182,35 @@ export const UploadDetails = () => {
     return (
         <div className="max-w-7xl mx-auto">
             <div className="grid gap-2 grid-cols-12 pt-5">
-                {Object.values(ImageEvents).map((event) => {
-                    const exist = uploadedFile?.events?.find((it: any) => it.event === event);
+                <button
+                    onClick={() => {
+                        if (Object.values(hideCoordinates).every((x) => x)) {
+                            setHideCoordinates(showImageEventsValue);
+                        } else {
+                            setHideCoordinates(hideImageEventsValue);
+                        }
+                    }}
+                    className="col-span-12 shadow rounded p-2 mt-2">
+                    <span>
+                        <span className="text-gray-400">
+                            <FontAwesomeIcon icon={faEyeSlash} />
+                        </span>
+                        <span className="text-green-400">
+                            <FontAwesomeIcon icon={faEye} />
+                        </span>
+                    </span>
+                </button>
+                {Object.values(ImageEvents).map((eventName) => {
+                    const exist = uploadedFile?.events?.find((it: any) => it.event === eventName);
+
+                    const supportsCoordinates = exist ? checkImageEventCoordinateSupport(exist) : false;
+
+                    const hide = hideCoordinates[eventName] ?? false;
                     return (
-                        <div key={event} className="col-span-4 flex items-center gap-2 lg:flex-row">
-                            <span className="">
+                        <div
+                            key={eventName}
+                            className="col-span-12 lg:col-span-4 grid grid-cols-12 items-center gap-2 lg:flex-row">
+                            <span className="col-span-2 flex flex-row-reverse gap-1">
                                 {exist === undefined && (
                                     <span className="text-gray-700">
                                         <FontAwesomeIcon icon={faCircleQuestion} />
@@ -139,8 +226,26 @@ export const UploadDetails = () => {
                                         <FontAwesomeIcon icon={faCircleCheck} />
                                     </span>
                                 )}
+                                {supportsCoordinates && (
+                                    <button
+                                        onClick={() => {
+                                            toggleViewCoordinates(eventName);
+                                        }}>
+                                        {hide ? (
+                                            <span className="text-gray-400">
+                                                <FontAwesomeIcon icon={faEyeSlash} />
+                                            </span>
+                                        ) : (
+                                            <span
+                                                className="text-green-400"
+                                                style={{ color: stringToRGBColor(eventName) }}>
+                                                <FontAwesomeIcon icon={faEye} />
+                                            </span>
+                                        )}
+                                    </button>
+                                )}
                             </span>
-                            <small>{camelPad(event)}</small>
+                            <small className="col-span-10">{camelPad(eventName)}</small>
                         </div>
                     );
                 })}
@@ -160,17 +265,19 @@ export const UploadDetails = () => {
                 <div className="col-span-6 shadow-md p-2 flex flex-col gap-2 p-4 rounded">
                     <h4>Generated Form:</h4>
                     <div className="grid grid-cols-12 gap-2 p-4 border rounded">
-                        {generatedForm.map((formRow) => {
+                        {generatedForm.map((formRow, formRowIndex) => {
                             const onlyHasOneElement = formRow.length === 1;
                             const onlyHasTwoElement = formRow.length === 2;
                             const centerClassNames = onlyHasOneElement ? 'w-full flex justify-center' : '';
-                            console.log({ formRow });
                             return (
-                                <div className="col-span-12 grid grid-cols-12 gap-1 p-1 border rounded">
-                                    {formRow.map((formField) => {
+                                <div
+                                    className="col-span-12 grid grid-cols-12 gap-1 p-1 border rounded"
+                                    key={formRowIndex}>
+                                    {formRow.map((formField, index) => {
                                         const name = formField[0];
                                         return (
                                             <div
+                                                key={name + index}
                                                 className={`${
                                                     onlyHasOneElement
                                                         ? 'col-span-12'
@@ -221,6 +328,7 @@ export const UploadDetails = () => {
                                                             checked
                                                             id="checked-checkbox"
                                                             type="checkbox"
+                                                            onChange={() => {}}
                                                             value=""
                                                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                                         />
@@ -235,6 +343,7 @@ export const UploadDetails = () => {
                                                     <div className="relative inline-flex items-center cursor-pointer">
                                                         <input
                                                             type="checkbox"
+                                                            onChange={() => {}}
                                                             value=""
                                                             className="sr-only peer"
                                                             checked

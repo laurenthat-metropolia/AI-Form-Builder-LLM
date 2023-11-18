@@ -62,5 +62,30 @@ export const uploadController = () => {
         });
     });
 
+    router.get('/:id/event/:event', requiresAccessToken, async (req: Request, res: Response) => {
+        const user = req.user as User;
+
+        const uploadedFileId = req.params.id;
+        const eventName = req.params.event;
+
+        const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
+        if (!uploadedFile || uploadedFile.ownerId !== user.id) {
+            res.status(401).send({
+                message: 'Not Authorized.',
+            });
+            return;
+        }
+
+        const hasTextRes = uploadedFile.events.find((ev) => ev.event === ImageEvents.TextDetectionResponseReceived);
+        const hasObjectRes = uploadedFile.events.find((ev) => ev.event === ImageEvents.ObjectDetectionResponseReceived);
+        const hasFormRes = uploadedFile.events.find((ev) => ev.event === ImageEvents.FormComponentsCreated);
+
+        res.status(200).send({
+            textRecognition: hasTextRes === undefined ? 'loading' : hasTextRes === null ? 'error' : 'success',
+            objectRecognition: hasObjectRes === undefined ? 'loading' : hasObjectRes === null ? 'error' : 'success',
+            formGeneration: hasFormRes === undefined ? 'loading' : hasFormRes === null ? 'error' : 'success',
+        });
+    });
+
     return router;
 };

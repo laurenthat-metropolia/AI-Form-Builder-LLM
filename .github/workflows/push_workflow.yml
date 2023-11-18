@@ -1,7 +1,7 @@
 name: Deployment
 on:
   push:
-    branches: [ main, features/versioning ]
+    branches: [ main ]
 permissions: write-all
 
 jobs:
