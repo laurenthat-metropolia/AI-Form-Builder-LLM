@@ -72,11 +72,11 @@ spec:
               restartPolicy: RestartContainer
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "2000m"
+              memory: "256Mi"
+              cpu: "500m"
             limits:
-              memory: "2Gi"
-              cpu: "2000m"
+              memory: "512Mi"
+              cpu: "1000m"
         - image: ericaskari/draw2form-web:latest
           name: draw2form-web
           imagePullPolicy: Always
