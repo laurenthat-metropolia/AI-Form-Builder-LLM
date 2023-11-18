@@ -12,4 +12,4 @@ COPY apps/api/prisma                    prisma
 RUN npm install
 
 COPY dist/apps/api                      ./
-CMD ["app/main.js"]
+CMD ["main.js"]

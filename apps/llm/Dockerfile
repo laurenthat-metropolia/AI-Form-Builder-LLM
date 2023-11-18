@@ -9,6 +9,6 @@ RUN pip3 install fastapi uvicorn opencv-python-headless numpy icecream python-mu
 
 COPY apps/llm/src .
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
 # uvicorn app:app --port 8001 --reload
 EXPOSE 8001
