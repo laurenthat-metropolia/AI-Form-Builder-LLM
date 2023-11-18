@@ -57,14 +57,14 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_ORGANIZATION
             - name: NODE_ENV
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/NODE_ENV
-        - image: ericaskari/draw2form-llm-api:latest
-          name: draw2form-llm-api
+        - image: ericaskari/draw2form-llm:latest
+          name: draw2form-llm
           imagePullPolicy: Always
           env:
             - name: APP_ROBOFLOW_API_KEY
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ROBOFLOW_API_KEY
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm/APP_ROBOFLOW_API_KEY
             - name: APP_ENV
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm-api/APP_ENV
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm/APP_ENV
           resizePolicy:
             - resourceName: cpu
               restartPolicy: RestartContainer
@@ -72,11 +72,11 @@ spec:
               restartPolicy: RestartContainer
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "2000m"
+              memory: "256Mi"
+              cpu: "500m"
             limits:
-              memory: "2Gi"
-              cpu: "2000m"
+              memory: "512Mi"
+              cpu: "1000m"
         - image: ericaskari/draw2form-web:latest
           name: draw2form-web
           imagePullPolicy: Always

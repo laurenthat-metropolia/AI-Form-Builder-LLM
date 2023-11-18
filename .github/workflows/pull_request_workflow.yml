@@ -2,7 +2,63 @@ name: Pull Request Tests
 on:
   pull_request:
 jobs:
-  BuildLLMApiDocker:
+  BuildDockerAPI:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git: Pull Source Code"
+        uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: 'node_modules'
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: "Docker: Set up QEMU"
+        uses: docker/setup-qemu-action@v3
+      - name: "Docker: Set up Buildx"
+        uses: docker/setup-buildx-action@v3
+      - run: npm install
+      - run: CI=false npm run build:api
+      - name: "Docker: Build And Push Image"
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: ericaskari/draw2form-api:latest
+          cache-from: type=registry,ref=ericaskari/draw2form-api:latest
+          cache-to: type=inline
+
+  BuildDockerWeb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git: Pull Source Code"
+        uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: 'node_modules'
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: "Docker: Set up QEMU"
+        uses: docker/setup-qemu-action@v3
+      - name: "Docker: Set up Buildx"
+        uses: docker/setup-buildx-action@v3
+      - run: npm install
+      - run: CI=false npm run build:web
+      - name: "Docker: Build And Push Image"
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          tags: ericaskari/draw2form-web:latest
+          cache-from: type=registry,ref=ericaskari/draw2form-web:latest
+          cache-to: type=inline
+
+  BuildDockerLLM:
     runs-on: ubuntu-latest
     steps:
       - name: "Git: Pull Source Code"
@@ -14,56 +70,9 @@ jobs:
       - name: "Docker: Build And Push Image"
         uses: docker/build-push-action@v5
         with:
-          context: llm-api
-          file: llm-api/Dockerfile
+          context: .
+          file: apps/llm/Dockerfile
           push: false
-          tags: ericaskari/draw2form-llm-api:latest
-          cache-from: type=registry,ref=ericaskari/draw2form-llm-api:latest
-          cache-to: type=inline
-  BuildApiDocker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git: Pull Source Code"
-        uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: "Docker: Set up QEMU"
-        uses: docker/setup-qemu-action@v3
-      - name: "Docker: Set up Buildx"
-        uses: docker/setup-buildx-action@v3
-      - run: npm install --prefix api
-      - run: CI=false npm run build --prefix api
-      - name: "Docker: Build And Push Image"
-        uses: docker/build-push-action@v5
-        with:
-          context: api
-          file: api/Dockerfile
-          push: false
-          tags: ericaskari/draw2form-api:latest
-          cache-from: type=registry,ref=ericaskari/draw2form-api:latest
-          cache-to: type=inline
-
-  BuildWebDocker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git: Pull Source Code"
-        uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: "Docker: Set up QEMU"
-        uses: docker/setup-qemu-action@v3
-      - name: "Docker: Set up Buildx"
-        uses: docker/setup-buildx-action@v3
-      - run: npm install --prefix web
-      - run: CI=false npm run build:production --prefix web
-      - name: "Docker: Build And Push Image"
-        uses: docker/build-push-action@v5
-        with:
-          context: web
-          file: web/Dockerfile
-          push: false
-          tags: ericaskari/draw2form-web:latest
-          cache-from: type=registry,ref=ericaskari/draw2form-web:latest
+          tags: ericaskari/draw2form-llm:latest
+          cache-from: type=registry,ref=ericaskari/draw2form-llm:latest
           cache-to: type=inline

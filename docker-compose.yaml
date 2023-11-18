@@ -1,13 +1,13 @@
 version: "3.8"
 services:
-#  draw2form--postgres:
-#    container_name: draw2form--postgres
-#    restart: 'no'
-#    image: postgres:14.9-alpine3.17
-#    ports:
-#      - "5432:5432"
-#    environment:
-#      POSTGRES_PASSWORD: V7NHzBm6U.4-phLzTvJt
+  draw2form--postgres:
+    container_name: draw2form--postgres
+    restart: 'no'
+    image: postgres:14.9-alpine3.17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: V7NHzBm6U.4-phLzTvJt
   draw2form--postgres2:
     container_name: draw2form--postgres2
     restart: 'no'
@@ -16,24 +16,3 @@ services:
       - "5433:5432"
     environment:
       POSTGRES_PASSWORD: V7NHzBm6U.4-phLzTvJt
-#  draw2form--api:
-#    container_name: draw2form--api
-#    build:
-#      context: api
-#      dockerfile: Dockerfile
-#    restart: 'no'
-#    env_file:
-#      - .env
-#    ports:
-#      - '8000:8000'
-#  draw2form--llm:
-#    container_name: draw2form--llm
-#    build:
-#      context: llm-api
-#      dockerfile: Dockerfile
-#    restart: 'no'
-#    env_file:
-#      - .env
-#    ports:
-#      - '8001:8001'
-
