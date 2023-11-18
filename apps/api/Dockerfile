@@ -12,5 +12,4 @@ COPY apps/api/prisma                    prisma
 RUN npm install
 
 COPY dist/apps/api                      ./
-COPY apps/api/src/templates             app/templates
 CMD ["app/main.js"]

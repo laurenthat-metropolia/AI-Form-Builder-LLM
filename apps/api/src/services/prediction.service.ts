@@ -155,7 +155,6 @@ export function levelPredictionsInYAxis(predictions: UnifiedPrediction[]): Unifi
                     testPredictionBottomRightYCoordinate - deltaY;
                 //     Save Test Subject
                 output.set(testPredictionIndex, textPredictionMoved);
-                console.log(`Prediction type ${textPredictionMoved.type} Moved in Y Axis: ${deltaY}`);
             } else {
                 continue;
             }

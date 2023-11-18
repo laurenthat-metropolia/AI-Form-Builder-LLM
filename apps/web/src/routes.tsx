@@ -3,6 +3,7 @@ import App from './app/app';
 import { Upload } from './app/pages/Upload';
 import { UploadDetails } from './app/pages/UploadDetails';
 import { AndroidLinkLoginMissingApp } from './app/android/auth/login/AndroidLinkLoginMissingApp';
+import { AndroidLaunchForLogin } from './app/android/auth/login/AndroidLaunchForLogin';
 
 export function AppRouter() {
     return (
@@ -24,10 +25,14 @@ export const router = createBrowserRouter([
                 path: '/upload/:id',
                 element: <UploadDetails />,
             },
+            {
+                path: '/apps/launch/android',
+                element: <AndroidLaunchForLogin />,
+            },
+            {
+                path: '/android/auth/login',
+                element: <AndroidLinkLoginMissingApp />,
+            },
         ],
-    },
-    {
-        path: '/android/auth/login',
-        element: <AndroidLinkLoginMissingApp />,
     },
 ]);

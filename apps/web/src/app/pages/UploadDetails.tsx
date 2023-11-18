@@ -158,10 +158,7 @@ export const UploadDetails = () => {
             (async () => {
                 try {
                     const env = process.env.NODE_ENV;
-                    const url =
-                        env === 'development'
-                            ? `http://localhost:8000/api/preview/upload/${id}`
-                            : `/api/preview/upload/${id}`;
+                    const url = env === 'development' ? `http://localhost:8000/api/upload/${id}` : `/api/upload/${id}`;
                     const result = await fetch(url);
 
                     const data: UploadedFileWithIdentifiableImageEvents = await result.json();

@@ -4,42 +4,39 @@ import { generateAccessToken } from '../strategies/passport-jwt.service';
 import { UserDatabase } from '../databases/userDatabase';
 import passport from 'passport';
 import { GoogleProfile } from '../interfaces/googleProfile';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { environment } from '../configurations/environment';
+import { AndroidLoginIntentBody } from '@draw2form/shared';
 
 export const authController = () => {
-  const router = express.Router();
+    const router = express.Router();
 
-  const continueWithAppTemplate = readFileSync(
-    resolve(
-      process.cwd(),
-      'apps',
-      'api',
-      'src',
-      'templates',
-      'continue-with-app.html'
-    )
-  ).toString();
+    router.get('/google', passport.authenticate('google'));
 
-  router.get('/google', passport.authenticate('google'));
+    router.get('/google/callback', passport.authenticate('google'), async (req: any, res: Response) => {
+        const googleProfile = req.user as GoogleProfile;
+        const user = await UserDatabase.syncUserByGoogleProfile(googleProfile);
+        const token = generateAccessToken(user);
+        const params = new URLSearchParams();
 
-  router.get(
-    '/google/callback',
-    passport.authenticate('google'),
-    async (req: any, res: Response) => {
-      const googleProfile = req.user as GoogleProfile;
-      const user = await UserDatabase.syncUserByGoogleProfile(googleProfile);
-      const token = generateAccessToken(user);
-      const params = new URLSearchParams();
-      params.set('token', JSON.stringify(token));
-      params.set('user', JSON.stringify(user));
-      const template = continueWithAppTemplate
-        .replace('[launchLink]', `/android/auth/login?${params.toString()}`)
-        .replace('[accessToken]', token.accessToken);
+        const loginInfo: AndroidLoginIntentBody = {
+            user,
+            token,
+        };
+        for (let [key, value] of Object.entries(loginInfo)) {
+            params.set(key, JSON.stringify(value));
+        }
 
-      res.send(template);
-    }
-  );
+        const url = environment.isProduction
+            ? `/apps/launch/android?${params.toString()}`
+            : `http://localhost:8443/apps/launch/android?${params.toString()}`;
+        res.redirect(url);
 
-  return router;
+        // const template = continueWithAppTemplate
+        //   .replace('[launchLink]', `/android/auth/login?${params.toString()}`)
+        //   .replace('[accessToken]', token.accessToken);
+        //
+        // res.send(template);
+    });
+
+    return router;
 };

@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { requiresAccessToken } from '../strategies/passport-jwt.service';
+import { requiresAccessToken, requiresAccessTokenAndAllowAnonymous } from '../strategies/passport-jwt.service';
 import { requireImageToBeUploaded, transformUploadedFile, uploadImageMiddleware } from '../configurations/configUpload';
 import { User } from '@prisma/client';
 import { fetchPopulatedUploadedFile, prisma } from '../databases/userDatabase';
@@ -11,11 +11,11 @@ export const uploadController = () => {
 
     router.post(
         '/',
-        requiresAccessToken,
+        requiresAccessTokenAndAllowAnonymous,
         uploadImageMiddleware,
         requireImageToBeUploaded,
         async (req: Request, res: Response): Promise<void> => {
-            const user: User = req.user as User;
+            const user: User | undefined = req.user as User | undefined;
             const image = transformUploadedFile(req.file);
 
             // Upload Image
@@ -23,30 +23,36 @@ export const uploadController = () => {
                 data: {
                     url: image.url,
                     key: image.key,
-                    ownerId: user.id,
+                    ownerId: user?.id ?? undefined,
                 },
             });
             // Send the response
             res.status(200).send(uploadedFile);
 
-            processUploadedFile(uploadedFile);
+            console.log(`UploadedFile processing "${uploadedFile.id}" Started.`);
+            processUploadedFile(uploadedFile)
+                .then(() => {
+                    console.log(`UploadedFile processing "${uploadedFile.id}" Completed.`);
+                })
+                .catch((err) => {
+                    console.log(`UploadedFile processing "${uploadedFile.id}" Failed.`);
+                    console.log({ uploadedFile, err });
+                });
         },
     );
 
-    router.get('/:id', requiresAccessToken, async (req: Request, res: Response) => {
+    router.get('/:id', requiresAccessTokenAndAllowAnonymous, async (req: Request, res: Response) => {
         const uploadedFileId = req.params.id;
         const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
         res.status(200).send(uploadedFile);
     });
 
-    router.get('/:id/status', requiresAccessToken, async (req: Request, res: Response) => {
-        const user = req.user as User;
-
+    router.get('/:id/status', requiresAccessTokenAndAllowAnonymous, async (req: Request, res: Response) => {
         const uploadedFileId = req.params.id;
         const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
-        if (!uploadedFile || uploadedFile.ownerId !== user.id) {
-            res.status(401).send({
-                message: 'Not Authorized.',
+        if (!uploadedFile) {
+            res.status(404).send({
+                message: 'UploadedFile Not Found.',
             });
             return;
         }
@@ -62,29 +68,47 @@ export const uploadController = () => {
         });
     });
 
-    router.get('/:id/event/:event', requiresAccessToken, async (req: Request, res: Response) => {
-        const user = req.user as User;
-
+    router.get('/:id/event/:event', requiresAccessTokenAndAllowAnonymous, async (req: Request, res: Response) => {
         const uploadedFileId = req.params.id;
         const eventName = req.params.event;
 
         const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
-        if (!uploadedFile || uploadedFile.ownerId !== user.id) {
-            res.status(401).send({
-                message: 'Not Authorized.',
+        if (!uploadedFile) {
+            res.status(404).send({
+                message: 'UploadedFile Not Found.',
+            });
+            return;
+        }
+        const eventItem = uploadedFile.events.find((event) => event.event === eventName) ?? null;
+        if (!eventItem) {
+            res.status(404).send({
+                message: 'Event Not Found.',
+            });
+            return;
+        }
+        res.status(200).send(eventItem);
+    });
+
+    router.get('/:id/event/:event/payload', requiresAccessToken, async (req: Request, res: Response) => {
+        const uploadedFileId = req.params.id;
+        const eventName = req.params.event;
+
+        const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
+        if (!uploadedFile) {
+            res.status(404).send({
+                message: 'UploadedFile Not Found.',
+            });
+            return;
+        }
+        const eventItem = uploadedFile.events.find((event) => event.event === eventName) ?? null;
+        if (!eventItem) {
+            res.status(404).send({
+                message: 'Event Not Found.',
             });
             return;
         }
 
-        const hasTextRes = uploadedFile.events.find((ev) => ev.event === ImageEvents.TextDetectionResponseReceived);
-        const hasObjectRes = uploadedFile.events.find((ev) => ev.event === ImageEvents.ObjectDetectionResponseReceived);
-        const hasFormRes = uploadedFile.events.find((ev) => ev.event === ImageEvents.FormComponentsCreated);
-
-        res.status(200).send({
-            textRecognition: hasTextRes === undefined ? 'loading' : hasTextRes === null ? 'error' : 'success',
-            objectRecognition: hasObjectRes === undefined ? 'loading' : hasObjectRes === null ? 'error' : 'success',
-            formGeneration: hasFormRes === undefined ? 'loading' : hasFormRes === null ? 'error' : 'success',
-        });
+        res.status(200).send(eventItem.payload);
     });
 
     return router;

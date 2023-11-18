@@ -20,7 +20,7 @@ export const Upload = () => {
                 setAlerts([]);
                 const env = process.env.NODE_ENV;
                 setLoading(true);
-                const url = env === 'development' ? `http://localhost:8000/api/preview/upload` : `/api/preview/upload`;
+                const url = env === 'development' ? `http://localhost:8000/api/upload` : `/api/upload`;
                 const result = await fetch(url, {
                     method: 'POST',
                     body: formData,

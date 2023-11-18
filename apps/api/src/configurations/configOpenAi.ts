@@ -1,8 +1,7 @@
 import OpenAI from 'openai';
 import { environment } from './environment';
-import { safeParse } from '../utils';
 import { FormButton, FormCheckbox, FormImage, FormLabel, FormTextField, FormToggleSwitch } from '@prisma/client';
-import { ExpectedChatGPTOutput, SupportedFormComponent, UnifiedPrediction } from '@draw2form/shared';
+import { ExpectedChatGPTOutput, safeParse, SupportedFormComponent, UnifiedPrediction } from '@draw2form/shared';
 import { ChatCompletionContentPart } from 'openai/src/resources/chat/completions';
 
 export const openAI = new OpenAI({
@@ -121,8 +120,6 @@ model FormLabel {
 export function processChatGPTOutput(
     parsedContent: ReturnType<typeof sendCommandsToChatGPTApi>,
 ): ExpectedChatGPTOutput {
-    console.log(parsedContent);
-
     const topLevelArray: any[] | null = (() => {
         if (parsedContent === null) {
             console.log(`CHATGPT response is not parsable.`);
