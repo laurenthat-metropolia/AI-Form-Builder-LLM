@@ -17,7 +17,7 @@ export const router = createBrowserRouter([
         element: <App />,
         children: [
             {
-                path: '/upload',
+                path: '/',
                 element: <Upload />,
             },
             {

@@ -1,159 +1,89 @@
-import {
-    faCircleCheck,
-    faCircleExclamation,
-    faCircleQuestion,
-    faWindowMinimize,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCircleCheck, faCircleExclamation, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-    ApiFormButton,
-    ApiFormCheckbox,
-    ApiFormGenerationEvent,
-    ApiFormImage,
-    ApiFormLabel,
-    ApiFormTextField,
-    ApiFormToggleSwitch,
-    ApiImageEvent,
-    ApiImageEvents,
-    ApiImageObjectDetectionEvent,
-    ApiImageTextDetectionEvent,
-    ApiUnifiedPredictionEvent,
-    ApiUploadedFile,
-    ApiUploadedFileWithParsedPayload,
-    UnifiedPrediction,
-} from '../types';
+
 import { Spinner } from '../components/Spinner';
 import { Canvas, CanvasAnnotation } from '../components/Canvas';
-import * as events from 'events';
+import { JSONTree } from 'react-json-tree';
+import { ImageEvents, SupportedFormComponent, UploadedFileWithIdentifiableImageEvents } from '@draw2form/shared';
 
-type ParseEvent = ApiImageEvent & {
-    parsedPayload: {};
-};
 export const UploadDetails = () => {
-    console.log();
     const { id } = useParams();
-    const [uploadedFile, setUploadedFile] = useState<ApiUploadedFileWithParsedPayload | null>(null);
+    const [uploadedFile, setUploadedFile] = useState<UploadedFileWithIdentifiableImageEvents | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [canvasAnnotations, setCanvasAnnotations] = useState<CanvasAnnotation[]>([]);
-    const [generatedForm, setGeneratedForm] = useState<
-        (
-            | ['FormTextField', ApiFormTextField, any]
-            | ['FormCheckbox', ApiFormCheckbox, any]
-            | ['FormButton', ApiFormButton, any]
-            | ['FormImage', ApiFormImage, any]
-            | ['FormLabel', ApiFormLabel, any]
-            | ['FormToggleSwitch', ApiFormToggleSwitch, any]
-        )[][]
-    >([]);
+    const [generatedForm, setGeneratedForm] = useState<SupportedFormComponent[][]>([]);
+
+    const camelPad = useCallback((str: string) => {
+        return (
+            str
+                // Look for long acronyms and filter out the last letter
+                .replace(/([A-Z]+)([A-Z][a-z])/g, ' $1 $2')
+                // Look for lower-case letters followed by upper-case letters
+                .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+                // Look for lower-case letters followed by numbers
+                .replace(/([a-zA-Z])(\d)/g, '$1 $2')
+                .replace(/^./, function (str: string) {
+                    return str.toUpperCase();
+                })
+                // Remove any white space left around the word
+                .trim()
+        );
+    }, []);
 
     useEffect(() => {
         if (!uploadedFile) {
             return;
         }
+
+        const events = uploadedFile.events ?? [];
         const output: CanvasAnnotation[] = [];
 
-        {
-            const ev = uploadedFile.events?.find((event: any) => event.event === 'TEXT_DETECTION_COMPLETED') as
-                | ApiImageTextDetectionEvent
-                | undefined;
+        for (let imageEvent of events) {
+            if (imageEvent.event === ImageEvents.TextDetectionResponseReceived) {
+                const payload = imageEvent.payload ?? [];
 
-            const polygons: CanvasAnnotation[] =
-                ev?.parsedPayload?.map(({ text, coordinates }: any): CanvasAnnotation => {
-                    return {
-                        type: 'rect',
-                        color: 'red',
-                        payload: {
-                            label: text,
-                            points: coordinates,
-                        },
-                    };
-                }) ?? [];
-            output.push(...polygons);
+                const polygons: CanvasAnnotation[] =
+                    payload.map(({ text, coordinates }): CanvasAnnotation => {
+                        return {
+                            type: 'rect',
+                            color: 'red',
+                            payload: {
+                                label: text,
+                                points: coordinates,
+                            },
+                        };
+                    }) ?? [];
+                output.push(...polygons);
+                /**
+                 *
+                 *
+                 */
+            } else if (imageEvent.event === ImageEvents.ObjectDetectionUnified) {
+                const payload = imageEvent.payload ?? [];
+                const polygons: CanvasAnnotation[] =
+                    payload?.map(({ type, coordinates, data }: any): CanvasAnnotation => {
+                        return {
+                            type: 'rect',
+                            color: 'cyan',
+                            payload: {
+                                label: 'text',
+                                points: coordinates,
+                            },
+                        };
+                    }) ?? [];
+                output.push(...polygons);
+                /**
+                 *
+                 *
+                 */
+            } else if (imageEvent.event === ImageEvents.FormComponentsCreated) {
+                const payload = imageEvent.payload ?? [];
+                setGeneratedForm(payload);
+            }
         }
 
-        {
-            const ev = uploadedFile.events?.find((event: any) => event.event === 'PREDICTIONS_UNIFIED') as
-                | ApiUnifiedPredictionEvent
-                | undefined;
-
-            const a = [1, 2, 3];
-            const TOP_LEFT_Y_COORDINATE_INDEX = 1;
-
-            const groupedByYAxis = ev?.parsedPayload.reduce((previousValue: any, currentValue: any) => {
-                const topLeftYCoordinate = currentValue.coordinates[TOP_LEFT_Y_COORDINATE_INDEX];
-
-                if (previousValue[topLeftYCoordinate] !== undefined) {
-                    previousValue[topLeftYCoordinate] = [...previousValue[topLeftYCoordinate], currentValue];
-                } else {
-                    previousValue[topLeftYCoordinate] = [currentValue];
-                }
-
-                return previousValue;
-            }, {} as Record<number, UnifiedPrediction[]>);
-            console.log(Object.values(groupedByYAxis ?? {}));
-            const polygons: CanvasAnnotation[] =
-                ev?.parsedPayload?.map(({ type, coordinates, data }: any): CanvasAnnotation => {
-                    return {
-                        type: 'rect',
-                        color: 'cyan',
-                        payload: {
-                            label: 'text',
-                            points: coordinates,
-                        },
-                    };
-                }) ?? [];
-            output.push(...polygons);
-        }
-
-        {
-            const ev = uploadedFile.events?.find((event: any) => event.event === 'OBJECT_DETECTION_COMPLETED') as
-                | ApiImageObjectDetectionEvent
-                | undefined;
-
-            const polygons: CanvasAnnotation[] =
-                ev?.parsedPayload?.map((payload: any): CanvasAnnotation => {
-                    const className = payload['class'];
-                    return {
-                        type: 'rect',
-                        color: 'blue',
-                        payload: {
-                            label: className,
-                            points: payload.coordinates,
-                        },
-                    };
-                }) ?? [];
-            output.push(...polygons);
-        }
-
-        // {
-        const ev = uploadedFile.events?.find((event: any) => event.event === 'STRUCTURE_GENERATION_COMPLETED') as
-            | ApiFormGenerationEvent
-            | undefined;
-        //     console.log(ev?.parsedPayload);
-        //     const polygons: CanvasAnnotation[] =
-        //         ev?.parsedPayload
-        //             ?.map(([type, field, response]): CanvasAnnotation | null => {
-        //                 const className = response['class'];
-        //                 if (!response.coordinates) {
-        //                     return null;
-        //                 }
-        //                 const [x, y, x1, y1] = response.coordinates;
-        //
-        //                 return {
-        //                     type: 'rect',
-        //                     color: 'black',
-        //                     payload: {
-        //                         label: className,
-        //                         points: [x, y, x1, y1],
-        //                     },
-        //                 };
-        //             })
-        //             .filter((x): x is CanvasAnnotation => x !== null) ?? [];
-        //     // output.push(...polygons);
-        setGeneratedForm(ev?.parsedPayload ?? []);
-        // }
         setCanvasAnnotations(output);
     }, [uploadedFile]);
 
@@ -171,9 +101,9 @@ export const UploadDetails = () => {
                             : `/api/preview/upload/${id}`;
                     const result = await fetch(url);
 
-                    const data: ApiUploadedFileWithParsedPayload = await result.json();
+                    const data: UploadedFileWithIdentifiableImageEvents = await result.json();
 
-                    if (data.events && data.events.length >= 3) {
+                    if (data.events && data.events.find((ev) => ev.event === ImageEvents.FormComponentsCreated)) {
                         clearInterval(interval);
                         setLoading(false);
                     }
@@ -188,16 +118,12 @@ export const UploadDetails = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col gap-6 p-6 lg:flex-row lg:justify-center">
-                {[
-                    [ApiImageEvents.OBJECT_DETECTION_COMPLETED, 'Object detection'],
-                    [ApiImageEvents.TEXT_DETECTION_COMPLETED, 'Text detection'],
-                    [ApiImageEvents.STRUCTURE_GENERATION_COMPLETED, 'Form generation'],
-                ].map(([eventName, label]) => {
-                    const exist = uploadedFile?.events?.find((it: any) => it.event === eventName);
+            <div className="grid gap-2 grid-cols-12 pt-5">
+                {Object.values(ImageEvents).map((event) => {
+                    const exist = uploadedFile?.events?.find((it: any) => it.event === event);
                     return (
-                        <div key={label} className="flex items-center gap-2 lg:justify-center  lg:flex-row">
-                            <span className="text-2xl">
+                        <div key={event} className="col-span-4 flex items-center gap-2 lg:flex-row">
+                            <span className="">
                                 {exist === undefined && (
                                     <span className="text-gray-700">
                                         <FontAwesomeIcon icon={faCircleQuestion} />
@@ -214,7 +140,7 @@ export const UploadDetails = () => {
                                     </span>
                                 )}
                             </span>
-                            <span>{label}</span>
+                            <small>{camelPad(event)}</small>
                         </div>
                     );
                 })}
@@ -328,13 +254,9 @@ export const UploadDetails = () => {
                     </div>
                 </div>
             </div>
-            <div className="col-span-6    flex flex-col gap-2 p-4 rounded">
-                <code className="overflow-hidden max-w-7xl shadow-md">
-                    <pre className="overflow-hidden max-w-7xl overflow-x-scroll p-2">
-                        <h4>Debug:</h4>
-                        {JSON.stringify(uploadedFile, undefined, 4)}
-                    </pre>
-                </code>
+            <div className="col-span-6 flex flex-col gap-2 p-4 rounded h-screen">
+                <h4>Debug:</h4>
+                <JSONTree data={uploadedFile ?? {}} />
             </div>
         </div>
     );

@@ -1,13 +1,5 @@
+import { ObjectDetectionResponse } from '@draw2form/shared';
 import fetch from 'node-fetch';
-
-export type ObjectDetectionResponseItem = {
-    confidence: number;
-    class: string;
-    class_id: number;
-    coordinates: [number, number, number, number];
-};
-
-export type ObjectDetectionResponse = ObjectDetectionResponseItem[];
 
 const api = 'http://127.0.0.1:8001/llm/predict';
 

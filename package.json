@@ -6,8 +6,10 @@
         "build:api": "nx build api",
         "build:web": "nx build web",
         "build:llm": "nx build llm",
+        "migraiton:deploy": "kubectl port-forward applications-postgresql-0 --namespace=databases 5432:5432",
+        "formward:db": "kubectl port-forward applications-postgresql-0 --namespace=databases 5432:5432",
         "op:start:api": "APP_ENV=local op run --no-masking --env-file=apps/api/.env.op nx serve api",
-        "op:start:web": "APP_ENV=local op run --no-masking --env-file=apps/web/.env.op nx serve web",
+        "op:start:web": "APP_ENV=local op run --no-masking --env-file=apps/web/.env.op nx serve web -- --port 8443",
         "op:start:llm": "APP_ENV=local op run --no-masking --env-file=apps/llm/.env.op nx serve llm",
         "postinstall": "npx prisma generate --schema=./apps/api/prisma/schema.prisma"
     },
@@ -95,6 +97,8 @@
         "passport-jwt": "^4.0.1",
         "react": "18.2.0",
         "react-dom": "18.2.0",
+        "react-json-tree": "^0.18.0",
+        "react-json-view-lite": "^1.2.0",
         "react-router-dom": "6.11.2",
         "swagger-ui-express": "^5.0.0",
         "tslib": "^2.3.0"

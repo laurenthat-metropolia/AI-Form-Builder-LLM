@@ -16,8 +16,8 @@ from fastapi.responses import JSONResponse
 load_dotenv()
 version = os.getenv("APP_BUILD_VERSION", "development")
 env = os.getenv("APP_ENV", "development")
-is_development = env == "development"
-is_production = not is_development
+is_production = env == "production"
+is_development = not is_production
 
 print(f"Starting Version: \"{version}\" Environment: \"{env}\"")
 

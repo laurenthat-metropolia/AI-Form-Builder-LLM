@@ -1,0 +1,2 @@
+export const TOP_LEFT_Y_COORDINATE_INDEX = 1;
+export const BOTTOM_RIGHT_Y_COORDINATE_INDEX = 3;
