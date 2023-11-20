@@ -14,6 +14,12 @@ export const profileController = () => {
             include: {
                 forms: {
                     include: {
+                        checkboxes: true,
+                        buttons: true,
+                        images: true,
+                        labels: true,
+                        textFields: true,
+                        toggleSwitches: true,
                         upload: {
                             include: {
                                 events: true,

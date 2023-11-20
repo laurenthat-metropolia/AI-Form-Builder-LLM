@@ -4,6 +4,7 @@ import { Upload } from './app/pages/Upload';
 import { UploadDetails } from './app/pages/UploadDetails';
 import { AndroidLinkLoginMissingApp } from './app/android/auth/login/AndroidLinkLoginMissingApp';
 import { AndroidLaunchForLogin } from './app/android/auth/login/AndroidLaunchForLogin';
+import { Forms } from './app/pages/Forms';
 
 export function AppRouter() {
     return (
@@ -19,7 +20,12 @@ export const router = createBrowserRouter([
         children: [
             {
                 path: '/',
+
                 element: <Upload />,
+            },
+            {
+                path: '/forms',
+                element: <Forms />,
             },
             {
                 path: '/upload/:id',

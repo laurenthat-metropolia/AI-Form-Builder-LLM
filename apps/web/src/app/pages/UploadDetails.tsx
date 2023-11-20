@@ -260,7 +260,11 @@ export const UploadDetails = () => {
                     {uploadedFile !== null && <Canvas url={uploadedFile.url} annotations={canvasAnnotations} />}
                 </div>
                 <div className="col-span-6 shadow-md p-2 flex flex-col gap-2 p-4 rounded">
-                    <h4>Generated Form:</h4>
+                    <h4>
+                        Generated Form:{' '}
+                        {uploadedFile?.events?.find((x) => x.event === ImageEvents.ChatGPTResponseProcessed)?.payload
+                            ?.name ?? 'No Name'}
+                    </h4>
                     <div className="grid grid-cols-12 gap-2 p-4 border rounded">
                         {generatedForm.map((formRow, formRowIndex) => {
                             const onlyHasOneElement = formRow.length === 1;

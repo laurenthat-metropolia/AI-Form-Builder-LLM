@@ -1,15 +1,23 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import styles from './app.module.scss';
 import { Outlet } from 'react-router-dom';
 import { TopNav } from './components/TopNav';
+import { AuthContext, GetAuthContextDefaultValue } from './contexts/AuthContext';
+import { useState } from 'react';
+import { LoginInformation } from '@draw2form/shared';
+import { EnvContext, EnvContextDefaultValue } from './contexts/EnvContext';
 
 function App() {
-  return (
-    <>
-      <TopNav />
-      <Outlet></Outlet>
-    </>
-  );
+    const [auth, setAuth] = useState<LoginInformation | null>(GetAuthContextDefaultValue());
+    const [env] = useState<'development' | 'production'>(EnvContextDefaultValue);
+
+    return (
+        <EnvContext.Provider value={env}>
+            <AuthContext.Provider value={[auth, setAuth]}>
+                <TopNav />
+                <Outlet></Outlet>
+            </AuthContext.Provider>
+        </EnvContext.Provider>
+    );
 }
 
 export default App;

@@ -11,19 +11,20 @@ import {
     User,
 } from '@prisma/client';
 import { prisma } from '../databases/userDatabase';
+import { requireImageToBeUploaded, transformUploadedFile, uploadImageMiddleware } from '../configurations/configUpload';
+import { FormStatus } from '@draw2form/shared';
+import { processUploadedFile } from '../services/prediction.service';
+import { populateUserFormBasedOnChatGPTResponse } from '../services/form.service';
 
 export const formController = () => {
     const router = express.Router();
 
-    router.post('/', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-        try {
-            const user = req.user as User;
-            const body = req.body;
-            const formResponse = await prisma.form.create({
-                data: {
+    router.get('/', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+        const user = req.user as User;
+        res.send(
+            await prisma.form.findMany({
+                where: {
                     ownerId: user.id,
-                    name: body.form.name?.trim(),
-                    status: body.form.available ?? false,
                 },
                 include: {
                     checkboxes: true,
@@ -32,15 +33,85 @@ export const formController = () => {
                     buttons: true,
                     labels: true,
                     images: true,
+                    upload: true,
                 },
-            });
-
-            res.status(200).json(formResponse);
-        } catch (error) {
-            console.error('Error creating Form:', error);
-            res.status(500).json({ error: 'Internal server error' });
-        }
+            }),
+        );
     });
+
+    router.post(
+        '/',
+        requiresAccessToken,
+        uploadImageMiddleware,
+        requireImageToBeUploaded,
+        async (req: Request, res: Response): Promise<void> => {
+            try {
+                const user = req.user as User;
+                const image = transformUploadedFile(req.file);
+                const createdForm = await prisma.form.create({
+                    data: {
+                        status: FormStatus.DRAFT,
+                        name: 'Form',
+                        ownerId: user.id,
+                    },
+                });
+                // Upload Image
+                const uploadedFile = await prisma.uploadedFile.create({
+                    data: {
+                        url: image.url,
+                        key: image.key,
+                        formId: createdForm.id,
+                    },
+                });
+
+                const populatedForm = await prisma.form.findFirstOrThrow({
+                    where: {
+                        id: createdForm.id,
+                    },
+                    include: {
+                        checkboxes: true,
+                        textFields: true,
+                        toggleSwitches: true,
+                        buttons: true,
+                        labels: true,
+                        images: true,
+                        upload: true,
+                    },
+                });
+
+                res.status(200).json(populatedForm);
+                const processedUploadedFile = await processUploadedFile(uploadedFile)
+                    .then((data) => {
+                        console.log(`UploadedFile processing "${uploadedFile.id}" Completed.`);
+                        return data;
+                    })
+                    .catch((err) => {
+                        console.log(`UploadedFile processing "${uploadedFile.id}" Failed.`);
+                        console.log(err);
+                        return null;
+                    });
+                if (processedUploadedFile) {
+                    await populateUserFormBasedOnChatGPTResponse(
+                        processedUploadedFile.name,
+                        processedUploadedFile.components,
+                        createdForm,
+                    )
+                        .then((data) => {
+                            console.log(`UploadedFile processing "${uploadedFile.id}" Form Completed.`);
+                            return data;
+                        })
+                        .catch((err) => {
+                            console.log(`UploadedFile processing "${uploadedFile.id}" Form Failed.`);
+                            console.log(err);
+                            return null;
+                        });
+                }
+            } catch (error) {
+                console.error('Error creating Form:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        },
+    );
 
     router.get('/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
         try {

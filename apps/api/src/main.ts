@@ -54,7 +54,7 @@ router.use('/upload', uploadController());
 
 router.use('/profile', profileController());
 
-router.use('/form', formController());
+router.use('/forms', formController());
 
 app.use(expressGlobalErrorHandler);
 

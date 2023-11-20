@@ -5,12 +5,14 @@ import { UserDatabase } from '../databases/userDatabase';
 import passport from 'passport';
 import { GoogleProfile } from '../interfaces/googleProfile';
 import { environment } from '../configurations/environment';
-import { AndroidLoginIntentBody } from '@draw2form/shared';
+import { LoginInformation } from '@draw2form/shared';
 
 export const authController = () => {
     const router = express.Router();
 
-    router.get('/google', passport.authenticate('google'));
+    router.get('/google', (req, res, next) => {
+        return passport.authenticate('google', {})(req, res, next);
+    });
 
     router.get('/google/callback', passport.authenticate('google'), async (req: any, res: Response) => {
         const googleProfile = req.user as GoogleProfile;
@@ -18,7 +20,7 @@ export const authController = () => {
         const token = generateAccessToken(user);
         const params = new URLSearchParams();
 
-        const loginInfo: AndroidLoginIntentBody = {
+        const loginInfo: LoginInformation = {
             user,
             token,
         };

@@ -2,6 +2,7 @@ datasource db {
   provider          = "postgresql"
   url               = env("APP_DATABASE_URL")
   shadowDatabaseUrl = "postgresql://postgres:V7NHzBm6U.4-phLzTvJt@localhost:5433/postgres?schema=public"
+  //   export APP_DATABASE_URL=postgresql://postgres:V7NHzBm6U.4-phLzTvJt@localhost:5432/postgres?schema=public
 }
 
 generator client {
