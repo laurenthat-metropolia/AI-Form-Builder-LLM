@@ -23,7 +23,6 @@ export const uploadController = () => {
                 data: {
                     url: image.url,
                     key: image.key,
-                    ownerId: user?.id ?? undefined,
                 },
             });
             // Send the response

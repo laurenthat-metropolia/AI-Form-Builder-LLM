@@ -23,7 +23,7 @@ export const formController = () => {
                 data: {
                     ownerId: user.id,
                     name: body.form.name?.trim(),
-                    available: body.form.available ?? false,
+                    status: body.form.available ?? false,
                 },
                 include: {
                     checkboxes: true,
@@ -105,7 +105,7 @@ export const formController = () => {
                 where: { id: formId },
                 data: {
                     name: body.form.name ? body.form.name.trim() : existingForm.name,
-                    available: body.form.available ? body.form.available : false,
+                    status: body.form.status ? body.form.status : 'DRAFT',
                     checkboxes: {
                         updateMany: {
                             where: {
