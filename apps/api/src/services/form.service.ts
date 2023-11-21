@@ -76,3 +76,52 @@ export const populateUserFormBasedOnChatGPTResponse = async (
         }
     }
 };
+
+const findPopulatedManyByOwnerId = async (ownerId: string) => {
+    return prisma.form.findMany({
+        where: {
+            ownerId: ownerId,
+        },
+        include: {
+            checkboxes: true,
+            textFields: true,
+            toggleSwitches: true,
+            buttons: true,
+            labels: true,
+            images: true,
+            upload: {
+                include: {
+                    events: true,
+                },
+            },
+        },
+    });
+};
+
+const findOnePopulatedById = async (id: string) => {
+    const item = await prisma.form.findFirst({
+        where: {
+            id: id,
+        },
+        include: {
+            checkboxes: true,
+            textFields: true,
+            toggleSwitches: true,
+            buttons: true,
+            labels: true,
+            images: true,
+            upload: {
+                include: {
+                    events: true,
+                },
+            },
+        },
+    });
+
+    return item ?? null;
+};
+
+export const forms = {
+    findPopulatedManyByOwnerId: findPopulatedManyByOwnerId,
+    findOnePopulatedById: findOnePopulatedById,
+};
