@@ -15,6 +15,8 @@ import morgan from 'morgan';
 import { PrismaModel } from './_gen/prisma-class';
 
 async function bootstrap() {
+    Logger.log(`Starting Version: \"${environment.APP_BUILD_VERSION}\" Environment: \"${environment.NODE_ENV}\"`);
+
     const app = await NestFactory.create(AppModule);
     const globalPrefix = 'api';
     app.setGlobalPrefix(globalPrefix);
@@ -51,3 +53,14 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+// Support Docker Container Exit order
+process.on('SIGTERM', function () {
+    console.log('\ncaught SIGTERM, stopping gracefully');
+    process.exit(1);
+});
+// Support Docker Container Exit order
+process.on('SIGINT', function () {
+    console.log('\ncaught SIGINT, stopping gracefully');
+    process.exit();
+});
