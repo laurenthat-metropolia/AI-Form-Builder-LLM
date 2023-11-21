@@ -1,6 +1,6 @@
 import { User } from '@prisma/client';
 
-export interface AndroidLoginIntentBody {
+export interface LoginInformation {
     token: {
         accessToken: string;
         expiresAt: number;

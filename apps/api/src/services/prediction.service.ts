@@ -18,7 +18,9 @@ import {
 } from '@draw2form/shared';
 import { eventService } from './event.service';
 
-export const processUploadedFile = async (uploadedFile: UploadedFile) => {
+export const processUploadedFile = async (
+    uploadedFile: UploadedFile,
+): Promise<{ name: string; components: ReturnType<typeof convertChatGPTOutputToFormComponents> }> => {
     /**
      *
      *  Get Responses from APis and Unify them.
@@ -66,11 +68,12 @@ export const processUploadedFile = async (uploadedFile: UploadedFile) => {
     await eventService.createChatGPTRequestSentEvent(uploadedFile, chatGPTInput);
     const chatGPTOutput = await sendCommandsToChatGPTApi(chatGPTInput);
     await eventService.createChatGPTResponseReceivedEvent(uploadedFile, chatGPTOutput);
+    console.log({ chatGPTOutput });
     /**
      *
      *  Process Response
      */
-    const processedChatGPTOutput = await processChatGPTOutput(chatGPTOutput);
+    const processedChatGPTOutput = processChatGPTOutput(chatGPTOutput);
     await eventService.createChatGPTResponseProcessedEvent(uploadedFile, processedChatGPTOutput);
 
     /**
@@ -79,6 +82,11 @@ export const processUploadedFile = async (uploadedFile: UploadedFile) => {
      */
     const formComponents = convertChatGPTOutputToFormComponents(processedChatGPTOutput);
     await eventService.createFormComponentsCreatedEvent(uploadedFile, formComponents);
+
+    return {
+        name: processedChatGPTOutput.name,
+        components: formComponents,
+    };
 };
 
 export function unifyObjectDetection(objects: ObjectDetectionResponse): UnifiedObjectPrediction[] {

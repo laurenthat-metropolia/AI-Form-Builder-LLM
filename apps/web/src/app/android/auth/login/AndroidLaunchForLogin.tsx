@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { AndroidLoginIntentBody, safeParse } from '@draw2form/shared';
+import React, { useContext, useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { LoginInformation, safeParse } from '@draw2form/shared';
+import { AuthContext } from '../../../contexts/AuthContext';
 
 export const AndroidLaunchForLogin = () => {
     const [params] = useSearchParams();
+    const [loginInformation, setLoginInformation] = useContext(AuthContext);
 
-    const [user] = useState<AndroidLoginIntentBody['user'] | null>(safeParse(params.get('user')));
-    const [token] = useState<AndroidLoginIntentBody['token'] | null>(safeParse(params.get('token')));
+    const [user] = useState<LoginInformation['user'] | null>(safeParse(params.get('user')));
+    const [token] = useState<LoginInformation['token'] | null>(safeParse(params.get('token')));
     const [showToken, setShowToken] = useState<boolean>(false);
     const [link, setLink] = useState<string | null>(null);
 
@@ -16,10 +18,14 @@ export const AndroidLaunchForLogin = () => {
         }
 
         const params = new URLSearchParams();
-        const loginInfo: AndroidLoginIntentBody = {
+        const loginInfo: LoginInformation = {
             user,
             token,
         };
+
+        setLoginInformation(loginInfo);
+        localStorage.setItem('draw2form', JSON.stringify(loginInfo));
+
         for (let [key, value] of Object.entries(loginInfo)) {
             params.set(key, JSON.stringify(value));
         }
@@ -32,6 +38,12 @@ export const AndroidLaunchForLogin = () => {
             <div>
                 <div className="w-screen flex items-center justify-center flex-col gap-4 overflow-visible pt-[10vh]">
                     <div className="w-24 h-24 bgc rounded mb-10"></div>
+                    <Link
+                        to="/"
+                        className="px-4 py-2 text-white bg-indigo-600 rounded duration-150 hover:bg-indigo-500 active:bg-indigo-700">
+                        Go to Home Page
+                    </Link>
+
                     <a
                         href={link ?? undefined}
                         className="px-4 py-2 text-white bg-indigo-600 rounded duration-150 hover:bg-indigo-500 active:bg-indigo-700">

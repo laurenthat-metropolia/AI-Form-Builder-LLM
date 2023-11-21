@@ -11,36 +11,172 @@ import {
     User,
 } from '@prisma/client';
 import { prisma } from '../databases/userDatabase';
+import { requireImageToBeUploaded, transformUploadedFile, uploadImageMiddleware } from '../configurations/configUpload';
+import { FormStatus, ImageEvents } from '@draw2form/shared';
+import { processUploadedFile } from '../services/prediction.service';
+import { forms, populateUserFormBasedOnChatGPTResponse } from '../services/form.service';
 
 export const formController = () => {
     const router = express.Router();
 
-    router.post('/', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-        try {
-            const user = req.user as User;
-            const body = req.body;
-            const formResponse = await prisma.form.create({
-                data: {
-                    ownerId: user.id,
-                    name: body.form.name?.trim(),
-                    status: body.form.available ?? false,
-                },
-                include: {
-                    checkboxes: true,
-                    textFields: true,
-                    toggleSwitches: true,
-                    buttons: true,
-                    labels: true,
-                    images: true,
-                },
-            });
-
-            res.status(200).json(formResponse);
-        } catch (error) {
-            console.error('Error creating Form:', error);
-            res.status(500).json({ error: 'Internal server error' });
-        }
+    router.get('/', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+        const user = req.user as User;
+        res.send(await forms.findPopulatedManyByOwnerId(user.id));
     });
+
+    router.get('/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+        const formId = req.params.id;
+        const item = await forms.findOnePopulatedById(formId);
+        if (!item) {
+            res.status(404).send({
+                message: 'Form Not Found.',
+            });
+            return;
+        }
+        res.send(item);
+    });
+
+    router.get('/:id/status', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+        const user = req.user as User;
+        const formId = req.params.id;
+        const item = await forms.findOnePopulatedById(formId);
+        if (!item) {
+            res.status(404).send({
+                message: 'Form Not Found.',
+            });
+            return;
+        }
+        const hasTextRes = item.upload?.events.find((ev) => ev.event === ImageEvents.TextDetectionResponseReceived);
+        const hasObjectRes = item.upload?.events.find((ev) => ev.event === ImageEvents.ObjectDetectionResponseReceived);
+        const hasFormRes = item.upload?.events.find((ev) => ev.event === ImageEvents.FormComponentsCreated);
+        res.status(200).send({
+            textRecognition: hasTextRes === undefined ? 'loading' : hasTextRes === null ? 'error' : 'success',
+            objectRecognition: hasObjectRes === undefined ? 'loading' : hasObjectRes === null ? 'error' : 'success',
+            formGeneration: hasFormRes === undefined ? 'loading' : hasFormRes === null ? 'error' : 'success',
+        });
+    });
+
+    // TODO: rename to events/:event
+    router.get('/:id/event/:event', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+        const eventName = req.params.event;
+        const formId = req.params.id;
+        const item = await forms.findOnePopulatedById(formId);
+
+        if (!item) {
+            res.status(404).send({
+                message: 'Form Not Found.',
+            });
+            return;
+        }
+
+        const eventItem = item.upload?.events.find((event) => event.event === eventName) ?? null;
+        if (!eventItem) {
+            res.status(404).send({
+                message: 'Event Not Found.',
+            });
+            return;
+        }
+        res.status(200).send(eventItem);
+    });
+
+    // TODO: rename to events/:event
+    router.get('/:id/event/:event/payload', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
+        const eventName = req.params.event;
+        const formId = req.params.id;
+        const item = await forms.findOnePopulatedById(formId);
+
+        if (!item) {
+            res.status(404).send({
+                message: 'Form Not Found.',
+            });
+            return;
+        }
+
+        const eventItem = item.upload?.events.find((event) => event.event === eventName) ?? null;
+        if (!eventItem) {
+            res.status(404).send({
+                message: 'Event Not Found.',
+            });
+            return;
+        }
+        res.status(200).send(eventItem.payload);
+    });
+
+    router.post(
+        '/',
+        requiresAccessToken,
+        uploadImageMiddleware,
+        requireImageToBeUploaded,
+        async (req: Request, res: Response): Promise<void> => {
+            try {
+                const user = req.user as User;
+                const image = transformUploadedFile(req.file);
+                const createdForm = await prisma.form.create({
+                    data: {
+                        status: FormStatus.DRAFT,
+                        name: 'Form',
+                        ownerId: user.id,
+                    },
+                });
+                // Upload Image
+                const uploadedFile = await prisma.uploadedFile.create({
+                    data: {
+                        url: image.url,
+                        key: image.key,
+                        formId: createdForm.id,
+                    },
+                });
+
+                const populatedForm = await prisma.form.findFirstOrThrow({
+                    where: {
+                        id: createdForm.id,
+                    },
+                    include: {
+                        checkboxes: true,
+                        textFields: true,
+                        toggleSwitches: true,
+                        buttons: true,
+                        labels: true,
+                        images: true,
+                        upload: true,
+                    },
+                });
+
+                res.status(200).json(populatedForm);
+
+                const processedUploadedFile = await processUploadedFile(uploadedFile)
+                    .then((data) => {
+                        console.log(`UploadedFile processing "${uploadedFile.id}" Completed.`);
+                        return data;
+                    })
+                    .catch((err) => {
+                        console.log(`UploadedFile processing "${uploadedFile.id}" Failed.`);
+                        console.log(err);
+                        return null;
+                    });
+
+                if (processedUploadedFile) {
+                    await populateUserFormBasedOnChatGPTResponse(
+                        processedUploadedFile.name,
+                        processedUploadedFile.components,
+                        createdForm,
+                    )
+                        .then((data) => {
+                            console.log(`UploadedFile processing "${uploadedFile.id}" Form Completed.`);
+                            return data;
+                        })
+                        .catch((err) => {
+                            console.log(`UploadedFile processing "${uploadedFile.id}" Form Failed.`);
+                            console.log(err);
+                            return null;
+                        });
+                }
+            } catch (error) {
+                console.error('Error creating Form:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        },
+    );
 
     router.get('/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
         try {

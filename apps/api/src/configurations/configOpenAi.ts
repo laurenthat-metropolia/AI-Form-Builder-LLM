@@ -1,7 +1,13 @@
 import OpenAI from 'openai';
 import { environment } from './environment';
 import { FormButton, FormCheckbox, FormImage, FormLabel, FormTextField, FormToggleSwitch } from '@prisma/client';
-import { ExpectedChatGPTOutput, safeParse, SupportedFormComponent, UnifiedPrediction } from '@draw2form/shared';
+import {
+    ExpectedChatGPTOutput,
+    safeParse,
+    SupportedFormComponent,
+    UnifiedPrediction,
+    UnifiedTextPrediction,
+} from '@draw2form/shared';
 import { ChatCompletionContentPart } from 'openai/src/resources/chat/completions';
 
 export const openAI = new OpenAI({
@@ -10,6 +16,12 @@ export const openAI = new OpenAI({
 });
 
 export function generateChatGPTInput(predictions: UnifiedPrediction[][]) {
+    const labels = predictions
+        .flat()
+        .filter((x): x is UnifiedTextPrediction => x.type === 'TEXT_PREDICTION')
+        .map((x) => x.data.text)
+        .join(', ');
+
     const tables: string = `
 model FormTextField {
   id        String @id @default(uuid())
@@ -87,7 +99,6 @@ model FormLabel {
                 `One key should be "orderX" and it should be the order of the component in the x axis.`,
                 `One key should be "orderY" and it should be the order of the component in the y axis.`,
                 `One key should be "label" and it should be added only if there is a text prediction in the same line or overlapping.`,
-                // `One key should be "coordinates" and it should be the coordinate of things you think is related to the form component.`,
                 `For drawing prediction class type "image" use "FormImage"`,
                 `For drawing prediction class type "input" use "FormTextField"`,
                 `For drawing prediction class type "checkbox" use "FormCheckbox"`,
@@ -104,10 +115,12 @@ model FormLabel {
             role: 'user',
             content: [
                 `Here is a list of drawing predictions: \n${PredictionsString}\n`,
-                `Each object has a key named "type" and it represents the type of the prediction.`,
-                `Each object has a key named "coordinates" and it represents the coordinate of the prediction.`,
-                `Each object has a key named "data" and it represents the information of the prediction.`,
-                `Create the JSON with array of mapped predictions to database models.`,
+                `Each prediction object has a key named "type" and it represents the type of the prediction.`,
+                `Each prediction object has a key named "coordinates" and it represents the coordinate of the prediction.`,
+                `Each prediction object has a key named "data" and it represents the information of the prediction.`,
+                `Create the JSON with following keys:`,
+                `one key is "name" and value should be a short descriptive form name based on following words: (${labels}) and do not the words and in no way just print the words to the value.`,
+                `one key is "components" and value is a an array of mapped predictions to database models.`,
             ].join('\n'),
         },
     ];
@@ -120,44 +133,49 @@ model FormLabel {
 export function processChatGPTOutput(
     parsedContent: ReturnType<typeof sendCommandsToChatGPTApi>,
 ): ExpectedChatGPTOutput {
-    const topLevelArray: any[] | null = (() => {
+    const topLevelObject: ExpectedChatGPTOutput | null = (() => {
         if (parsedContent === null) {
             console.log(`CHATGPT response is not parsable.`);
             return null;
         }
         const isArray = Array.isArray(parsedContent);
         if (isArray) {
-            console.log(`CHATGPT returned array`);
-            return parsedContent as any;
+            console.log(`CHATGPT returned array. Panicking don't know what to doooo!!!`);
+            return null;
         }
         if (typeof parsedContent === 'object') {
-            console.log(`CHATGPT returned object. returning the values.`);
-            return (Object.values(parsedContent) ?? []).flat() as any;
+            console.log(`CHATGPT returned object.`);
+            const name = parsedContent['name'];
+            const components = parsedContent['components'];
+            return {
+                name: typeof name === 'string' ? name : 'Generated Form',
+                components: Array.isArray(components) ? components : [],
+            };
         } else {
             console.log(`CHATGPT returned unknown format. ${typeof parsedContent}`);
-            return parsedContent;
+            return null;
         }
     })();
 
-    if (topLevelArray === null) {
+    if (topLevelObject === null) {
         return null;
     }
 
-    const validatedNestedArray: any[][] | null = (() => {
-        return topLevelArray.map((items) => {
-            const isArray = Array.isArray(items);
-            if (isArray) {
-                console.log(`CHATGPT returned array`);
+    const validatedComponents: ExpectedChatGPTOutput['components'] = (() => {
+        return topLevelObject.components.map((items) => {
+            if (Array.isArray(items)) {
                 return items;
             }
             if (typeof items === 'object') {
-                console.log(`CHATGPT returned object. returning the values.`);
                 return [items];
             }
+            return [];
         });
     })();
 
-    return validatedNestedArray;
+    topLevelObject.components = validatedComponents;
+
+    return topLevelObject;
 }
 
 export async function sendCommandsToChatGPTApi<T = any>(
@@ -180,7 +198,7 @@ export async function sendCommandsToChatGPTApi<T = any>(
 }
 
 export const convertChatGPTOutputToFormComponents = (rows: ExpectedChatGPTOutput): SupportedFormComponent[][] => {
-    return rows.map((rowItems): SupportedFormComponent[] => {
+    return rows.components.map((rowItems): SupportedFormComponent[] => {
         const items: (SupportedFormComponent | null)[] = rowItems.map((columnItem): SupportedFormComponent | null => {
             switch (columnItem.type) {
                 case 'FormLabel':

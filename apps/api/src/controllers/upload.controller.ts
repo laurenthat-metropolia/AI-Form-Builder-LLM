@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import { requiresAccessToken, requiresAccessTokenAndAllowAnonymous } from '../strategies/passport-jwt.service';
 import { requireImageToBeUploaded, transformUploadedFile, uploadImageMiddleware } from '../configurations/configUpload';
-import { User } from '@prisma/client';
 import { fetchPopulatedUploadedFile, prisma } from '../databases/userDatabase';
 import { ImageEvents } from '@draw2form/shared';
 import { processUploadedFile } from '../services/prediction.service';
@@ -15,7 +14,6 @@ export const uploadController = () => {
         uploadImageMiddleware,
         requireImageToBeUploaded,
         async (req: Request, res: Response): Promise<void> => {
-            const user: User | undefined = req.user as User | undefined;
             const image = transformUploadedFile(req.file);
 
             // Upload Image
@@ -27,15 +25,13 @@ export const uploadController = () => {
             });
             // Send the response
             res.status(200).send(uploadedFile);
-
-            console.log(`UploadedFile processing "${uploadedFile.id}" Started.`);
-            processUploadedFile(uploadedFile)
-                .then(() => {
+            await processUploadedFile(uploadedFile)
+                .then((data) => {
                     console.log(`UploadedFile processing "${uploadedFile.id}" Completed.`);
                 })
                 .catch((err) => {
                     console.log(`UploadedFile processing "${uploadedFile.id}" Failed.`);
-                    console.log({ uploadedFile, err });
+                    console.log(err);
                 });
         },
     );
