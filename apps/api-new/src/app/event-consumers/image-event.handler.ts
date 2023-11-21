@@ -3,11 +3,12 @@ import { Job } from 'bull';
 import { Form, UploadedFile } from '@prisma/client';
 import { processUploadedFile } from '../services/prediction.service';
 import { populateUserFormBasedOnChatGPTResponse } from '../services/form.service';
+import { ConsumerTopics } from './consumer-topics';
 
-@Processor('image-events')
+@Processor(ConsumerTopics.FormCreated)
 export class ImageEventHandler {
     @Process()
-    async transcode(job: Job<{ uploadedFile: UploadedFile; form: Form }>) {
+    async transcode(job: Job<{ uploadedFile: UploadedFile; form: Form | null }>) {
         const { uploadedFile, form } = job.data;
         const processedUploadedFile = await processUploadedFile(uploadedFile)
             .then((data) => {
@@ -20,7 +21,7 @@ export class ImageEventHandler {
                 return null;
             });
 
-        if (processedUploadedFile) {
+        if (processedUploadedFile && form) {
             await populateUserFormBasedOnChatGPTResponse(
                 processedUploadedFile.name,
                 processedUploadedFile.components,

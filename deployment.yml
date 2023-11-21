@@ -57,6 +57,10 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_OPENAI_ORGANIZATION
             - name: NODE_ENV
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/NODE_ENV
+            - name: APP_REDIS_HOSTNAME
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_REDIS_HOSTNAME
+            - name: APP_REDIS_PASSWORD
+              value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_REDIS_PASSWORD
         - image: ericaskari/draw2form-llm:latest
           name: draw2form-llm
           imagePullPolicy: Always

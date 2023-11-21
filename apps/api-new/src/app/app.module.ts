@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AppValidationPipe } from './validation.pipe';
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthStrategy } from './authentication/jwt-auth.strategy';
@@ -11,6 +9,11 @@ import { FormController } from './controllers/form.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { BullModule } from '@nestjs/bull';
 import { UploadService } from './services/upload.service';
+import { ImageEventHandler } from './event-consumers/image-event.handler';
+import { ConsumerTopics } from './event-consumers/consumer-topics';
+import { environment } from './configurations/environment';
+import { ProfileController } from './controllers/profile.controller';
+import { UploadController } from './controllers/upload.controller';
 
 @Module({
     imports: [
@@ -19,15 +22,16 @@ import { UploadService } from './services/upload.service';
         }),
         BullModule.forRoot({
             redis: {
-                host: 'localhost',
+                host: environment.APP_REDIS_HOSTNAME,
                 port: 6379,
+                password: environment.APP_REDIS_PASSWORD,
             },
         }),
         BullModule.registerQueue({
-            name: 'image-events',
+            name: ConsumerTopics.FormCreated,
         }),
     ],
-    controllers: [AppController, AuthController, FormController],
-    providers: [AppService, JwtAuthStrategy, GoogleAuthStrategy, AnonymousAuthStrategy, AppValidationPipe],
+    controllers: [AuthController, FormController, ProfileController, UploadController],
+    providers: [JwtAuthStrategy, GoogleAuthStrategy, AnonymousAuthStrategy, AppValidationPipe, ImageEventHandler],
 })
 export class AppModule {}

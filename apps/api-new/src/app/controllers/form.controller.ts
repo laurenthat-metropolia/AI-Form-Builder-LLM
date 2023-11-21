@@ -19,27 +19,29 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { transformUploadedFile } from '../services/upload.service';
 import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
+import { ConsumerTopics } from '../event-consumers/consumer-topics';
 
 @Controller('forms')
 export class FormController {
-    constructor(@InjectQueue('image-events') private imageEventsQueue: Queue) {}
+    constructor(@InjectQueue(ConsumerTopics.FormCreated) private imageEventsQueue: Queue) {}
     @Get()
+    @UseGuards(JwtAuthGuard)
     async getItems(@Req() request: Request) {
         const user = request.user as User;
+        console.log(user);
         return forms.findPopulatedManyByOwnerId(user.id);
     }
     @Get(':id')
-    async getItem(@Req() request: Request, @Param() params: Record<string, string>) {
-        const user = request.user as User;
+    async getItem(@Param() params: Record<string, string>) {
         const formId = params.id;
         const item = await forms.findOnePopulatedById(formId);
         if (!item) {
             throw new NotFoundException();
         }
+        return item;
     }
     @Get(':id/status')
-    async getItemStatus(@Req() request: Request, @Param() params: Record<string, string>) {
-        const user = request.user as User;
+    async getItemStatus(@Param() params: Record<string, string>) {
         const formId = params.id;
         const item = await forms.findOnePopulatedById(formId);
         if (!item) {
@@ -56,8 +58,7 @@ export class FormController {
     }
 
     @Get(':id/event/:event')
-    async getItemEvent(@Req() request: Request, @Param() params: Record<string, string>) {
-        const user = request.user as User;
+    async getItemEvent(@Param() params: Record<string, string>) {
         const formId = params.id;
         const eventName = params.event;
 
@@ -74,8 +75,7 @@ export class FormController {
         return eventItem;
     }
     @Get(':id/event/:event/payload')
-    async getItemEventPayload(@Req() request: Request, @Param() params: Record<string, string>) {
-        const user = request.user as User;
+    async getItemEventPayload(@Param() params: Record<string, string>) {
         const formId = params.id;
         const eventName = params.event;
         const item = await forms.findOnePopulatedById(formId);
@@ -131,106 +131,6 @@ export class FormController {
     }
 }
 
-//     router.post(
-//         '/',
-//         requiresAccessToken,
-//         uploadImageMiddleware,
-//         requireImageToBeUploaded,
-//         async (req: Request, res: Response): Promise<void> => {
-//             try {
-//                 const user = req.user as User;
-//                 const image = transformUploadedFile(req.file);
-//                 const createdForm = await prisma.form.create({
-//                     data: {
-//                         status: FormStatus.DRAFT,
-//                         name: 'Form',
-//                         ownerId: user.id,
-//                     },
-//                 });
-//                 // Upload Image
-//                 const uploadedFile = await prisma.uploadedFile.create({
-//                     data: {
-//                         url: image.url,
-//                         key: image.key,
-//                         formId: createdForm.id,
-//                     },
-//                 });
-//
-//                 const populatedForm = await prisma.form.findFirstOrThrow({
-//                     where: {
-//                         id: createdForm.id,
-//                     },
-//                     include: {
-//                         checkboxes: true,
-//                         textFields: true,
-//                         toggleSwitches: true,
-//                         buttons: true,
-//                         labels: true,
-//                         images: true,
-//                         upload: true,
-//                     },
-//                 });
-//
-//                 res.status(200).json(populatedForm);
-//
-//                 const processedUploadedFile = await processUploadedFile(uploadedFile)
-//                     .then((data) => {
-//                         console.log(`UploadedFile processing "${uploadedFile.id}" Completed.`);
-//                         return data;
-//                     })
-//                     .catch((err) => {
-//                         console.log(`UploadedFile processing "${uploadedFile.id}" Failed.`);
-//                         console.log(err);
-//                         return null;
-//                     });
-//
-//                 if (processedUploadedFile) {
-//                     await populateUserFormBasedOnChatGPTResponse(
-//                         processedUploadedFile.name,
-//                         processedUploadedFile.components,
-//                         createdForm,
-//                     )
-//                         .then((data) => {
-//                             console.log(`UploadedFile processing "${uploadedFile.id}" Form Completed.`);
-//                             return data;
-//                         })
-//                         .catch((err) => {
-//                             console.log(`UploadedFile processing "${uploadedFile.id}" Form Failed.`);
-//                             console.log(err);
-//                             return null;
-//                         });
-//                 }
-//             } catch (error) {
-//                 console.error('Error creating Form:', error);
-//                 res.status(500).json({ error: 'Internal server error' });
-//             }
-//         },
-//     );
-//
-//     router.get('/:formId', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-//         try {
-//             const formId = req.params.formId;
-//             const form = await prisma.form.findUnique({
-//                 where: {
-//                     id: formId,
-//                 },
-//                 include: {
-//                     checkboxes: true,
-//                     textFields: true,
-//                     toggleSwitches: true,
-//                     images: true,
-//                     buttons: true,
-//                     labels: true,
-//                 },
-//             });
-//
-//             res.status(200).json(form);
-//         } catch (error) {
-//             console.error('Error retrieving form:', error);
-//             res.status(500).json({ error: 'Internal server error' });
-//         }
-//     });
-//
 //     router.put('/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
 //         try {
 //             const user: User = req.user as User;

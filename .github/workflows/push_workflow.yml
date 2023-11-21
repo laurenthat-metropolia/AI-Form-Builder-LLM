@@ -186,6 +186,8 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[14].value = env(APP_OPENAI_API_KEY)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[15].value = env(APP_OPENAI_ORGANIZATION)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[16].value = env(NODE_ENV)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[17].value = env(APP_REDIS_HOSTNAME)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[18].value = env(APP_REDIS_PASSWORD)' deployment.yml
 
             export IMAGE_TAG=ericaskari/draw2form-llm:${{needs.Version.outputs.version}}
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
