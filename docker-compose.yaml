@@ -20,6 +20,15 @@ services:
       POSTGRES_PASSWORD: V7NHzBm6U.4-phLzTvJt
     volumes:
       - db2data:/var/lib/postgresql/data/
+  draw2form--redis:
+    container_name: draw2form--redis
+    restart: 'no'
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - db3data:/data/
 volumes:
   db1data:
   db2data:
+  db3data:
