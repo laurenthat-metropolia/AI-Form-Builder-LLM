@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { AppValidationPipe } from './validation.pipe';
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthStrategy } from './authentication/jwt-auth.strategy';
-import { GoogleAuthStrategy } from './authentication/google-auth-strategy';
+import { GoogleAuthStrategy } from './authentication/google-auth.strategy';
 import { AnonymousAuthStrategy } from './authentication/anonymous-auth.strategy';
 import { FormController } from './controllers/form.controller';
 import { MulterModule } from '@nestjs/platform-express';

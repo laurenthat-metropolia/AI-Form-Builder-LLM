@@ -5,7 +5,7 @@ import { GoogleProfile } from '../interfaces/googleProfile';
 import { environment } from '../configurations/environment';
 import { LoginInformation } from '@draw2form/shared';
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
-import { GoogleOauthGuard } from '../authentication/google-auth-guard';
+import { GoogleOauthGuard } from '../authentication/google-auth.guard';
 import { JwtAuthStrategy } from '../authentication/jwt-auth.strategy';
 
 @Controller('auth')

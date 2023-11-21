@@ -15,6 +15,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { ConsumerTopics } from '../event-consumers/consumer-topics';
 import { Queue } from 'bull';
 import { ImageEvents } from '@draw2form/shared';
+import { ApiParam } from '@nestjs/swagger';
 
 @Controller('upload')
 export class UploadController {
@@ -22,6 +23,11 @@ export class UploadController {
 
     @Post()
     @UseInterceptors(FileInterceptor('image'))
+    @ApiParam({
+        name: 'image',
+        type: 'file',
+        description: 'Image',
+    })
     async createItem(@UploadedFile() file: Express.Multer.File) {
         if (!file) {
             throw new BadRequestException({
@@ -43,12 +49,22 @@ export class UploadController {
     }
 
     @Get(':id')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'uploadedFileId',
+    })
     async getItem(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
         return await fetchPopulatedUploadedFile(uploadedFileId);
     }
 
     @Get(':id/status')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'uploadedFileId',
+    })
     async getItemStatus(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
         const uploadedFile = await fetchPopulatedUploadedFile(uploadedFileId);
@@ -65,6 +81,17 @@ export class UploadController {
         };
     }
     @Get(':id/event/:event')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'uploadedFileId',
+    })
+    @ApiParam({
+        name: 'event',
+        type: 'string',
+        description: 'event',
+        enum: Object.values(ImageEvents),
+    })
     async getItemEvent(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
         const eventName = params.event;
@@ -80,6 +107,17 @@ export class UploadController {
     }
 
     @Get(':id/event/:event/payload')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'uploadedFileId',
+    })
+    @ApiParam({
+        name: 'event',
+        type: 'string',
+        description: 'event',
+        enum: Object.values(ImageEvents),
+    })
     async getItemEventPayload(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
         const eventName = params.event;

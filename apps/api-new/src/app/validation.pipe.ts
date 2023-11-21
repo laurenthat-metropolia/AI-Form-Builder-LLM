@@ -1,4 +1,11 @@
-import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
+import {
+    ArgumentMetadata,
+    BadRequestException,
+    HttpException,
+    HttpStatus,
+    Injectable,
+    PipeTransform,
+} from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
 
@@ -9,8 +16,11 @@ import { validate, ValidationError } from 'class-validator';
 @Injectable()
 export class AppValidationPipe implements PipeTransform {
     async transform(value: any, metadata: ArgumentMetadata): Promise<any> {
+        if (value === undefined) {
+            throw new BadRequestException();
+        }
         const { metatype } = metadata;
-
+        console.log({ metadata, value });
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const request = plainToClass(metatype, value);

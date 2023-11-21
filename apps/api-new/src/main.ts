@@ -11,6 +11,8 @@ import { json, urlencoded } from 'body-parser';
 import { AppValidationPipe } from './app/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { environment } from './app/configurations/environment';
+import morgan from 'morgan';
+import { PrismaModel } from './_gen/prisma-class';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -35,9 +37,13 @@ async function bootstrap() {
         })
         .build();
 
-    const document = SwaggerModule.createDocument(app, documentBuilder, {});
+    const document = SwaggerModule.createDocument(app, documentBuilder, {
+        extraModels: [...PrismaModel.extraModels],
+    });
 
     SwaggerModule.setup(`api/docs`, app, document);
+
+    app.use(morgan(':method :status :url :response-time'));
 
     const port = 8000;
     await app.listen(port);
