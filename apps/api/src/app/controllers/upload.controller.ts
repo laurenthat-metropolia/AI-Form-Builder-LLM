@@ -15,18 +15,30 @@ import { InjectQueue } from '@nestjs/bull';
 import { ConsumerTopics } from '../event-consumers/consumer-topics';
 import { Queue } from 'bull';
 import { ImageEvents } from '@draw2form/shared';
-import { ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Upload')
 @Controller('upload')
 export class UploadController {
     constructor(@InjectQueue(ConsumerTopics.FormCreated) private imageEventsQueue: Queue) {}
 
     @Post()
     @UseInterceptors(FileInterceptor('image'))
-    @ApiParam({
-        name: 'image',
-        type: 'file',
-        description: 'Image',
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                image: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    })
+    @ApiOperation({
+        summary: 'Upload image without creating Form',
+        description: 'Upload Image and get processing results without logging in and creating form',
     })
     async createItem(@UploadedFile() file: Express.Multer.File) {
         if (!file) {
@@ -54,6 +66,10 @@ export class UploadController {
         type: 'string',
         description: 'uploadedFileId',
     })
+    @ApiOperation({
+        summary: 'Get UploadedFile with details',
+        description: 'Get UploadedFile with details',
+    })
     async getItem(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
         return await fetchPopulatedUploadedFile(uploadedFileId);
@@ -64,6 +80,10 @@ export class UploadController {
         name: 'id',
         type: 'string',
         description: 'uploadedFileId',
+    })
+    @ApiOperation({
+        summary: 'Get UploadedFile event status',
+        description: 'Get UploadedFile event status',
     })
     async getItemStatus(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
@@ -92,6 +112,10 @@ export class UploadController {
         description: 'event',
         enum: Object.values(ImageEvents),
     })
+    @ApiOperation({
+        summary: 'Get UploadedFile event details',
+        description: 'Get UploadedFile event details',
+    })
     async getItemEvent(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;
         const eventName = params.event;
@@ -117,6 +141,10 @@ export class UploadController {
         type: 'string',
         description: 'event',
         enum: Object.values(ImageEvents),
+    })
+    @ApiOperation({
+        summary: 'Get UploadedFile event payload',
+        description: 'Get UploadedFile event payload',
     })
     async getItemEventPayload(@Param() params: Record<string, string>) {
         const uploadedFileId = params.id;

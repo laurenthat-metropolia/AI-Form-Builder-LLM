@@ -7,18 +7,28 @@ import { LoginInformation } from '@draw2form/shared';
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { GoogleOauthGuard } from '../authentication/google-auth.guard';
 import { JwtAuthStrategy } from '../authentication/jwt-auth.strategy';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
     constructor() {}
 
     @Get('google')
     @UseGuards(GoogleOauthGuard)
+    @ApiOperation({
+        summary: 'Authenticate with Google',
+        description: 'Authenticate with Google',
+    })
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     async auth() {}
 
     @Get('google/callback')
     @UseGuards(GoogleOauthGuard)
+    @ApiOperation({
+        summary: 'Callback url for Google Authentication',
+        description: 'Callback url for Google Authentication',
+    })
     async googleAuthCallback(@Req() req, @Res() res: Response) {
         const googleProfile = req.user as GoogleProfile;
         const user = await UserDatabase.syncUserByGoogleProfile(googleProfile);

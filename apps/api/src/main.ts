@@ -31,19 +31,28 @@ async function bootstrap() {
 
     const documentBuilder = new DocumentBuilder()
         .setTitle('Draw2Form')
-        .setDescription('Controllers')
         .setVersion(environment.APP_BUILD_VERSION)
-        .addSecurity('BearerAuth', {
-            type: 'http',
-            scheme: 'bearer',
-        })
+        .addBearerAuth(
+            {
+                name: 'Authorization',
+                bearerFormat: 'Bearer',
+                type: 'http',
+                scheme: 'bearer',
+                in: 'Header',
+            },
+            'Bearer',
+        )
         .build();
 
     const document = SwaggerModule.createDocument(app, documentBuilder, {
         extraModels: [...PrismaModel.extraModels],
     });
 
-    SwaggerModule.setup(`api/docs`, app, document);
+    SwaggerModule.setup(`api/docs`, app, document, {
+        swaggerOptions: {
+            persistAuthorization: true, // this
+        },
+    });
 
     app.use(morgan(':method :status :url :response-time'));
 

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
@@ -9,6 +9,7 @@ import jsonwebtoken from 'jsonwebtoken';
 
 @Injectable()
 export class JwtAuthStrategy extends PassportStrategy(Strategy) {
+    logger = new Logger('JwtAuthStrategy');
     constructor() {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -24,6 +25,7 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
      * @param payload
      */
     async validate(payload: any): Promise<User | null> {
+        this.logger.log(`[Validate] ${payload}`);
         const user = await prisma.user.findFirst({
             where: {
                 id: payload.sub,

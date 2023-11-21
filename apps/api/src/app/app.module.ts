@@ -14,6 +14,7 @@ import { ConsumerTopics } from './event-consumers/consumer-topics';
 import { environment } from './configurations/environment';
 import { ProfileController } from './controllers/profile.controller';
 import { UploadController } from './controllers/upload.controller';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
     imports: [
@@ -29,6 +30,15 @@ import { UploadController } from './controllers/upload.controller';
         }),
         BullModule.registerQueue({
             name: ConsumerTopics.FormCreated,
+        }),
+        JwtModule.register({
+            global: true,
+            secret: environment.APP_JWT_SECRET,
+            signOptions: {
+                expiresIn: '30d',
+                audience: environment.APP_JWT_AUDIENCE,
+                issuer: environment.APP_JWT_ISSUER,
+            },
         }),
     ],
     controllers: [AuthController, FormController, ProfileController, UploadController],

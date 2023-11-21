@@ -3,11 +3,15 @@ import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { Request } from 'express';
 import { User } from '@prisma/client';
 import { prisma } from '../databases/userDatabase';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Profile')
 @Controller('profile')
 export class ProfileController {
     @Get()
     @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiConsumes('application/json')
     async profile(@Req() request: Request) {
         const user = request.user as User;
         const response = await prisma.user.findFirst({
@@ -37,6 +41,8 @@ export class ProfileController {
     }
 
     @Put()
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
     async editProfile() {
         throw new NotImplementedException();
         //     router.put('/', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {

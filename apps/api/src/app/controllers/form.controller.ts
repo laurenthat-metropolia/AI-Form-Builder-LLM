@@ -20,13 +20,19 @@ import { Queue } from 'bull';
 import { transformUploadedFile } from '../services/upload.service';
 import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { ConsumerTopics } from '../event-consumers/consumer-topics';
-import { ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Forms')
 @Controller('forms')
 export class FormController {
     constructor(@InjectQueue(ConsumerTopics.FormCreated) private imageEventsQueue: Queue) {}
     @Get()
     @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiOperation({
+        summary: 'Get user Form list',
+        description: 'Get user Form list',
+    })
     async getItems(@Req() request: Request) {
         const user = request.user as User;
         console.log(user);
@@ -37,6 +43,10 @@ export class FormController {
         name: 'id',
         type: 'string',
         description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Get Form details by id',
+        description: 'Get Form details by id',
     })
     async getItem(@Param() params: Record<string, string>) {
         const formId = params.id;
@@ -51,6 +61,10 @@ export class FormController {
         name: 'id',
         type: 'string',
         description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Get Image event statuses',
+        description: 'Get Image event statuses',
     })
     async getItemStatus(@Param() params: Record<string, string>) {
         const formId = params.id;
@@ -80,6 +94,10 @@ export class FormController {
         description: 'event',
         enum: Object.values(ImageEvents),
     })
+    @ApiOperation({
+        summary: 'Get Image event by form id and event name',
+        description: 'Get Image event by form id and event name',
+    })
     async getItemEvent(@Param() params: Record<string, string>) {
         const formId = params.id;
         const eventName = params.event;
@@ -108,6 +126,10 @@ export class FormController {
         description: 'event',
         enum: Object.values(ImageEvents),
     })
+    @ApiOperation({
+        summary: 'Get Image event payload by form id and event name',
+        description: 'Get Image event payload by form id and event name',
+    })
     async getItemEventPayload(@Param() params: Record<string, string>) {
         const formId = params.id;
         const eventName = params.event;
@@ -126,11 +148,23 @@ export class FormController {
 
     @Post()
     @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
     @UseInterceptors(FileInterceptor('image'))
-    @ApiParam({
-        name: 'image',
-        type: 'file',
-        description: 'Image',
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                image: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    })
+    @ApiOperation({
+        summary: 'Create Form by uploading image',
+        description: 'Create Form by uploading image',
     })
     async createItem(@Req() request: Request, @UploadedFile() file: Express.Multer.File) {
         const user = request.user as User;
