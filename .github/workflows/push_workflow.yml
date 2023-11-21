@@ -148,7 +148,7 @@ jobs:
         APP_ROBOFLOW_API_KEY: ${{ secrets.APP_ROBOFLOW_API_KEY }}
         APP_OPENAI_ORGANIZATION: ${{ secrets.APP_OPENAI_ORGANIZATION }}
         APP_OPENAI_API_KEY: ${{ secrets.APP_OPENAI_API_KEY }}
-        APP_S3_ENDPOINT: http://minio.databases.svc.cluster.local:9000
+        APP_S3_ENDPOINT: ${{ secrets.APP_S3_ENDPOINT }}
         APP_S3_ACCESS_KEY: minio
         APP_S3_SECRET_KEY: ${{ secrets.APP_S3_SECRET_KEY }}
         APP_COMPUTER_VISION_KEY: ${{ secrets.APP_COMPUTER_VISION_KEY }}
