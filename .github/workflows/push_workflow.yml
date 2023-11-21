@@ -153,6 +153,8 @@ jobs:
         APP_S3_SECRET_KEY: ${{ secrets.APP_S3_SECRET_KEY }}
         APP_COMPUTER_VISION_KEY: ${{ secrets.APP_COMPUTER_VISION_KEY }}
         APP_COMPUTER_VISION_ENDPOINT: ${{ secrets.APP_COMPUTER_VISION_ENDPOINT }}
+        APP_REDIS_HOSTNAME: ${{ secrets.APP_REDIS_HOSTNAME }}
+        APP_REDIS_PASSWORD: ${{ secrets.APP_REDIS_PASSWORD }}
         NODE_ENV: production
         APP_ENV: production
 
