@@ -1,8 +1,8 @@
 import { prisma } from '../databases/userDatabase';
-import { convertChatGPTOutputToFormComponents } from '../../../../api/src/configurations/configOpenAi';
 import { Form } from '@prisma/client';
 import { SupportedFormComponent } from '@draw2form/shared';
 import { randomUUID } from 'crypto';
+import { convertChatGPTOutputToFormComponents } from '../configurations/configOpenAi';
 
 export const populateUserFormBasedOnChatGPTResponse = async (
     name: string,

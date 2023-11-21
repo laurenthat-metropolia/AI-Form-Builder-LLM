@@ -4,12 +4,12 @@ WORKDIR /app
 ARG APP_BUILD_VERSION=local-development
 ENV APP_BUILD_VERSION=$APP_BUILD_VERSION
 
-RUN apt update -y && apt install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev -y
-
 COPY dist/apps/api/package.json         package.json
 COPY dist/apps/api/package-lock.json    package-lock.json
 COPY apps/api/prisma                    prisma
 RUN npm install
+RUN npm install prisma-class-generator
+RUN npx prisma generate
 
 COPY dist/apps/api                      ./
 CMD ["main.js"]
