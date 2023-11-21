@@ -1,67 +1,67 @@
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
+/**
+ * This is not a production server yet!
+ * This is only a minimal backend to get started.
+ */
 
-import { config as configGoogleOAuth2 } from './strategies/passport-google-oauth2.service';
+import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 
-import { config as configJWT } from './strategies/passport-jwt.service';
-import { configSession } from './configurations/configSession';
-import { configSwagger } from './configurations/configSwagger';
-import { configLogging } from './configurations/configLogging';
-import { uploadController } from './controllers/upload.controller';
-import { profileController } from './controllers/profile.controller';
-import { formController } from './controllers/form.controller';
-import { authController } from './controllers/auth.controller';
-import { expressGlobalErrorHandler } from './error.handler';
-import { environment } from './configurations/environment';
+import { AppModule } from './app/app.module';
+import { json, urlencoded } from 'body-parser';
+import { AppValidationPipe } from './app/validation.pipe';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { environment } from './app/configurations/environment';
+import morgan from 'morgan';
+import { PrismaModel } from './_gen/prisma-class';
 
-console.log(`Starting Version: \"${environment.APP_BUILD_VERSION}\" Environment: \"${environment.NODE_ENV}\"`);
+async function bootstrap() {
+    Logger.log(`Starting Version: \"${environment.APP_BUILD_VERSION}\" Environment: \"${environment.NODE_ENV}\"`);
 
-// Express App
-const app = express();
+    const app = await NestFactory.create(AppModule);
+    const globalPrefix = 'api';
+    app.setGlobalPrefix(globalPrefix);
 
-// include before other routes
-app.use(cors());
+    app.use(urlencoded({ limit: '100mb', extended: true }));
+    app.use(json({ limit: '100mb' }));
 
-// Loggers
-configLogging(app);
+    app.enableCors();
 
-// Session is required by passport.js
-configSession(app);
+    const appValidationPipe: AppValidationPipe = app.get(AppValidationPipe);
+    app.useGlobalPipes(appValidationPipe);
 
-// Parsing capabilities for body of request.
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+    const documentBuilder = new DocumentBuilder()
+        .setTitle('Draw2Form')
+        .setVersion(environment.APP_BUILD_VERSION)
+        .addBearerAuth(
+            {
+                name: 'Authorization',
+                bearerFormat: 'Bearer',
+                type: 'http',
+                scheme: 'bearer',
+                in: 'Header',
+            },
+            'Bearer',
+        )
+        .build();
 
-// Swagger UI
-configSwagger(app);
+    const document = SwaggerModule.createDocument(app, documentBuilder, {
+        extraModels: [...PrismaModel.extraModels],
+    });
 
-// https://www.passportjs.org/packages/passport-google-oauth2/
-configGoogleOAuth2();
+    SwaggerModule.setup(`api/docs`, app, document, {
+        swaggerOptions: {
+            persistAuthorization: true, // this
+        },
+    });
 
-// https://www.passportjs.org/packages/passport-jwt/
-configJWT();
+    app.use(morgan(':method :status :url :response-time'));
 
-const router = express.Router();
+    const port = 8000;
+    await app.listen(port);
+    Logger.log(`🚀 Application is running on: http://localhost:${port}/${globalPrefix}`);
+}
 
-app.use('/api', router);
-
-router.use('/assets', express.static(path.join(__dirname, 'assets')));
-
-router.use('/auth', authController());
-
-router.use('/upload', uploadController());
-
-router.use('/profile', profileController());
-
-router.use('/forms', formController());
-
-app.use(expressGlobalErrorHandler);
-
-const server = app.listen(8000, '0.0.0.0', (): void => {
-    console.log('Started listening on port 8000');
-});
-server.on('error', console.error);
+bootstrap();
 
 // Support Docker Container Exit order
 process.on('SIGTERM', function () {

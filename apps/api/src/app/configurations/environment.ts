@@ -21,4 +21,6 @@ export const environment = cleanEnv(process.env, {
     APP_COMPUTER_VISION_ENDPOINT: str(),
     APP_OPENAI_ORGANIZATION: str(),
     APP_OPENAI_API_KEY: str(),
+    APP_REDIS_HOSTNAME: str(),
+    APP_REDIS_PASSWORD: str(),
 });

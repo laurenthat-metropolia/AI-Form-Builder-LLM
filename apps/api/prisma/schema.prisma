@@ -9,6 +9,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator prismaClassGenerator {
+  provider = "prisma-class-generator"
+  dryRun   = false
+}
+
 model User {
   id              String           @id @default(uuid())
   email           String           @unique
