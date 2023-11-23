@@ -6,37 +6,32 @@ import {
     FormComponentsCreatedEventPayload,
     ImageEvents,
     ObjectDetectionResponseReceivedEventPayload,
-    ObjectDetectionUnifiedEventPayload,
     TextDetectionResponseReceivedEventPayload,
-    TextDetectionUnifiedEventPayload,
+    UIComponentPredictedEventPayload,
+    UnifiedPrediction,
     UnifiedPredictionCoordinatesRoundedEventPayload,
+    UnifiedPredictionsLeveledInXAxisEventPayload,
     UnifiedPredictionsLeveledInYAxisEventPayload,
 } from '@draw2form/shared';
 import { UploadedFile } from '@prisma/client';
 
 const createObjectDetectionResponseReceivedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
-    data: ObjectDetectionResponseReceivedEventPayload,
+    data: ObjectDetectionResponseReceivedEventPayload | null,
 ) => {
     await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ObjectDetectionResponseReceived, data);
 };
 const createTextDetectionResponseReceivedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
-    data: TextDetectionResponseReceivedEventPayload,
+    data: TextDetectionResponseReceivedEventPayload | null,
 ) => {
     await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.TextDetectionResponseReceived, data);
 };
-const createTextDetectionUnifiedEvent = async (
+const createDetectionsUnifiedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
-    data: TextDetectionUnifiedEventPayload,
+    data: UnifiedPrediction[] | null,
 ) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.TextDetectionUnified, data);
-};
-const createObjectDetectionUnifiedEvent = async (
-    uploadedFile: Pick<UploadedFile, 'id'>,
-    data: ObjectDetectionUnifiedEventPayload,
-) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ObjectDetectionUnified, data);
+    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.DetectionsUnified, data);
 };
 
 const createChatGPTRequestSentEvent = async (
@@ -44,6 +39,13 @@ const createChatGPTRequestSentEvent = async (
     data: ChatGPTRequestSentEventPayload,
 ) => {
     await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ChatGPTRequestSent, data);
+};
+
+const createUIComponentPredictedEvent = async (
+    uploadedFile: Pick<UploadedFile, 'id'>,
+    data: UIComponentPredictedEventPayload,
+) => {
+    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.UIComponentPredicted, data);
 };
 const createChatGPTResponseReceivedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
@@ -70,6 +72,12 @@ const createUnifiedPredictionsLeveledInYAxisEvent = async (
 ) => {
     await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.UnifiedPredictionsLeveledInYAxis, data);
 };
+const createUnifiedPredictionsLeveledInXAxisEvent = async (
+    uploadedFile: Pick<UploadedFile, 'id'>,
+    data: UnifiedPredictionsLeveledInXAxisEventPayload,
+) => {
+    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.UnifiedPredictionsLeveledInXAxis, data);
+};
 const createFormComponentsCreatedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
     data: FormComponentsCreatedEventPayload,
@@ -80,12 +88,13 @@ const createFormComponentsCreatedEvent = async (
 export const eventService = {
     createObjectDetectionResponseReceivedEvent: createObjectDetectionResponseReceivedEvent,
     createTextDetectionResponseReceivedEvent: createTextDetectionResponseReceivedEvent,
-    createTextDetectionUnifiedEvent: createTextDetectionUnifiedEvent,
-    createObjectDetectionUnifiedEvent: createObjectDetectionUnifiedEvent,
+    createDetectionsUnifiedEvent: createDetectionsUnifiedEvent,
     createChatGPTRequestSentEvent: createChatGPTRequestSentEvent,
     createChatGPTResponseReceivedEvent: createChatGPTResponseReceivedEvent,
     createChatGPTResponseProcessedEvent: createChatGPTResponseProcessedEvent,
     createUnifiedPredictionCoordinatesRoundedEvent: createUnifiedPredictionCoordinatesRoundedEvent,
     createUnifiedPredictionsLeveledInYAxisEvent: createUnifiedPredictionsLeveledInYAxisEvent,
+    createUnifiedPredictionsLeveledInXAxisEvent: createUnifiedPredictionsLeveledInXAxisEvent,
     createFormComponentsCreatedEvent: createFormComponentsCreatedEvent,
+    createUIComponentPredictedEvent: createUIComponentPredictedEvent,
 };

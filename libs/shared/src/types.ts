@@ -8,21 +8,33 @@ import {
     UploadedFile,
 } from '@prisma/client';
 import { IdentifiableImageEvent } from './events';
-import { TextDetectionResponseItem } from './azure';
-import { ObjectDetectionResponseItem } from './llm';
 
+export interface Identifiable {
+    id: number;
+}
 export interface UnifiedObjectPrediction {
     type: 'OBJECT_PREDICTION';
-    data: Omit<ObjectDetectionResponseItem, 'coordinates'>;
+    kind: string;
     coordinates: [number, number, number, number];
 }
 export interface UnifiedTextPrediction {
     type: 'TEXT_PREDICTION';
-    data: Omit<TextDetectionResponseItem, 'coordinates'>;
+    label: string;
     coordinates: [number, number, number, number];
 }
 
-export type UnifiedPrediction = UnifiedObjectPrediction | UnifiedTextPrediction;
+export type IdentifiableUnifiedTextPrediction = UnifiedTextPrediction & Identifiable;
+export type IdentifiableUnifiedObjectPrediction = UnifiedObjectPrediction & Identifiable;
+export type UnifiedPrediction = IdentifiableUnifiedTextPrediction | IdentifiableUnifiedObjectPrediction;
+
+export interface UiComponentPrediction {
+    type: 'UI_CL_PREDICTION';
+    id: number;
+    kind: string;
+    label: string;
+    coordinates: [number, number, number, number];
+    textCoordinates: [number, number, number, number] | null;
+}
 
 export type SupportedFormComponent =
     | ['FormTextField', FormTextField]

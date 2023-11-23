@@ -40,8 +40,6 @@ export const Upload = () => {
                 setLoading(false);
 
                 navigate(`/upload/${data.id}`);
-
-                console.log(data);
             } catch (error: any) {
                 console.error(error);
                 setLoading(false);

@@ -35,7 +35,6 @@ export class FormController {
     })
     async getItems(@Req() request: Request) {
         const user = request.user as User;
-        console.log(user);
         return forms.findPopulatedManyByOwnerId(user.id);
     }
     @Get(':id')

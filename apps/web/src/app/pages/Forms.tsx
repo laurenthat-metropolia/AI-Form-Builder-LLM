@@ -40,7 +40,6 @@ export const Forms = () => {
                 const data = await result.json();
                 setLoading(false);
                 updateFormList();
-                console.log(data);
             } catch (error: any) {
                 console.error(error);
                 setLoading(false);

@@ -24,7 +24,6 @@ export class GoogleAuthStrategy extends PassportStrategy(Strategy, 'google') {
         profile: GoogleProfileFromApi,
         done: VerifyCallback,
     ): Promise<any> {
-        console.log({ _accessToken, _refreshToken, profile, done });
         done(null, normalizeGoogleProfile(profile));
     }
 }
