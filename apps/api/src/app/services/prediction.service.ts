@@ -4,14 +4,11 @@ import { recognizeText } from '../configurations/configAzureVision';
 import {
     BOTTOM_RIGHT_X_COORDINATE_INDEX,
     BOTTOM_RIGHT_Y_COORDINATE_INDEX,
-    IdentifiableUnifiedObjectPrediction,
-    IdentifiableUnifiedTextPrediction,
     ObjectDetectionResponse,
     SupportedFormComponent,
     TextDetectionResponse,
     TOP_LEFT_X_COORDINATE_INDEX,
     TOP_LEFT_Y_COORDINATE_INDEX,
-    UiComponentPrediction,
     UnifiedObjectPrediction,
     UnifiedPrediction,
     UnifiedTextPrediction,
@@ -41,23 +38,22 @@ export class PredictionService {
         await eventService.createTextDetectionResponseReceivedEvent(uploadedFile, textDetectionResponse);
         /**
          *
-         *  Unify.
+         *  Unify and assign Ids.
          */
         const unifiedPredictions: UnifiedPrediction[] = [
             ...this.unifyObjectDetection(objectDetectionResponses),
-            ...this.unifyTextDetection(textDetectionResponse),
+            ...this.unifyTextDetection(textDetectionResponse.filter((x) => x.text !== 'v' && x.text !== 'V')),
         ].map(
             (x, index): UnifiedPrediction => ({
                 ...x,
                 id: index,
             }),
         );
-
-        await eventService.createDetectionsUnifiedEvent(uploadedFile, unifiedPredictions);
+        await eventService.createPredictionsUnifiedEvent(uploadedFile, unifiedPredictions);
 
         /**
          *
-         *  Merge And Round Coordinates
+         *  Round Coordinates
          */
         const unifiedPredictionsWithRoundedCoordinates = this.roundCoordinates(unifiedPredictions);
         await eventService.createUnifiedPredictionCoordinatesRoundedEvent(
@@ -72,113 +68,29 @@ export class PredictionService {
         await eventService.createUnifiedPredictionsLeveledInYAxisEvent(uploadedFile, unifiedPredictionsLeveledInYAxis);
         /**
          *
-         *  Create CHATGPT Commands AND Send API Call and Save Event
-         *
+         *  Describe image with gpt 4
          */
-        const uiPredictions = await this.openAIService.sendCommandsToChatGPTApi<{
-            mappedIds: [number, null | number | 'checkbox'][];
-        }>(this.openAIService.generateChatGPTInputForLabelMapping(unifiedPredictionsLeveledInYAxis));
-        console.log({ uiPredictions });
-        const uiComponents = ((): UiComponentPrediction[] => {
-            const mappings = uiPredictions.mappedIds
-                .map((idMapping): UiComponentPrediction[] => {
-                    const [labelId, componentId] = idMapping as [number, null | number | 'checkbox'];
-                    const label = unifiedPredictionsLeveledInYAxis.find(
-                        (x): x is IdentifiableUnifiedTextPrediction => x.id === labelId,
-                    );
-
-                    if (componentId === null) {
-                        // No Mapping. Let's count the text as a standalone text
-                        return [
-                            {
-                                type: 'UI_CL_PREDICTION',
-                                kind: 'label',
-                                coordinates: label.coordinates,
-                                label: label.label,
-                                id: labelId,
-                                textCoordinates: null,
-                            },
-                        ];
-                    }
-
-                    if (typeof componentId === 'number') {
-                        const component = unifiedPredictionsLeveledInYAxis.find(
-                            (x): x is IdentifiableUnifiedObjectPrediction => x.id === componentId,
-                        );
-                        return [
-                            {
-                                type: 'UI_CL_PREDICTION',
-                                kind: component.kind,
-                                coordinates: component.coordinates,
-                                label: label.label,
-                                id: labelId,
-                                textCoordinates: label.coordinates,
-                            },
-                        ];
-                    } else {
-                        return [];
-                    }
-                })
-                .flat();
-            const mappedObjectIds = uiPredictions.mappedIds
-                .map((x) => x[1])
-                .filter((x): x is number => x !== null && typeof x === 'number');
-            const mappedTextIds = uiPredictions.mappedIds
-                .map((x) => x[0])
-                .filter((x): x is number => x !== null && typeof x === 'number');
-
-            const restOfObjects = unifiedPredictionsLeveledInYAxis
-                .filter((x): x is IdentifiableUnifiedObjectPrediction => x.type === 'OBJECT_PREDICTION')
-                .filter((x) => !mappedObjectIds.includes(x.id))
-                .map((component): UiComponentPrediction => {
-                    return {
-                        type: 'UI_CL_PREDICTION',
-                        kind: component.kind,
-                        coordinates: component.coordinates,
-                        label: 'No Label',
-                        id: component.id,
-                        textCoordinates: null,
-                    };
-                });
-            const restOfLabels = unifiedPredictionsLeveledInYAxis
-                .filter((x): x is IdentifiableUnifiedTextPrediction => x.type === 'TEXT_PREDICTION')
-                .filter((x) => !mappedTextIds.includes(x.id))
-                .map((component): UiComponentPrediction => {
-                    return {
-                        type: 'UI_CL_PREDICTION',
-                        kind: 'label',
-                        coordinates: component.coordinates,
-                        label: component.label,
-                        id: component.id,
-                        textCoordinates: null,
-                    };
-                });
-
-            return [...mappings, ...restOfObjects, ...restOfLabels].sort((x, y) => x.coordinates[1] - y.coordinates[1]);
-        })();
-        await eventService.createUIComponentPredictedEvent(uploadedFile, uiComponents);
-
-        // const chatGPTInput = this.openAIService.generateChatGPTInputForFinalJSON(unifiedPredictionsLeveledInYAxis);
-        // await eventService.createChatGPTRequestSentEvent(uploadedFile, chatGPTInput);
-        // const chatGPTOutput = await this.openAIService.sendCommandsToChatGPTApi(chatGPTInput);
-        // await eventService.createChatGPTResponseReceivedEvent(uploadedFile, chatGPTOutput);
-
+        const imageDescription = await this.openAIService.describeImageForFormComponentMapping(uploadedFile.url);
+        await eventService.createChatGPT4ImageDescribedEvent(uploadedFile, { message: imageDescription });
         /**
          *
+         *  Create CHATGPT 3.5 Commands AND Send API Call and Save Event
+         *
+         */
+        const chatGPTOutput = await this.openAIService.sendCommandsToChatGPTApi(
+            this.openAIService.generateChatGPTInputForFinalJSON(unifiedPredictionsLeveledInYAxis, imageDescription),
+        );
+        await eventService.createChatGPT3P5JsonGeneratedEvent(uploadedFile, chatGPTOutput);
+        /**
          *  Process Response
-         */
-        // const processedChatGPTOutput = this.openAIService.processChatGPTOutputForFinalJSON(chatGPTOutput);
-        // await eventService.createChatGPTResponseProcessedEvent(uploadedFile, processedChatGPTOutput);
-
-        /**
-         *
          *  Convert to Form Components
          */
-        const formComponents = this.openAIService.convertChatGPTOutputToFormComponents(uiComponents);
+        const { name, components } = this.openAIService.processChatGPTOutputForFinalJSON(chatGPTOutput);
+        const formComponents = this.openAIService.convertChatGPTOutputToFormComponents(components);
         await eventService.createFormComponentsCreatedEvent(uploadedFile, formComponents);
 
         return {
-            name: 'Form',
+            name: name ?? 'Form',
             components: formComponents,
         };
     };

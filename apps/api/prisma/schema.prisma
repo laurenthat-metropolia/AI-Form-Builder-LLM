@@ -29,6 +29,8 @@ model Form {
   status          String // "DRAFT" | "PUBLISHED"
   owner           User               @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId         String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   textFields      FormTextField[]
   checkboxes      FormCheckbox[]
   toggleSwitches  FormToggleSwitch[]
@@ -140,11 +142,13 @@ model FormLabel {
 }
 
 model ImageEvent {
-  id      String       @id @default(uuid())
-  event   String
-  payload Json?
-  file    UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  fileId  String
+  id        String       @id @default(uuid())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  event     String
+  payload   Json?
+  file      UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fileId    String
 
   @@unique([fileId, event])
 }

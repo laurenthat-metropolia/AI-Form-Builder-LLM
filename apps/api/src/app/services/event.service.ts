@@ -1,16 +1,12 @@
 import { UserDatabase } from '../databases/userDatabase';
 import {
-    ChatGPTRequestSentEventPayload,
-    ChatGPTResponseProcessedEventPayload,
-    ChatGPTResponseReceivedEventPayload,
+    ChatGPT3P5JsonGeneratedEventPayload,
     FormComponentsCreatedEventPayload,
     ImageEvents,
     ObjectDetectionResponseReceivedEventPayload,
     TextDetectionResponseReceivedEventPayload,
-    UIComponentPredictedEventPayload,
     UnifiedPrediction,
     UnifiedPredictionCoordinatesRoundedEventPayload,
-    UnifiedPredictionsLeveledInXAxisEventPayload,
     UnifiedPredictionsLeveledInYAxisEventPayload,
 } from '@draw2form/shared';
 import { UploadedFile } from '@prisma/client';
@@ -27,37 +23,21 @@ const createTextDetectionResponseReceivedEvent = async (
 ) => {
     await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.TextDetectionResponseReceived, data);
 };
-const createDetectionsUnifiedEvent = async (
+const createPredictionsUnifiedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
     data: UnifiedPrediction[] | null,
 ) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.DetectionsUnified, data);
+    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.PredictionsUnified, data);
+};
+const createChatGPT4ImageDescribedEvent = async (uploadedFile: Pick<UploadedFile, 'id'>, data: { message: string }) => {
+    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ChatGPT4ImageDescribed, { message: data });
 };
 
-const createChatGPTRequestSentEvent = async (
+const createChatGPT3P5JsonGeneratedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
-    data: ChatGPTRequestSentEventPayload,
+    data: ChatGPT3P5JsonGeneratedEventPayload,
 ) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ChatGPTRequestSent, data);
-};
-
-const createUIComponentPredictedEvent = async (
-    uploadedFile: Pick<UploadedFile, 'id'>,
-    data: UIComponentPredictedEventPayload,
-) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.UIComponentPredicted, data);
-};
-const createChatGPTResponseReceivedEvent = async (
-    uploadedFile: Pick<UploadedFile, 'id'>,
-    data: ChatGPTResponseReceivedEventPayload,
-) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ChatGPTResponseReceived, data);
-};
-const createChatGPTResponseProcessedEvent = async (
-    uploadedFile: Pick<UploadedFile, 'id'>,
-    data: ChatGPTResponseProcessedEventPayload,
-) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ChatGPTResponseProcessed, data);
+    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.ChatGPT3P5JsonGenerated, data);
 };
 
 const createUnifiedPredictionCoordinatesRoundedEvent = async (
@@ -72,12 +52,6 @@ const createUnifiedPredictionsLeveledInYAxisEvent = async (
 ) => {
     await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.UnifiedPredictionsLeveledInYAxis, data);
 };
-const createUnifiedPredictionsLeveledInXAxisEvent = async (
-    uploadedFile: Pick<UploadedFile, 'id'>,
-    data: UnifiedPredictionsLeveledInXAxisEventPayload,
-) => {
-    await UserDatabase.upsertImageEvent(uploadedFile.id, ImageEvents.UnifiedPredictionsLeveledInXAxis, data);
-};
 const createFormComponentsCreatedEvent = async (
     uploadedFile: Pick<UploadedFile, 'id'>,
     data: FormComponentsCreatedEventPayload,
@@ -88,13 +62,10 @@ const createFormComponentsCreatedEvent = async (
 export const eventService = {
     createObjectDetectionResponseReceivedEvent: createObjectDetectionResponseReceivedEvent,
     createTextDetectionResponseReceivedEvent: createTextDetectionResponseReceivedEvent,
-    createDetectionsUnifiedEvent: createDetectionsUnifiedEvent,
-    createChatGPTRequestSentEvent: createChatGPTRequestSentEvent,
-    createChatGPTResponseReceivedEvent: createChatGPTResponseReceivedEvent,
-    createChatGPTResponseProcessedEvent: createChatGPTResponseProcessedEvent,
+    createPredictionsUnifiedEvent: createPredictionsUnifiedEvent,
+    createChatGPT3P5JsonGeneratedEvent: createChatGPT3P5JsonGeneratedEvent,
     createUnifiedPredictionCoordinatesRoundedEvent: createUnifiedPredictionCoordinatesRoundedEvent,
     createUnifiedPredictionsLeveledInYAxisEvent: createUnifiedPredictionsLeveledInYAxisEvent,
-    createUnifiedPredictionsLeveledInXAxisEvent: createUnifiedPredictionsLeveledInXAxisEvent,
     createFormComponentsCreatedEvent: createFormComponentsCreatedEvent,
-    createUIComponentPredictedEvent: createUIComponentPredictedEvent,
+    createChatGPT4ImageDescribedEvent: createChatGPT4ImageDescribedEvent,
 };

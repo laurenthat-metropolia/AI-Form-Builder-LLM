@@ -13,16 +13,12 @@ import { Spinner } from '../components/Spinner';
 import { Canvas, CanvasAnnotation } from '../components/Canvas';
 import { JSONTree } from 'react-json-tree';
 import {
-    BOTTOM_RIGHT_X_COORDINATE_INDEX,
-    BOTTOM_RIGHT_Y_COORDINATE_INDEX,
     hideImageEventsValue,
     IdentifiableImageEvent,
     ImageEvents,
     ImageEventsColors,
     showImageEventsValue,
     SupportedFormComponent,
-    TOP_LEFT_X_COORDINATE_INDEX,
-    TOP_LEFT_Y_COORDINATE_INDEX,
     UploadedFileWithIdentifiableImageEvents,
 } from '@draw2form/shared';
 
@@ -172,36 +168,9 @@ export const UploadDetails = () => {
                     }
                     setUploadedFile(data);
                     setEvents(
-                        data.events?.reduce((prev, curr) => {
-                            if (curr.event === 'UIComponentPredicted') {
-                                curr.payload = curr.payload.map((x) => {
-                                    x.coordinates = x.textCoordinates
-                                        ? [
-                                              Math.min(
-                                                  x.coordinates[TOP_LEFT_X_COORDINATE_INDEX],
-                                                  x.textCoordinates[TOP_LEFT_X_COORDINATE_INDEX],
-                                              ),
-                                              Math.min(
-                                                  x.coordinates[TOP_LEFT_Y_COORDINATE_INDEX],
-                                                  x.textCoordinates[TOP_LEFT_Y_COORDINATE_INDEX],
-                                              ),
-                                              Math.max(
-                                                  x.coordinates[BOTTOM_RIGHT_X_COORDINATE_INDEX],
-                                                  x.textCoordinates[BOTTOM_RIGHT_X_COORDINATE_INDEX],
-                                              ),
-                                              Math.max(
-                                                  x.coordinates[BOTTOM_RIGHT_Y_COORDINATE_INDEX],
-                                                  x.textCoordinates[BOTTOM_RIGHT_Y_COORDINATE_INDEX],
-                                              ),
-                                          ]
-                                        : x.coordinates;
-                                    return x;
-                                });
-                            }
-
-                            prev.push(curr);
-                            return prev;
-                        }, [] as IdentifiableImageEvent[]),
+                        data.events?.sort(
+                            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+                        ) ?? [],
                     );
                 } catch (error) {
                     console.error(error);
@@ -232,7 +201,7 @@ export const UploadDetails = () => {
                         </span>
                     </span>
                 </button>
-                {Object.values(ImageEvents).map((eventName) => {
+                {Object.values(ImageEvents).map((eventName, index) => {
                     const exist = uploadedFile?.events?.find((it: any) => it.event === eventName);
 
                     const supportsCoordinates = exist ? checkImageEventCoordinateSupport(exist) : false;
@@ -277,7 +246,9 @@ export const UploadDetails = () => {
                                     </button>
                                 )}
                             </span>
-                            <small className="col-span-10">{camelPad(eventName)}</small>
+                            <small className="col-span-10">
+                                {index + 1}. {camelPad(eventName)}
+                            </small>
                         </div>
                     );
                 })}
@@ -295,11 +266,6 @@ export const UploadDetails = () => {
                     {uploadedFile !== null && <Canvas url={uploadedFile.url} annotations={canvasAnnotations} />}
                 </div>
                 <div className="col-span-6 shadow-md p-2 flex flex-col gap-2 p-4 rounded">
-                    <h4>
-                        Generated Form:
-                        {uploadedFile?.events?.find((x) => x.event === ImageEvents.ChatGPTResponseProcessed)?.payload
-                            ?.name ?? 'No Name'}
-                    </h4>
                     <div className="grid grid-cols-12 gap-2 p-4 border rounded">
                         <div className="col-span-12 grid grid-cols-12 gap-1 p-1 border rounded">
                             {generatedForm.map((formField, index) => {
@@ -383,16 +349,24 @@ export const UploadDetails = () => {
             </div>
             <div className="col-span-6 flex flex-col gap-2 p-4 rounded h-screen">
                 <h4>Debug:</h4>
-                <JSONTree data={uploadedFile ?? {}} />
-
-                {events?.map((event) => {
-                    return (
-                        <div>
-                            <h4>{event.event}:</h4>
-                            <JSONTree data={event ?? {}} />
-                        </div>
-                    );
-                })}
+                <ol className="relative border-s border-gray-200 dark:border-gray-700">
+                    {events?.map((event) => {
+                        return (
+                            <li className="mb-10 ms-4">
+                                <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-700"></div>
+                                <time className="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
+                                    {event.event}
+                                </time>
+                                {/*<h3 className="text-lg font-semibold text-gray-900 dark:text-white">*/}
+                                {/*    Application UI code in Tailwind CSS*/}
+                                {/*</h3>*/}
+                                <p className="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+                                    <JSONTree data={event} />
+                                </p>
+                            </li>
+                        );
+                    })}
+                </ol>
             </div>
         </div>
     );
