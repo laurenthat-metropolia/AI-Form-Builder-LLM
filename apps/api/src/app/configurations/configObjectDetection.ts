@@ -11,7 +11,7 @@ export const recognizeObjects = async (
         const api =
             environment.NODE_ENV === 'development'
                 ? 'http://127.0.0.1:8001/llm/predict'
-                : 'service-draw2form-llm.app-draw2form:8001/llm/predict';
+                : 'http://service-draw2form-llm.app-draw2form.svc.cluster.local:8001/llm/predict';
         const url = new URL(api);
         url.searchParams.set('image_url', imageUrl);
         url.searchParams.set('model_name', model);
