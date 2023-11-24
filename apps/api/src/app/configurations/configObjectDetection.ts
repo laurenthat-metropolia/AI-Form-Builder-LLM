@@ -1,7 +1,6 @@
 import { ObjectDetectionResponse } from '@draw2form/shared';
 import fetch from 'node-fetch';
-
-const api = 'http://127.0.0.1:8001/llm/predict';
+import { environment } from './environment';
 
 export const recognizeObjects = async (
     imageUrl: string,
@@ -9,9 +8,14 @@ export const recognizeObjects = async (
     model: string = 'roboflow',
 ): Promise<ObjectDetectionResponse | null> => {
     try {
+        const api =
+            environment.NODE_ENV === 'development'
+                ? 'http://127.0.0.1:8001/llm/predict'
+                : 'http://service-draw2form-llm.app-draw2form.svc.cluster.local:8001';
         const url = new URL(api);
         url.searchParams.set('image_url', imageUrl);
         url.searchParams.set('model_name', model);
+        console.log(`LLM Api | Sending request to url: ${url.href}`);
         const response = await fetch(url.href, {
             method: 'post',
             body: undefined,
