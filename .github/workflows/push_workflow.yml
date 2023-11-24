@@ -195,9 +195,9 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
             
             export IMAGE_TAG=ericaskari/draw2form-llm:${{needs.Version.outputs.version}}
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment-llm.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[0].value = env(APP_ROBOFLOW_API_KEY)' deployment-llm.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[1].value = env(APP_ENV)' deployment-llm.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form-llm") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment-llm.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form-llm") .spec.template.spec.containers[0].env[0].value = env(APP_ROBOFLOW_API_KEY)' deployment-llm.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form-llm") .spec.template.spec.containers[0].env[1].value = env(APP_ENV)' deployment-llm.yml
 
             kubectl apply --filename deployment.yml
             kubectl apply --filename deployment-llm.yml
