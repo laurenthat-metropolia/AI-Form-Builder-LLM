@@ -291,7 +291,8 @@ model FormLabel {
                     `Form components that we support at this moment are: "label, button, checkbox, toggle, image, input"`,
                     `You can use "label" for Header texts`,
                     `Please try to map each form component in the picture to one of ours.`,
-                    `Note that form component labels has higher priority so if a text looks to be a input or button or any other component's label then choose them as component label and not standalone label component.`,
+                    `Note that form component labels has higher priority so if a text looks to be an input's label, button's label, checkboxes' label or any other component's label then choose them as that component's label and not a standalone label.`,
+                    `For numeric inputs and date inputs and dropdown inputs just use "input"`,
                 ].join('.\n'),
             },
             {

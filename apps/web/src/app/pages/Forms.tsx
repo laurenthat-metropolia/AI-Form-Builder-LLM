@@ -3,6 +3,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import { Form } from '@prisma/client';
 import { FileUpload } from '../components/FileUpload';
 import { EnvContext } from '../contexts/EnvContext';
+import { Link } from 'react-router-dom';
 
 export const Forms = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -120,13 +121,15 @@ export const Forms = () => {
                                             return (
                                                 <tr>
                                                     <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                                                        <div className="flex items-center">
-                                                            <div className="ml-3">
-                                                                <p className="text-gray-900 whitespace-no-wrap">
-                                                                    {form.name}
-                                                                </p>
+                                                        <Link to={form.id}>
+                                                            <div className="flex items-center">
+                                                                <div className="ml-3">
+                                                                    <p className="text-gray-900 whitespace-no-wrap">
+                                                                        {form.name}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        </Link>
                                                     </td>
                                                     <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
                                                         <span className="relative inline-block px-3 py-1 font-semibold leading-tight text-green-900">

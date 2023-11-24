@@ -27,6 +27,10 @@ export const router = createBrowserRouter([
                 path: '/forms',
                 element: <Forms />,
             },
+            // {
+            //     path: '/forms/:id',
+            //     element: <FormEdit />,
+            // },
             {
                 path: '/upload/:id',
                 element: <UploadDetails />,
