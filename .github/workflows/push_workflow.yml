@@ -1,7 +1,7 @@
 name: Deployment
 on:
   push:
-    branches: [ main ]
+    branches: [ main, fix/workflows ]
 permissions: write-all
 
 jobs:
