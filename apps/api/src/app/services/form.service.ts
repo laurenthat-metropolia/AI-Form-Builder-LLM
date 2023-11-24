@@ -1,12 +1,11 @@
 import { prisma } from '../databases/userDatabase';
 import { Form } from '@prisma/client';
-import { SupportedFormComponent } from '@draw2form/shared';
 import { randomUUID } from 'crypto';
-import { convertChatGPTOutputToFormComponents } from '../configurations/configOpenAi';
+import { SupportedFormComponent } from '@draw2form/shared';
 
 export const populateUserFormBasedOnChatGPTResponse = async (
     name: string,
-    supportedComponents: ReturnType<typeof convertChatGPTOutputToFormComponents>,
+    supportedComponents: SupportedFormComponent[],
     form: Form,
 ): Promise<void> => {
     await prisma.form.update({
@@ -17,62 +16,60 @@ export const populateUserFormBasedOnChatGPTResponse = async (
             name: name,
         },
     });
-    for (let supportedComponentsRow of supportedComponents) {
-        for (let component of supportedComponentsRow satisfies SupportedFormComponent[]) {
-            if (component[0] === 'FormButton') {
-                await prisma.formButton.create({
-                    data: {
-                        ...component[1],
-                        formId: form.id,
-                        id: randomUUID(),
-                    },
-                });
-            }
-            if (component[0] === 'FormCheckbox') {
-                await prisma.formCheckbox.create({
-                    data: {
-                        ...component[1],
-                        formId: form.id,
-                        id: randomUUID(),
-                    },
-                });
-            }
-            if (component[0] === 'FormImage') {
-                await prisma.formImage.create({
-                    data: {
-                        ...component[1],
-                        formId: form.id,
-                        id: randomUUID(),
-                    },
-                });
-            }
-            if (component[0] === 'FormLabel') {
-                await prisma.formLabel.create({
-                    data: {
-                        ...component[1],
-                        formId: form.id,
-                        id: randomUUID(),
-                    },
-                });
-            }
-            if (component[0] === 'FormTextField') {
-                await prisma.formTextField.create({
-                    data: {
-                        ...component[1],
-                        formId: form.id,
-                        id: randomUUID(),
-                    },
-                });
-            }
-            if (component[0] === 'FormToggleSwitch') {
-                await prisma.formToggleSwitch.create({
-                    data: {
-                        ...component[1],
-                        formId: form.id,
-                        id: randomUUID(),
-                    },
-                });
-            }
+    for (const component of supportedComponents) {
+        if (component[0] === 'FormButton') {
+            await prisma.formButton.create({
+                data: {
+                    ...component[1],
+                    formId: form.id,
+                    id: randomUUID(),
+                },
+            });
+        }
+        if (component[0] === 'FormCheckbox') {
+            await prisma.formCheckbox.create({
+                data: {
+                    ...component[1],
+                    formId: form.id,
+                    id: randomUUID(),
+                },
+            });
+        }
+        if (component[0] === 'FormImage') {
+            await prisma.formImage.create({
+                data: {
+                    ...component[1],
+                    formId: form.id,
+                    id: randomUUID(),
+                },
+            });
+        }
+        if (component[0] === 'FormLabel') {
+            await prisma.formLabel.create({
+                data: {
+                    ...component[1],
+                    formId: form.id,
+                    id: randomUUID(),
+                },
+            });
+        }
+        if (component[0] === 'FormTextField') {
+            await prisma.formTextField.create({
+                data: {
+                    ...component[1],
+                    formId: form.id,
+                    id: randomUUID(),
+                },
+            });
+        }
+        if (component[0] === 'FormToggleSwitch') {
+            await prisma.formToggleSwitch.create({
+                data: {
+                    ...component[1],
+                    formId: form.id,
+                    id: randomUUID(),
+                },
+            });
         }
     }
 };

@@ -15,6 +15,8 @@ import { environment } from './configurations/environment';
 import { ProfileController } from './controllers/profile.controller';
 import { UploadController } from './controllers/upload.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { OpenaiService } from './services/openai.service';
+import { PredictionService } from './services/prediction.service';
 
 @Module({
     imports: [
@@ -42,6 +44,14 @@ import { JwtModule } from '@nestjs/jwt';
         }),
     ],
     controllers: [AuthController, FormController, ProfileController, UploadController],
-    providers: [JwtAuthStrategy, GoogleAuthStrategy, AnonymousAuthStrategy, AppValidationPipe, ImageEventHandler],
+    providers: [
+        JwtAuthStrategy,
+        GoogleAuthStrategy,
+        AnonymousAuthStrategy,
+        AppValidationPipe,
+        ImageEventHandler,
+        OpenaiService,
+        PredictionService,
+    ],
 })
 export class AppModule {}

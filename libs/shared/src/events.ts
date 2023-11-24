@@ -1,33 +1,28 @@
 import { ImageEvent as OImageEvent } from '.prisma/client';
 import { TextDetectionResponse } from './azure';
 import { ObjectDetectionResponse } from './llm';
-import { SupportedFormComponent, UnifiedObjectPrediction, UnifiedPrediction, UnifiedTextPrediction } from './types';
+import { SupportedFormComponent, UnifiedPrediction } from './types';
 
 export const ImageEvents = {
     ObjectDetectionResponseReceived: 'ObjectDetectionResponseReceived',
     TextDetectionResponseReceived: 'TextDetectionResponseReceived',
-    TextDetectionUnified: 'TextDetectionUnified',
-    ObjectDetectionUnified: 'ObjectDetectionUnified',
-    ChatGPTRequestSent: 'ChatGPTRequestSent',
-    ChatGPTResponseReceived: 'ChatGPTResponseReceived',
-    ChatGPTResponseProcessed: 'ChatGPTResponseProcessed',
+    PredictionsUnified: 'PredictionsUnified',
     UnifiedPredictionCoordinatesRounded: 'UnifiedPredictionCoordinatesRounded',
     UnifiedPredictionsLeveledInYAxis: 'UnifiedPredictionsLeveledInYAxis',
+    ChatGPT4ImageDescribed: 'ChatGPT4ImageDescribed',
+    ChatGPT3P5JsonGenerated: 'ChatGPT3P5JsonGenerated',
     FormComponentsCreated: 'FormComponentsCreated',
 } as const;
 
 export type ObjectDetectionResponseReceivedEventPayload = ObjectDetectionResponse;
 export type TextDetectionResponseReceivedEventPayload = TextDetectionResponse;
-export type TextDetectionUnifiedEventPayload = UnifiedTextPrediction[];
-export type ObjectDetectionUnifiedEventPayload = UnifiedObjectPrediction[];
-export type ChatGPTRequestSentEventPayload = Record<string, any>;
-export type ChatGPTResponseReceivedEventPayload = Record<string, any>;
-export type ChatGPTResponseProcessedEventPayload = any;
+export type PredictionsUnifiedEventPayload = UnifiedPrediction[];
 export type UnifiedPredictionCoordinatesRoundedEventPayload = UnifiedPrediction[];
 export type UnifiedPredictionsLeveledInYAxisEventPayload = UnifiedPrediction[];
-export type FormComponentsCreatedEventPayload = SupportedFormComponent[][];
+export type ChatGPT4ImageDescribedPayload = { message: string };
+export type ChatGPT3P5JsonGeneratedEventPayload = Record<string, any>;
+export type FormComponentsCreatedEventPayload = SupportedFormComponent[];
 
-type CommonImageEvent = Omit<OImageEvent, 'payload' | 'event'>;
 export type IdentifiableImageEvent = Omit<OImageEvent, 'payload' | 'event'> &
     (
         | {
@@ -39,24 +34,16 @@ export type IdentifiableImageEvent = Omit<OImageEvent, 'payload' | 'event'> &
               payload: TextDetectionResponseReceivedEventPayload | null;
           }
         | {
-              event: typeof ImageEvents.TextDetectionUnified;
-              payload: TextDetectionUnifiedEventPayload | null;
+              event: typeof ImageEvents.PredictionsUnified;
+              payload: PredictionsUnifiedEventPayload | null;
           }
         | {
-              event: typeof ImageEvents.ObjectDetectionUnified;
-              payload: ObjectDetectionUnifiedEventPayload | null;
+              event: typeof ImageEvents.ChatGPT4ImageDescribed;
+              payload: ChatGPT4ImageDescribedPayload | null;
           }
         | {
-              event: typeof ImageEvents.ChatGPTRequestSent;
-              payload: ChatGPTRequestSentEventPayload | null;
-          }
-        | {
-              event: typeof ImageEvents.ChatGPTResponseReceived;
-              payload: ChatGPTResponseReceivedEventPayload | null;
-          }
-        | {
-              event: typeof ImageEvents.ChatGPTResponseProcessed;
-              payload: ChatGPTResponseProcessedEventPayload | null;
+              event: typeof ImageEvents.ChatGPT3P5JsonGenerated;
+              payload: ChatGPT3P5JsonGeneratedEventPayload | null;
           }
         | {
               event: typeof ImageEvents.UnifiedPredictionCoordinatesRounded;
@@ -84,11 +71,9 @@ export const showImageEventsValue: Record<string, boolean> = Object.keys(ImageEv
 export const ImageEventsColors: Record<keyof typeof ImageEvents, string> = {
     ObjectDetectionResponseReceived: '#ff646b',
     TextDetectionResponseReceived: '#46ff2a',
-    TextDetectionUnified: '#ffbc52',
-    ObjectDetectionUnified: '#ff70ce',
-    ChatGPTRequestSent: '#27afff',
-    ChatGPTResponseReceived: '#e791a9',
-    ChatGPTResponseProcessed: '#f48686',
+    PredictionsUnified: '#ffbc52',
+    ChatGPT4ImageDescribed: '#27afff',
+    ChatGPT3P5JsonGenerated: '#e791a9',
     UnifiedPredictionCoordinatesRounded: '#ffcd33',
     UnifiedPredictionsLeveledInYAxis: '#19fff5',
     FormComponentsCreated: '#000000',

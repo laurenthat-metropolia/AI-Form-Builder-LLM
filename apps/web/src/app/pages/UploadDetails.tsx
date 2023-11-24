@@ -25,9 +25,10 @@ import {
 export const UploadDetails = () => {
     const { id } = useParams();
     const [uploadedFile, setUploadedFile] = useState<UploadedFileWithIdentifiableImageEvents | null>(null);
+    const [events, setEvents] = useState<UploadedFileWithIdentifiableImageEvents['events'] | []>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [canvasAnnotations, setCanvasAnnotations] = useState<CanvasAnnotation[]>([]);
-    const [generatedForm, setGeneratedForm] = useState<SupportedFormComponent[][]>([]);
+    const [generatedForm, setGeneratedForm] = useState<SupportedFormComponent[]>([]);
     const [hideCoordinates, setHideCoordinates] = useState<Record<string, boolean>>({});
 
     const stringToRGBColor = useCallback((str: keyof typeof ImageEvents): string => {
@@ -93,7 +94,7 @@ export const UploadDetails = () => {
             return;
         }
         const events = uploadedFile.events ?? [];
-        for (let imageEvent of events) {
+        for (const imageEvent of events) {
             if (imageEvent.event === ImageEvents.FormComponentsCreated) {
                 const payload = imageEvent.payload ?? [];
                 setGeneratedForm(payload);
@@ -117,7 +118,7 @@ export const UploadDetails = () => {
         const events = uploadedFile.events ?? [];
         const output: CanvasAnnotation[] = [];
 
-        for (let imageEvent of events) {
+        for (const imageEvent of events) {
             const hide = hideCoordinates[imageEvent.event] ?? false;
 
             if (hide) {
@@ -125,14 +126,13 @@ export const UploadDetails = () => {
             }
 
             const supportsCoordinates = checkImageEventCoordinateSupport(imageEvent);
-            console.log({ supportsCoordinates });
 
             if (!supportsCoordinates) {
                 continue;
             }
 
             const coordinates = getCoordinateList(imageEvent);
-            console.log({ coordinates });
+
             const polygons: CanvasAnnotation[] =
                 coordinates.map((coordinate, index): CanvasAnnotation => {
                     return {
@@ -146,7 +146,6 @@ export const UploadDetails = () => {
                 }) ?? [];
             output.push(...polygons);
         }
-        console.log({ output });
         setCanvasAnnotations(output);
     }, [uploadedFile, hideCoordinates]);
 
@@ -168,6 +167,11 @@ export const UploadDetails = () => {
                         setLoading(false);
                     }
                     setUploadedFile(data);
+                    setEvents(
+                        data.events?.sort(
+                            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+                        ) ?? [],
+                    );
                 } catch (error) {
                     console.error(error);
                 }
@@ -197,7 +201,7 @@ export const UploadDetails = () => {
                         </span>
                     </span>
                 </button>
-                {Object.values(ImageEvents).map((eventName) => {
+                {Object.values(ImageEvents).map((eventName, index) => {
                     const exist = uploadedFile?.events?.find((it: any) => it.event === eventName);
 
                     const supportsCoordinates = exist ? checkImageEventCoordinateSupport(exist) : false;
@@ -242,7 +246,9 @@ export const UploadDetails = () => {
                                     </button>
                                 )}
                             </span>
-                            <small className="col-span-10">{camelPad(eventName)}</small>
+                            <small className="col-span-10">
+                                {index + 1}. {camelPad(eventName)}
+                            </small>
                         </div>
                     );
                 })}
@@ -260,113 +266,107 @@ export const UploadDetails = () => {
                     {uploadedFile !== null && <Canvas url={uploadedFile.url} annotations={canvasAnnotations} />}
                 </div>
                 <div className="col-span-6 shadow-md p-2 flex flex-col gap-2 p-4 rounded">
-                    <h4>
-                        Generated Form:{' '}
-                        {uploadedFile?.events?.find((x) => x.event === ImageEvents.ChatGPTResponseProcessed)?.payload
-                            ?.name ?? 'No Name'}
-                    </h4>
                     <div className="grid grid-cols-12 gap-2 p-4 border rounded">
-                        {generatedForm.map((formRow, formRowIndex) => {
-                            const onlyHasOneElement = formRow.length === 1;
-                            const onlyHasTwoElement = formRow.length === 2;
-                            const centerClassNames = onlyHasOneElement ? 'w-full flex justify-center' : '';
-                            return (
-                                <div
-                                    className="col-span-12 grid grid-cols-12 gap-1 p-1 border rounded"
-                                    key={formRowIndex}>
-                                    {formRow.map((formField, index) => {
-                                        const name = formField[0];
-                                        return (
-                                            <div
-                                                key={name + index}
-                                                className={`${
-                                                    onlyHasOneElement
-                                                        ? 'col-span-12'
-                                                        : onlyHasTwoElement
-                                                        ? 'col-span-6'
-                                                        : 'col-span-4'
-                                                } flex items-center gap-1 p-1 border rounded`}>
-                                                {name === 'FormImage' && (
-                                                    <div className="flex items-center justify-center w-full h-48 bg-gray-300 rounded  dark:bg-gray-700">
-                                                        <svg
-                                                            className="w-10 h-10"
-                                                            aria-hidden="true"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            fill="currentColor"
-                                                            viewBox="0 0 20 18">
-                                                            <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
-                                                        </svg>
-                                                    </div>
-                                                )}
-                                                {name === 'FormLabel' && (
-                                                    <div className={`${centerClassNames}`}>
-                                                        <h5 className="text-xl font-bold ">{formField[1].label}</h5>
-                                                    </div>
-                                                )}
-                                                {name === 'FormButton' && (
-                                                    <div className={`${centerClassNames}`}>
-                                                        <button
-                                                            type="button"
-                                                            className=" text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 focus:outline-none">
-                                                            {formField[1].label}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                {name === 'FormTextField' && (
-                                                    <div>
-                                                        <input
-                                                            type="text"
-                                                            id="first_name"
-                                                            placeholder={formField[1].label}
-                                                            className=" border border-gray-300  text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                                            required
-                                                        />
-                                                    </div>
-                                                )}
-                                                {name === 'FormCheckbox' && (
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            checked
-                                                            id="checked-checkbox"
-                                                            type="checkbox"
-                                                            onChange={() => {}}
-                                                            value=""
-                                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                                        />
-                                                        <label
-                                                            htmlFor="checked-checkbox"
-                                                            className="ms-2 text-sm font-medium">
-                                                            {formField[1].label}
-                                                        </label>
-                                                    </div>
-                                                )}
-                                                {name === 'FormToggleSwitch' && (
-                                                    <div className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            onChange={() => {}}
-                                                            value=""
-                                                            className="sr-only peer"
-                                                            checked
-                                                        />
-                                                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                                        <span className="ms-3 text-sm font-medium">
-                                                            {formField[1].label}
-                                                        </span>
-                                                    </div>
-                                                )}
+                        <div className="col-span-12 grid grid-cols-12 gap-1 p-1 border rounded">
+                            {generatedForm.map((formField, index) => {
+                                const name = formField[0];
+                                return (
+                                    <div
+                                        key={name + index}
+                                        className={`col-span-12 flex items-center gap-1 p-1 px-2  rounded`}>
+                                        {name === 'FormImage' && (
+                                            <div className="flex items-center justify-center w-full h-48 bg-gray-300 rounded  dark:bg-gray-700">
+                                                <svg
+                                                    className="w-10 h-10"
+                                                    aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 18">
+                                                    <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+                                                </svg>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            );
-                        })}
+                                        )}
+                                        {name === 'FormLabel' && (
+                                            <div className={`w-full flex justify-center`}>
+                                                <h5 className="text-xl font-bold ">{formField[1].label}</h5>
+                                            </div>
+                                        )}
+                                        {name === 'FormTextField' && (
+                                            <div className={`w-full grid grid-cols-2 gap-2 items-center`}>
+                                                <label className="text-gray-700">{formField[1].label}</label>
+                                                <input
+                                                    type="text"
+                                                    id="first_name"
+                                                    placeholder={formField[1].label}
+                                                    className=" border border-gray-300  text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                                    required
+                                                />
+                                            </div>
+                                        )}
+                                        {name === 'FormCheckbox' && (
+                                            <div className={`w-full grid grid-cols-2 gap-2 items-center`}>
+                                                <label className="text-gray-700">{formField[1].label}</label>
+                                                <input
+                                                    checked
+                                                    id="checked-checkbox"
+                                                    type="checkbox"
+                                                    onChange={() => {}}
+                                                    value=""
+                                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                />
+                                            </div>
+                                        )}
+                                        {name === 'FormToggleSwitch' && (
+                                            <div className={`w-full grid grid-cols-2 gap-2 items-center`}>
+                                                <label className="text-gray-700">{formField[1].label}</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="checkbox"
+                                                        onChange={() => {}}
+                                                        value=""
+                                                        className="sr-only peer"
+                                                        checked
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {name === 'FormButton' && (
+                                            <div className={`w-full flex justify-center items-center py-2`}>
+                                                <button
+                                                    type="button"
+                                                    className=" text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 focus:outline-none">
+                                                    {formField[1].label}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
             <div className="col-span-6 flex flex-col gap-2 p-4 rounded h-screen">
                 <h4>Debug:</h4>
-                <JSONTree data={uploadedFile ?? {}} />
+                <ol className="relative border-s border-gray-200 dark:border-gray-700">
+                    {events?.map((event) => {
+                        return (
+                            <li className="mb-10 ms-4">
+                                <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-700"></div>
+                                <time className="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
+                                    {event.event}
+                                </time>
+                                {/*<h3 className="text-lg font-semibold text-gray-900 dark:text-white">*/}
+                                {/*    Application UI code in Tailwind CSS*/}
+                                {/*</h3>*/}
+                                <p className="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+                                    <JSONTree data={event} />
+                                </p>
+                            </li>
+                        );
+                    })}
+                </ol>
             </div>
         </div>
     );

@@ -1,10 +1,8 @@
-export type ExpectedChatGPTOutput = {
+export type ExpectedChatGPTOutputForFinalJSON = {
     name: string;
     components: {
         type: string;
-        class: string;
+        kind: string;
         label: string;
-        orderX: number;
-        orderY: number;
-    }[][];
+    }[];
 };

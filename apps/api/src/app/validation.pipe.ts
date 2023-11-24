@@ -20,7 +20,6 @@ export class AppValidationPipe implements PipeTransform {
             throw new BadRequestException();
         }
         const { metatype } = metadata;
-        console.log({ metadata, value });
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const request = plainToClass(metatype, value);

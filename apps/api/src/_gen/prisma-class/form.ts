@@ -25,6 +25,12 @@ export class Form {
     @ApiProperty({ type: String })
     ownerId: string;
 
+    @ApiProperty({ type: Date })
+    createdAt: Date;
+
+    @ApiProperty({ type: Date })
+    updatedAt: Date;
+
     @ApiProperty({ isArray: true, type: () => FormTextField })
     textFields: FormTextField[];
 
