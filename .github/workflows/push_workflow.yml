@@ -191,13 +191,15 @@ jobs:
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[17].value = env(APP_REDIS_HOSTNAME)' deployment.yml
             yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[18].value = env(APP_REDIS_PASSWORD)' deployment.yml
 
-            export IMAGE_TAG=ericaskari/draw2form-llm:${{needs.Version.outputs.version}}
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[0].value = env(APP_ROBOFLOW_API_KEY)' deployment.yml
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].env[1].value = env(APP_ENV)' deployment.yml
-
             export IMAGE_TAG=ericaskari/draw2form-web:${{needs.Version.outputs.version}}
-            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[2].image = env(IMAGE_TAG)' deployment.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[1].image = env(IMAGE_TAG)' deployment.yml
+            
+            export IMAGE_TAG=ericaskari/draw2form-llm:${{needs.Version.outputs.version}}
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].image = env(IMAGE_TAG)' deployment-llm.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[0].value = env(APP_ROBOFLOW_API_KEY)' deployment-llm.yml
+            yq e -i 'select(.metadata.name == "deployment-draw2form") .spec.template.spec.containers[0].env[1].value = env(APP_ENV)' deployment-llm.yml
+
             kubectl apply --filename deployment.yml
+            kubectl apply --filename deployment-llm.yml
 
 

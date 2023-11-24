@@ -61,26 +61,6 @@ spec:
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_REDIS_HOSTNAME
             - name: APP_REDIS_PASSWORD
               value: op://Metropolia/deployment-draw2form-$APP_ENV/api/APP_REDIS_PASSWORD
-        - image: ericaskari/draw2form-llm:latest
-          name: draw2form-llm
-          imagePullPolicy: Always
-          env:
-            - name: APP_ROBOFLOW_API_KEY
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm/APP_ROBOFLOW_API_KEY
-            - name: APP_ENV
-              value: op://Metropolia/deployment-draw2form-$APP_ENV/llm/APP_ENV
-          resizePolicy:
-            - resourceName: cpu
-              restartPolicy: RestartContainer
-            - resourceName: memory
-              restartPolicy: RestartContainer
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "500m"
-            limits:
-              memory: "512Mi"
-              cpu: "1000m"
         - image: ericaskari/draw2form-web:latest
           name: draw2form-web
           imagePullPolicy: Always
@@ -103,10 +83,6 @@ spec:
     - name: api-port
       port: 8000
       targetPort: 8000
-      protocol: TCP
-    - name: llm-port
-      port: 8001
-      targetPort: 8001
       protocol: TCP
     - name: files-port
       port: 80
@@ -149,13 +125,6 @@ spec:
                 name: service-draw2form
                 port:
                   number: 8000
-          - path: /llm
-            pathType: Prefix
-            backend:
-              service:
-                name: service-draw2form
-                port:
-                  number: 8001
           - path: /files
             pathType: Prefix
             backend:
