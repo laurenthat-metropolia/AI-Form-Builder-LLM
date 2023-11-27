@@ -17,6 +17,7 @@ import { UploadController } from './controllers/upload.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { OpenaiService } from './services/openai.service';
 import { PredictionService } from './services/prediction.service';
+import { FormFieldController } from './controllers/form-field.controller';
 
 @Module({
     imports: [
@@ -43,7 +44,7 @@ import { PredictionService } from './services/prediction.service';
             },
         }),
     ],
-    controllers: [AuthController, FormController, ProfileController, UploadController],
+    controllers: [AuthController, ProfileController, FormController, FormFieldController, UploadController],
     providers: [
         JwtAuthStrategy,
         GoogleAuthStrategy,

@@ -1,5 +1,8 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
-
+.env.api
+.env.api.injected
+.env.llm
+.env.llm.injected
 # compiled output
 dist
 tmp
