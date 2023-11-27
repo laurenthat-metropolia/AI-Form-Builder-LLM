@@ -1,8 +1,12 @@
 import {
+    Body,
     Controller,
+    Delete,
+    ForbiddenException,
     Get,
     NotFoundException,
     Param,
+    Patch,
     Post,
     Req,
     UploadedFile,
@@ -21,6 +25,7 @@ import { transformUploadedFile } from '../services/upload.service';
 import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { ConsumerTopics } from '../event-consumers/consumer-topics';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { UpdateFormRequest } from '../dtos/UpdateForm.request';
 
 @ApiTags('Forms')
 @Controller('forms')
@@ -55,6 +60,80 @@ export class FormController {
         }
         return item;
     }
+    @Delete(':id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Delete Form by id',
+        description: 'Delete Form by id',
+    })
+    async deleteForm(@Req() request: Request, @Param() params: Record<string, string>) {
+        const user = request.user as User;
+        const formId = params.id;
+
+        const form = await prisma.form.findFirst({
+            where: {
+                id: formId,
+            },
+        });
+        if (!form) {
+            throw new NotFoundException();
+        }
+        if (form.ownerId !== user.id) {
+            throw new ForbiddenException();
+        }
+
+        return prisma.form.delete({
+            where: {
+                id: formId,
+                ownerId: user.id,
+            },
+        });
+    }
+
+    @Patch(':id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Patch Form by id',
+        description: 'Patch Form by id',
+    })
+    async patchForm(@Req() request: Request, @Param() params: Record<string, string>, @Body() body: UpdateFormRequest) {
+        const user = request.user as User;
+        const formId = params.id;
+
+        const form = await prisma.form.findFirst({
+            where: {
+                id: formId,
+            },
+        });
+        if (!form) {
+            throw new NotFoundException();
+        }
+        if (form.ownerId !== user.id) {
+            throw new ForbiddenException();
+        }
+
+        return prisma.form.update({
+            where: {
+                id: formId,
+            },
+            data: {
+                name: body.name ?? form.name,
+            },
+        });
+    }
+
     @Get(':id/status')
     @ApiParam({
         name: 'id',

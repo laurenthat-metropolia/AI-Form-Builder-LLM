@@ -1,9 +1,10 @@
-import { Controller, Get, NotImplementedException, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { Request } from 'express';
 import { User } from '@prisma/client';
 import { prisma } from '../databases/userDatabase';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UpdateUserRequest } from '../dtos/UpdateUser.request';
 
 @ApiTags('Profile')
 @Controller('profile')
@@ -12,6 +13,10 @@ export class ProfileController {
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiConsumes('application/json')
+    @ApiOperation({
+        summary: 'Get Populated Profile',
+        description: 'Get Populated Profile',
+    })
     async profile(@Req() request: Request) {
         const user = request.user as User;
         const response = await prisma.user.findFirst({
@@ -40,28 +45,24 @@ export class ProfileController {
         return response;
     }
 
-    @Put()
+    @Patch()
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
-    async editProfile() {
-        throw new NotImplementedException();
-        //     router.put('/', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
-        //         const user: User = req.user as User;
-        //         const body: User = req.body as User;
-        //         const response = await prisma.user.update({
-        //             where: {
-        //                 id: user.id,
-        //             },
-        //             data: {
-        //                 ...user,
-        //                 ...body,
-        //                 id: user.id,
-        //                 email: user.email,
-        //             },
-        //         });
-        //
-        //         res.status(200).send(response);
-        //         return;
-        //     });
+    @ApiOperation({
+        summary: 'Update Profile',
+        description: 'Update Profile',
+    })
+    async editProfile(@Req() request: Request, @Body() body: UpdateUserRequest) {
+        const user = request.user as User;
+
+        return prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                ...user,
+                name: body.name ?? user.name,
+            },
+        });
     }
 }

@@ -4,8 +4,8 @@ import {
     Delete,
     NotFoundException,
     Param,
+    Patch,
     Post,
-    Put,
     Req,
     UploadedFile,
     UseGuards,
@@ -73,7 +73,7 @@ export class FormFieldController {
         });
     }
 
-    @Put('text-field/:id')
+    @Patch('text-field/:id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiParam({
@@ -222,7 +222,7 @@ export class FormFieldController {
         });
     }
 
-    @Put('label/:id')
+    @Patch('label/:id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiParam({
@@ -371,7 +371,7 @@ export class FormFieldController {
         });
     }
 
-    @Put('checkbox/:id')
+    @Patch('checkbox/:id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiParam({
@@ -521,7 +521,7 @@ export class FormFieldController {
         });
     }
 
-    @Put('toggle-switch/:id')
+    @Patch('toggle-switch/:id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiParam({
@@ -669,7 +669,7 @@ export class FormFieldController {
         });
     }
 
-    @Put('button/:id')
+    @Patch('button/:id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiParam({
@@ -833,7 +833,7 @@ export class FormFieldController {
         });
     }
 
-    @Put('image/:id')
+    @Patch('image/:id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiParam({
