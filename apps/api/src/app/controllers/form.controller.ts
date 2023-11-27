@@ -3,7 +3,6 @@ import {
     Controller,
     Delete,
     ForbiddenException,
-    InternalServerErrorException,
     Get,
     NotFoundException,
     Param,
@@ -281,11 +280,10 @@ export class FormController {
         return populatedForm;
     }
 
-    @Post(":id/publish")
+    @Post(':id/publish')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('Bearer')
     @ApiConsumes('application/json')
-
     @ApiParam({
         name: 'id',
         type: 'string',
@@ -295,19 +293,32 @@ export class FormController {
         summary: 'Scan Form by formId',
         description: 'Scan Form by providing formId',
     })
-    async scanForm( @Req() request: Request, @Param()  params: Record<string,string>) {
-        try {
-            return params;
-        } catch (error) {
-            console.error('Error scanning form:', error);
-            throw new InternalServerErrorException('Internal server error');
+    async scanForm(@Req() request: Request, @Param() params: Record<string, string>) {
+        const user = request.user as User;
+        const formId = params.id;
+
+        const form = await prisma.form.findFirst({
+            where: {
+                id: formId,
+            },
+        });
+        if (!form) {
+            throw new NotFoundException();
         }
+        if (form.ownerId !== user.id) {
+            throw new ForbiddenException();
+        }
+
+        return prisma.form.update({
+            where: {
+                id: formId,
+            },
+            data: {
+                status: 'PUBLISHED',
+            },
+        });
     }
-
 }
-
-
-
 
 //     router.put('/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
 //         try {
