@@ -220,7 +220,7 @@ model FormLabel {
                                 id: '',
                                 formId: '',
                                 order: index,
-                                imageId: '',
+                                url: null,
                             } satisfies FormImage,
                         ];
                     case 'input':
