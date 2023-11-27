@@ -1,6 +1,6 @@
 import {
     Controller,
-    Get,
+    Get, InternalServerErrorException,
     NotFoundException,
     Param,
     Post,
@@ -16,11 +16,12 @@ import { FormStatus, ImageEvents } from '@draw2form/shared';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { prisma } from '../databases/userDatabase';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { Queue} from 'bull';
 import { transformUploadedFile } from '../services/upload.service';
 import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { ConsumerTopics } from '../event-consumers/consumer-topics';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {Body} from "node-fetch";
 
 @ApiTags('Forms')
 @Controller('forms')
@@ -200,7 +201,34 @@ export class FormController {
         await this.imageEventsQueue.add({ uploadedFile, form: createdForm });
         return populatedForm;
     }
+
+    @Post(":id/publish")
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiConsumes('application/json')
+
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Scan Form by formId',
+        description: 'Scan Form by providing formId',
+    })
+    async scanForm( @Req() request: Request, @Param()  params: Record<string,string>) {
+        try {
+            return params;
+        } catch (error) {
+            console.error('Error scanning form:', error);
+            throw new InternalServerErrorException('Internal server error');
+        }
+    }
+
 }
+
+
+
 
 //     router.put('/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
 //         try {
