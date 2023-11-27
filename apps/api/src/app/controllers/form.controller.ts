@@ -3,6 +3,7 @@ import {
     Controller,
     Delete,
     ForbiddenException,
+    InternalServerErrorException,
     Get,
     NotFoundException,
     Param,
@@ -279,7 +280,34 @@ export class FormController {
         await this.imageEventsQueue.add({ uploadedFile, form: createdForm });
         return populatedForm;
     }
+
+    @Post(":id/publish")
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiConsumes('application/json')
+
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Scan Form by formId',
+        description: 'Scan Form by providing formId',
+    })
+    async scanForm( @Req() request: Request, @Param()  params: Record<string,string>) {
+        try {
+            return params;
+        } catch (error) {
+            console.error('Error scanning form:', error);
+            throw new InternalServerErrorException('Internal server error');
+        }
+    }
+
 }
+
+
+
 
 //     router.put('/:id', requiresAccessToken, async (req: Request, res: Response): Promise<void> => {
 //         try {
