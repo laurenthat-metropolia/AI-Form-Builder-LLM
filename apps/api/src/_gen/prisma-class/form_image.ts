@@ -1,5 +1,5 @@
 import { Form } from './form';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FormImage {
     @ApiProperty({ type: String })
@@ -14,6 +14,6 @@ export class FormImage {
     @ApiProperty({ type: Number })
     order: number;
 
-    @ApiProperty({ type: String })
-    imageId: string;
+    @ApiPropertyOptional({ type: String })
+    url?: string;
 }

@@ -117,11 +117,11 @@ model FormToggleSwitchResponse {
 }
 
 model FormImage {
-  id      String @id @default(uuid())
-  form    Form   @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  formId  String
-  order   Int
-  imageId String
+  id     String  @id @default(uuid())
+  form   Form    @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  formId String
+  order  Int
+  url    String?
 }
 
 model FormButton {
