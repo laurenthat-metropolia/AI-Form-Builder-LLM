@@ -2,6 +2,7 @@ import {
     Body,
     Controller,
     Delete,
+    NotFoundException,
     Param,
     Post,
     Put,
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { UpdateFormFieldRequest } from '../dtos/UpdateFormField.request';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { transformUploadedFile } from '../services/upload.service';
+import { NewFormImageRequest } from '../dtos/NewFormImage.request';
 
 @ApiTags('Form Fields')
 @Controller('forms/:formId/fields')
@@ -47,9 +49,8 @@ export class FormFieldController {
     ) {
         const user = request.user as User;
         const formId = params.formId;
-        console.log({ params });
 
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
@@ -58,12 +59,15 @@ export class FormFieldController {
                 textFields: true,
             },
         });
-        console.log({ form });
+
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
         return prisma.formTextField.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: form.textFields.length,
+                order: body.order ?? form.textFields.length,
                 label: body.label,
             },
         });
@@ -94,20 +98,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formTextField.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formTextField.findFirst({
             where: {
                 formId: form.id,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formTextField.update({
             where: {
                 formId: form.id,
@@ -142,20 +152,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formTextField.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formTextField.findFirst({
             where: {
                 formId: formId,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formTextField.delete({
             where: {
                 formId: form.id,
@@ -183,7 +199,7 @@ export class FormFieldController {
     ) {
         const user = request.user as User;
         const formId = params.formId;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
@@ -193,11 +209,14 @@ export class FormFieldController {
             },
         });
 
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
         return prisma.formLabel.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: form.labels.length,
+                order: body.order ?? form.labels.length,
                 label: body.label,
             },
         });
@@ -228,20 +247,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formLabel.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formLabel.findFirst({
             where: {
                 formId: form.id,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formLabel.update({
             where: {
                 formId: form.id,
@@ -276,20 +301,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formLabel.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formLabel.findFirst({
             where: {
                 formId: formId,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formLabel.delete({
             where: {
                 formId: form.id,
@@ -317,7 +348,7 @@ export class FormFieldController {
     ) {
         const user = request.user as User;
         const formId = params.formId;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
@@ -327,11 +358,14 @@ export class FormFieldController {
             },
         });
 
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
         return prisma.formCheckbox.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: form.checkboxes.length,
+                order: body.order ?? form.checkboxes.length,
                 label: body.label,
             },
         });
@@ -363,20 +397,26 @@ export class FormFieldController {
         const formId = params.formId;
         const fieldId = params.id;
 
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formCheckbox.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formCheckbox.findFirst({
             where: {
                 formId: form.id,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formCheckbox.update({
             where: {
                 formId: form.id,
@@ -411,20 +451,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formCheckbox.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formCheckbox.findFirst({
             where: {
                 formId: formId,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formCheckbox.delete({
             where: {
                 formId: form.id,
@@ -452,7 +498,7 @@ export class FormFieldController {
     ) {
         const user = request.user as User;
         const formId = params.formId;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
@@ -462,11 +508,14 @@ export class FormFieldController {
             },
         });
 
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
         return prisma.formToggleSwitch.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: form.toggleSwitches.length,
+                order: body.order ?? form.toggleSwitches.length,
                 label: body.label,
             },
         });
@@ -497,20 +546,25 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formToggleSwitch.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formToggleSwitch.findFirst({
             where: {
                 formId: form.id,
                 id: fieldId,
             },
         });
-
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formToggleSwitch.update({
             where: {
                 formId: form.id,
@@ -545,20 +599,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formToggleSwitch.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formToggleSwitch.findFirst({
             where: {
                 formId: formId,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formToggleSwitch.delete({
             where: {
                 formId: form.id,
@@ -586,7 +646,7 @@ export class FormFieldController {
     ) {
         const user = request.user as User;
         const formId = params.formId;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
@@ -596,6 +656,9 @@ export class FormFieldController {
             },
         });
 
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
         return prisma.formButton.create({
             data: {
                 formId: form.id,
@@ -631,20 +694,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formButton.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formButton.findFirst({
             where: {
                 formId: form.id,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formButton.update({
             where: {
                 formId: form.id,
@@ -679,20 +748,26 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formButton.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formButton.findFirst({
             where: {
                 formId: formId,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formButton.delete({
             where: {
                 formId: form.id,
@@ -729,14 +804,14 @@ export class FormFieldController {
     async createImage(
         @Req() request: Request,
         @Param() params: Record<string, string>,
-        @Body() body: NewFormFieldRequest,
+        @Body() body: NewFormImageRequest,
         @UploadedFile() file: Express.Multer.File | null,
     ) {
         const user = request.user as User;
         const formId = params.formId;
         const image = file ? transformUploadedFile(file) : null;
 
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
@@ -746,10 +821,13 @@ export class FormFieldController {
             },
         });
 
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
         return prisma.formImage.create({
             data: {
                 formId: form.id,
-                order: form.images.length,
+                order: body.order ?? form.images.length,
                 url: image?.url ?? null,
             },
         });
@@ -788,27 +866,33 @@ export class FormFieldController {
     async updateImage(
         @Req() request: Request,
         @Param() params: Record<string, string>,
-        @Body() body: UpdateFormFieldRequest,
+        @Body() body: NewFormImageRequest,
         @UploadedFile() file: Express.Multer.File | null,
     ) {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
         const image = file ? transformUploadedFile(file) : null;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formImage.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formImage.findFirst({
             where: {
                 formId: form.id,
                 id: fieldId,
             },
         });
 
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
         return prisma.formImage.update({
             where: {
                 formId: form.id,
@@ -843,19 +927,25 @@ export class FormFieldController {
         const user = request.user as User;
         const formId = params.formId;
         const fieldId = params.id;
-        const form = await prisma.form.findFirstOrThrow({
+        const form = await prisma.form.findFirst({
             where: {
                 ownerId: user.id,
                 id: formId,
             },
         });
 
-        const field = await prisma.formImage.findFirstOrThrow({
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+        const field = await prisma.formImage.findFirst({
             where: {
                 formId: formId,
                 id: fieldId,
             },
         });
+        if (!field) {
+            throw new NotFoundException('Field Not Found.');
+        }
 
         return prisma.formImage.delete({
             where: {
