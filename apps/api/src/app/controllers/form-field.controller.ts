@@ -24,6 +24,7 @@ import { UpdateFormFieldRequest } from '../dtos/UpdateFormField.request';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { transformUploadedFile } from '../services/upload.service';
 import { NewFormImageRequest } from '../dtos/NewFormImage.request';
+import { forms } from '../services/form.service';
 
 @ApiTags('Form Fields')
 @Controller('forms/:formId/fields')
@@ -63,11 +64,13 @@ export class FormFieldController {
         if (!form) {
             throw new NotFoundException('Form Not Found.');
         }
+
+        const order = await forms.countFormFields(form.id);
         return prisma.formTextField.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: body.order ?? form.textFields.length,
+                order: order,
                 label: body.label,
             },
         });
@@ -212,11 +215,13 @@ export class FormFieldController {
         if (!form) {
             throw new NotFoundException('Form Not Found.');
         }
+
+        const order = await forms.countFormFields(form.id);
         return prisma.formLabel.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: body.order ?? form.labels.length,
+                order: order,
                 label: body.label,
             },
         });
@@ -361,11 +366,13 @@ export class FormFieldController {
         if (!form) {
             throw new NotFoundException('Form Not Found.');
         }
+
+        const order = await forms.countFormFields(form.id);
         return prisma.formCheckbox.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: body.order ?? form.checkboxes.length,
+                order: order,
                 label: body.label,
             },
         });
@@ -511,11 +518,13 @@ export class FormFieldController {
         if (!form) {
             throw new NotFoundException('Form Not Found.');
         }
+
+        const order = await forms.countFormFields(form.id);
         return prisma.formToggleSwitch.create({
             data: {
                 ...body,
                 formId: form.id,
-                order: body.order ?? form.toggleSwitches.length,
+                order: order,
                 label: body.label,
             },
         });
@@ -659,10 +668,12 @@ export class FormFieldController {
         if (!form) {
             throw new NotFoundException('Form Not Found.');
         }
+
+        const order = await forms.countFormFields(form.id);
         return prisma.formButton.create({
             data: {
                 formId: form.id,
-                order: body.order ?? form.buttons.length,
+                order: order,
                 label: body.label,
                 type: 'submit',
             },
@@ -824,10 +835,12 @@ export class FormFieldController {
         if (!form) {
             throw new NotFoundException('Form Not Found.');
         }
+
+        const order = await forms.countFormFields(form.id);
         return prisma.formImage.create({
             data: {
                 formId: form.id,
-                order: body.order ?? form.images.length,
+                order: order,
                 url: image?.url ?? null,
             },
         });

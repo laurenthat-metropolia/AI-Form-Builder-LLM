@@ -94,6 +94,40 @@ const findPopulatedManyByOwnerId = async (ownerId: string) => {
         },
     });
 };
+const countFormFields = async (formId: string): Promise<number> => {
+    const checkboxes = await prisma.formCheckbox.count({
+        where: {
+            formId: formId,
+        },
+    });
+    const textFields = await prisma.formTextField.count({
+        where: {
+            formId: formId,
+        },
+    });
+    const toggleSwitches = await prisma.formToggleSwitch.count({
+        where: {
+            formId: formId,
+        },
+    });
+    const buttons = await prisma.formButton.count({
+        where: {
+            formId: formId,
+        },
+    });
+    const labels = await prisma.formLabel.count({
+        where: {
+            formId: formId,
+        },
+    });
+    const images = await prisma.formImage.count({
+        where: {
+            formId: formId,
+        },
+    });
+
+    return checkboxes + textFields + toggleSwitches + buttons + labels + images;
+};
 
 const findOnePopulatedById = async (id: string) => {
     const item = await prisma.form.findFirst({
@@ -121,4 +155,5 @@ const findOnePopulatedById = async (id: string) => {
 export const forms = {
     findPopulatedManyByOwnerId: findPopulatedManyByOwnerId,
     findOnePopulatedById: findOnePopulatedById,
+    countFormFields: countFormFields,
 };
