@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { Client } from 'minio';
+import sharp from 'sharp';
 
 export interface UploadedFile {
     key: string;
@@ -42,6 +43,7 @@ export class UploadService {
         ): Promise<void> {
             const key = randomUUID() + path.parse(file.originalname).ext;
             console.log(`[UploadService] Uploading ${key} with size: ${file.size}`);
+            console.log({ file });
             await UploadService.upload(file, UploadService.bucket, key, file.mimetype);
             (file as any).key = key;
             callback(undefined, file);
@@ -50,6 +52,17 @@ export class UploadService {
     };
 
     static async upload(file: Express.Multer.File, bucket: string, name: string, mimetype: string) {
-        return UploadService.minioClient.putObject(bucket, name, file.stream);
+        const buffer = await (async () => {
+            const buffers: any = [];
+            // node.js readable streams implement the async iterator protocol
+            for await (const data of file.stream) {
+                buffers.push(data);
+            }
+            return Buffer.concat(buffers);
+        })();
+
+        const transformedBuffer = await sharp(buffer).resize(640).jpeg({ mozjpeg: true }).toBuffer();
+
+        return UploadService.minioClient.putObject(bucket, name, transformedBuffer);
     }
 }
