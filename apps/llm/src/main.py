@@ -1,17 +1,15 @@
 import os
+import shutil
 
 import cv2
-
 import numpy as np
 import requests
+from PIL import Image
 from dotenv import load_dotenv
-from icecream import ic
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 from roboflow import Roboflow
 from ultralytics import YOLO
-from fastapi import FastAPI, status
-from PIL import Image
-from fastapi.responses import JSONResponse
-
 
 load_dotenv()
 version = os.getenv("APP_BUILD_VERSION", "development")
@@ -101,17 +99,14 @@ class LocalModel:
 
 
 def download_image(image_url: str, file_path: str):
-    # Send an HTTP GET request to the image URL
-    response = requests.get(image_url)
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
-        # Open a binary file with the specified file name to write the image content
-        with open(file_path, 'wb') as file:
-            file.write(response.content)
-            print(f'Image downloaded as {file_path} successfully.')
-            return True
-    else:
-        print('Failed to download the image. Status code:', response.status_code)
+    try:
+        with requests.get(image_url, stream=True) as r:
+            with open(file_path, 'wb') as f:
+                shutil.copyfileobj(r.raw, f)
+                return True
+    except Exception as e:
+        print("Downloading Image Failed.")
+        print(e)
         return False
 
 

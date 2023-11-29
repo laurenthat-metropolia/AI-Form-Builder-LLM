@@ -41,6 +41,7 @@ export class UploadService {
             callback: (error?: any, info?: Partial<Express.Multer.File>) => void,
         ): Promise<void> {
             const key = randomUUID() + path.parse(file.originalname).ext;
+            console.log(`[UploadService] Uploading ${key} with size: ${file.size}`);
             await UploadService.upload(file, UploadService.bucket, key, file.mimetype);
             (file as any).key = key;
             callback(undefined, file);
