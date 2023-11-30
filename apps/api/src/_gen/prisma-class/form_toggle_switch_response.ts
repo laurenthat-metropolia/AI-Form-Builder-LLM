@@ -18,6 +18,6 @@ export class FormToggleSwitchResponse {
     @ApiProperty({ type: String })
     toggleSwitchId: string;
 
-    @ApiProperty({ type: String })
-    value: string;
+    @ApiProperty({ type: Boolean })
+    value: boolean;
 }

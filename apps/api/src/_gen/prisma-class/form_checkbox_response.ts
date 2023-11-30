@@ -18,6 +18,6 @@ export class FormCheckboxResponse {
     @ApiProperty({ type: String })
     checkboxId: string;
 
-    @ApiProperty({ type: String })
-    value: string;
+    @ApiProperty({ type: Boolean })
+    value: boolean;
 }

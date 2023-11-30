@@ -68,7 +68,6 @@ export class FormFieldController {
         const order = await forms.countFormFields(form.id);
         return prisma.formTextField.create({
             data: {
-                ...body,
                 formId: form.id,
                 order: order,
                 label: body.label,
@@ -219,7 +218,6 @@ export class FormFieldController {
         const order = await forms.countFormFields(form.id);
         return prisma.formLabel.create({
             data: {
-                ...body,
                 formId: form.id,
                 order: order,
                 label: body.label,
@@ -370,7 +368,6 @@ export class FormFieldController {
         const order = await forms.countFormFields(form.id);
         return prisma.formCheckbox.create({
             data: {
-                ...body,
                 formId: form.id,
                 order: order,
                 label: body.label,
@@ -522,7 +519,6 @@ export class FormFieldController {
         const order = await forms.countFormFields(form.id);
         return prisma.formToggleSwitch.create({
             data: {
-                ...body,
                 formId: form.id,
                 order: order,
                 label: body.label,
