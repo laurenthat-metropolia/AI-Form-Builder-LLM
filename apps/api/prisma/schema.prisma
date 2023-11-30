@@ -91,7 +91,7 @@ model FormCheckboxResponse {
   submissionId String
   checkbox     FormCheckbox   @relation(fields: [checkboxId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   checkboxId   String
-  value        String
+  value        Boolean
 
   @@unique([checkboxId, submissionId])
 }
@@ -111,7 +111,7 @@ model FormToggleSwitchResponse {
   submissionId   String
   toggleSwitch   FormToggleSwitch @relation(fields: [toggleSwitchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   toggleSwitchId String
-  value          String
+  value          Boolean
 
   @@unique([toggleSwitchId, submissionId])
 }
