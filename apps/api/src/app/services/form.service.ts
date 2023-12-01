@@ -153,29 +153,8 @@ const findOnePopulatedById = async (id: string) => {
     return item ?? null;
 };
 
-const createFormSubmission = async (ownerId: string, formId: string) => {
-    const item = await prisma.formSubmission.findFirst({
-        where: {
-            formId,
-            ownerId,
-        },
-    });
-
-    if (item) {
-        return item;
-    }
-
-    return prisma.formSubmission.create({
-        data: {
-            formId,
-            ownerId,
-        },
-    });
-};
-
 export const forms = {
     findPopulatedManyByOwnerId: findPopulatedManyByOwnerId,
     findOnePopulatedById: findOnePopulatedById,
     countFormFields: countFormFields,
-    createFormSubmission: createFormSubmission,
 };
