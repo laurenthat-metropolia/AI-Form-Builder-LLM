@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -24,8 +25,21 @@ import { Queue } from 'bull';
 import { transformUploadedFile } from '../services/upload.service';
 import { JwtAuthGuard } from '../authentication/jwt-auth.guard';
 import { ConsumerTopics } from '../event-consumers/consumer-topics';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiParam,
+    ApiResponse,
+    ApiTags,
+    getSchemaPath,
+} from '@nestjs/swagger';
 import { UpdateFormRequest } from '../dtos/UpdateForm.request';
+import { NewFormSubmissionRequest } from '../dtos/NewFormSubmission.request';
+import { PrismaModel } from '../../_gen/prisma-class';
+import { JwtAndAnonymousAuthGuard } from '../authentication/jwt-and-anonymous-auth.guard';
+import FormSubmission = PrismaModel.FormSubmission;
 
 @ApiTags('Forms')
 @Controller('forms')
@@ -94,6 +108,123 @@ export class FormController {
                 ownerId: user.id,
             },
         });
+    }
+
+    @Post(':id/submit')
+    @UseGuards(JwtAndAnonymousAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'formId',
+    })
+    @ApiOperation({
+        summary: 'Submit Form by id',
+        description: 'Submit Form by id',
+    })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            $ref: getSchemaPath(FormSubmission),
+        },
+    })
+    @ApiBody({ type: [NewFormSubmissionRequest] })
+    async submitForm(
+        @Req() request: Request,
+        @Param() params: Record<string, string>,
+        @Body() body: NewFormSubmissionRequest,
+    ) {
+        const user = request.user as User | undefined;
+        const formId = params.id;
+
+        const form = await prisma.form.findFirst({
+            where: {
+                id: formId,
+            },
+        });
+        if (!form) {
+            throw new NotFoundException();
+        }
+        const submission = await (async () => {
+            if (user === undefined) {
+                return prisma.formSubmission.create({
+                    data: {
+                        formId,
+                    },
+                });
+            }
+            const userSubmission = await prisma.formSubmission.findFirst({
+                where: {
+                    formId,
+                    ownerId: user.id,
+                },
+            });
+            if (userSubmission) {
+                throw new ForbiddenException('Already submitted.');
+            }
+            return prisma.formSubmission.create({
+                data: {
+                    formId,
+                    ownerId: user.id,
+                },
+            });
+        })();
+
+        for (const fieldResponse of body.checkboxResponses) {
+            const checkboxes = await prisma.formCheckbox.findMany({
+                where: {
+                    formId: formId,
+                },
+            });
+            if (!checkboxes.map((x) => x.id).includes(fieldResponse.id)) {
+                throw new BadRequestException('Unknown Field Id.');
+            }
+            await prisma.formCheckboxResponse.create({
+                data: {
+                    submissionId: submission.id,
+                    value: fieldResponse.value,
+                    checkboxId: fieldResponse.id,
+                },
+            });
+        }
+
+        for (const fieldResponse of body.textFieldResponses) {
+            const textFields = await prisma.formTextField.findMany({
+                where: {
+                    formId: formId,
+                },
+            });
+            if (!textFields.map((x) => x.id).includes(fieldResponse.id)) {
+                throw new BadRequestException('Unknown Field Id.');
+            }
+            await prisma.formTextFieldResponse.create({
+                data: {
+                    submissionId: submission.id,
+                    value: fieldResponse.value,
+                    textFieldId: fieldResponse.id,
+                },
+            });
+        }
+
+        for (const fieldResponse of body.toggleSwitchResponses) {
+            const toggles = await prisma.formToggleSwitch.findMany({
+                where: {
+                    formId: formId,
+                },
+            });
+            if (!toggles.map((x) => x.id).includes(fieldResponse.id)) {
+                throw new BadRequestException('Unknown Field Id.');
+            }
+            await prisma.formToggleSwitchResponse.create({
+                data: {
+                    submissionId: submission.id,
+                    value: fieldResponse.value,
+                    toggleSwitchId: fieldResponse.id,
+                },
+            });
+        }
+
+        return true;
     }
 
     @Patch(':id')

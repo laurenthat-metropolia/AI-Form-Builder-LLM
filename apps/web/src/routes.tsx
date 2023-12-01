@@ -5,6 +5,7 @@ import { UploadDetails } from './app/pages/UploadDetails';
 import { AndroidLinkLoginMissingApp } from './app/android/auth/login/AndroidLinkLoginMissingApp';
 import { AndroidLaunchForLogin } from './app/android/auth/login/AndroidLaunchForLogin';
 import { Forms } from './app/pages/Forms';
+import { SubmitForm } from './app/pages/SubmitForm';
 
 export function AppRouter() {
     return (
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
             {
                 path: '/android/auth/login',
                 element: <AndroidLinkLoginMissingApp />,
+            },
+            {
+                path: '/android/forms/publish',
+                element: <SubmitForm />,
             },
         ],
     },
