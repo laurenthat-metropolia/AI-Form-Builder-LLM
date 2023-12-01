@@ -3,23 +3,17 @@ import { Form } from './form';
 import { FormTextFieldResponse } from './form_text_field_response';
 import { FormCheckboxResponse } from './form_checkbox_response';
 import { FormToggleSwitchResponse } from './form_toggle_switch_response';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FormSubmission {
     @ApiProperty({ type: String })
     id: string;
 
-    @ApiProperty({ type: String })
-    name: string;
+    @ApiPropertyOptional({ type: () => User })
+    owner?: User;
 
-    @ApiProperty({ type: String })
-    status: string;
-
-    @ApiProperty({ type: () => User })
-    owner: User;
-
-    @ApiProperty({ type: String })
-    ownerId: string;
+    @ApiPropertyOptional({ type: String })
+    ownerId?: string;
 
     @ApiProperty({ type: () => Form })
     form: Form;

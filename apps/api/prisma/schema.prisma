@@ -43,10 +43,8 @@ model Form {
 
 model FormSubmission {
   id                    String                     @id @default(uuid())
-  name                  String
-  status                String // "DRAFT" | "PUBLISHED"
-  owner                 User                       @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  ownerId               String
+  owner                 User?                      @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId               String?
   form                  Form                       @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   formId                String
   textFieldResponses    FormTextFieldResponse[]
