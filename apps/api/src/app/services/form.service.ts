@@ -167,10 +167,8 @@ const createFormSubmission = async (ownerId: string, formId: string) => {
 
     return prisma.formSubmission.create({
         data: {
-            name: '',
             formId,
             ownerId,
-            status: 'PUBLISHED', // TODO: better idea about this?
         },
     });
 };
