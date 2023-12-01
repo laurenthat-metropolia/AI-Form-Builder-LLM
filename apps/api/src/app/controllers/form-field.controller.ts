@@ -808,12 +808,8 @@ export class FormFieldController {
             },
         },
     })
-    async createImage(
-        @Req() request: Request,
-        @Param() params: Record<string, string>,
-        @Body() body: NewFormImageRequest,
-        @UploadedFile() file: Express.Multer.File | null,
-    ) {
+    async createImage(@Req() request: Request, @Param() params: Record<string, string>) {
+        const file = (request.file ?? null) as Express.Multer.File | null;
         const user = request.user as User;
         const formId = params.formId;
         const image = file ? transformUploadedFile(file) : null;

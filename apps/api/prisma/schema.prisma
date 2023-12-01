@@ -38,7 +38,7 @@ model Form {
   buttons         FormButton[]
   labels          FormLabel[]
   upload          UploadedFile?
-  formSubmissinos FormSubmission[]
+  formSubmissions FormSubmission[]
 }
 
 model FormSubmission {
