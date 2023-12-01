@@ -53,5 +53,5 @@ export class Form {
     upload?: UploadedFile;
 
     @ApiProperty({ isArray: true, type: () => FormSubmission })
-    formSubmissinos: FormSubmission[];
+    formSubmissions: FormSubmission[];
 }
