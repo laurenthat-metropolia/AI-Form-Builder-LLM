@@ -143,6 +143,7 @@ export class FormController {
             },
         });
         if (!form) {
+            console.log('[submitForm] NotFoundException');
             throw new NotFoundException();
         }
         const submission = await (async () => {
@@ -160,6 +161,7 @@ export class FormController {
                 },
             });
             if (userSubmission) {
+                console.log('[submitForm] ForbiddenException Already submitted');
                 throw new ForbiddenException('Already submitted.');
             }
             return prisma.formSubmission.create({
@@ -177,6 +179,7 @@ export class FormController {
                 },
             });
             if (!checkboxes.map((x) => x.id).includes(fieldResponse.id)) {
+                console.log('[submitForm] BadRequestException Unknown Field Id');
                 throw new BadRequestException('Unknown Field Id.');
             }
             await prisma.formCheckboxResponse.create({
@@ -195,6 +198,7 @@ export class FormController {
                 },
             });
             if (!textFields.map((x) => x.id).includes(fieldResponse.id)) {
+                console.log('[submitForm] BadRequestException Unknown Field Id');
                 throw new BadRequestException('Unknown Field Id.');
             }
             await prisma.formTextFieldResponse.create({
@@ -213,6 +217,7 @@ export class FormController {
                 },
             });
             if (!toggles.map((x) => x.id).includes(fieldResponse.id)) {
+                console.log('[submitForm] BadRequestException Unknown Field Id');
                 throw new BadRequestException('Unknown Field Id.');
             }
             await prisma.formToggleSwitchResponse.create({
@@ -224,7 +229,7 @@ export class FormController {
             });
         }
 
-        return true;
+        return submission;
     }
 
     @Patch(':id')

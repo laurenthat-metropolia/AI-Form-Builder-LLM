@@ -27,6 +27,7 @@ export class AppValidationPipe implements PipeTransform {
         const validationErrors: ValidationError[] = await validate(request);
 
         if (validationErrors.length > 0) {
+            console.log(JSON.stringify(validationErrors, undefined, 4));
             throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
         }
 
