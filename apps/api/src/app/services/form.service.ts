@@ -146,7 +146,14 @@ const findOnePopulatedById = async (id: string) => {
                     events: true,
                 },
             },
-            formSubmissions: true,
+            formSubmissions: {
+                include: {
+                    checkboxResponses: true,
+                    toggleSwitchResponses: true,
+                    textFieldResponses: true,
+                    owner: true,
+                },
+            },
         },
     });
 
