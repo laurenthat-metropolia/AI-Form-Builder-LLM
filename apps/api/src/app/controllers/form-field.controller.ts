@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -25,6 +26,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { transformUploadedFile } from '../services/upload.service';
 import { NewFormImageRequest } from '../dtos/NewFormImage.request';
 import { forms } from '../services/form.service';
+import { Resources, ValueOf } from '@draw2form/shared';
+import { Direction } from '../interfaces/direction';
 
 @ApiTags('Form Fields')
 @Controller('forms/:formId/fields')
@@ -128,7 +131,6 @@ export class FormFieldController {
             data: {
                 ...field,
                 label: body.label ?? field.label,
-                order: body.order ?? field.order,
             },
         });
     }
@@ -278,7 +280,6 @@ export class FormFieldController {
             data: {
                 ...field,
                 label: body.label ?? field.label,
-                order: body.order ?? field.order,
             },
         });
     }
@@ -429,7 +430,6 @@ export class FormFieldController {
             data: {
                 ...field,
                 label: body.label ?? field.label,
-                order: body.order ?? field.order,
             },
         });
     }
@@ -578,7 +578,6 @@ export class FormFieldController {
             data: {
                 ...field,
                 label: body.label ?? field.label,
-                order: body.order ?? field.order,
             },
         });
     }
@@ -729,7 +728,6 @@ export class FormFieldController {
             data: {
                 ...field,
                 label: body.label ?? field.label,
-                order: body.order ?? field.order,
             },
         });
     }
@@ -906,7 +904,6 @@ export class FormFieldController {
             data: {
                 ...field,
                 url: image?.url ?? field.url,
-                order: body.order ?? field.order,
             },
         });
     }
@@ -958,5 +955,96 @@ export class FormFieldController {
                 id: field.id,
             },
         });
+    }
+
+    @Patch(`:fieldType/:id/order/:direction`)
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('Bearer')
+    @ApiParam({
+        name: 'fieldType',
+        type: 'enum',
+        enum: Object.values(Resources),
+        description: 'Field Type',
+    })
+    @ApiParam({
+        name: 'direction',
+        type: 'enum',
+        enum: Object.values(Direction),
+        description: 'Direction to move in the form',
+    })
+    @ApiParam({
+        name: 'formId',
+        type: 'string',
+        description: 'Form Id',
+    })
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        description: 'FormButton Id',
+    })
+    @ApiOperation({
+        summary: 'Update FormButton',
+        description: 'Update FormButton',
+    })
+    async changeOrder(@Req() request: Request, @Param() params: Record<string, string>) {
+        const user = request.user as User;
+        const formId = params.formId;
+        const fieldType = params.fieldType as ValueOf<typeof Resources>;
+        const direction = params.direction as ValueOf<typeof Direction>;
+        const fieldId = params.id;
+
+        if (!Object.values(Direction).includes(direction)) {
+            throw new BadRequestException('Unknown direction');
+        }
+        if (!Object.values(Resources).includes(fieldType)) {
+            throw new BadRequestException('Unknown fieldType');
+        }
+
+        const form = await prisma.form.findFirst({
+            where: {
+                ownerId: user.id,
+                id: formId,
+            },
+        });
+
+        if (!form) {
+            throw new NotFoundException('Form Not Found.');
+        }
+
+        await forms.validateAndFixFormFieldOrders(form.id);
+
+        const formFields = await forms.getFormFields(form.id);
+        const formFieldCount = formFields.length;
+        const field = formFields.find((x) => x.id === fieldId);
+        const fieldIndex = formFields.findIndex((x) => x.id === fieldId);
+
+        if (!field || fieldIndex === -1) {
+            throw new BadRequestException('Field Not Found.');
+        }
+        if (formFieldCount === 1) {
+            throw new BadRequestException('Nowhere to go.');
+        }
+        if (field.order === 0 && direction === Direction.Up) {
+            throw new BadRequestException('Nowhere to go.');
+        }
+        if (field.order === formFieldCount - 1 && direction === Direction.Down) {
+            throw new BadRequestException('Nowhere to go.');
+        }
+
+        if (direction === Direction.Up) {
+            const prev = formFields[fieldIndex - 1];
+            await forms.updateResourceOrder(prev.resource, prev.id, field.order);
+            await forms.updateResourceOrder(field.resource, field.id, prev.order);
+        } else {
+            const next = formFields[fieldIndex + 1];
+            await forms.updateResourceOrder(next.resource, next.id, field.order);
+            await forms.updateResourceOrder(field.resource, field.id, next.order);
+        }
+
+        return (await forms.getFormFields(form.id)).map((x) => ({
+            id: x.id,
+            order: x.order,
+            resource: x.resource,
+        }));
     }
 }

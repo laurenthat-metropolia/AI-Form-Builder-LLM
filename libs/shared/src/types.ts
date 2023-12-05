@@ -13,6 +13,8 @@ import {
 } from '@prisma/client';
 import { IdentifiableImageEvent } from './events';
 
+export type ValueOf<T> = T[keyof T];
+
 export interface Identifiable {
     id: number;
 }

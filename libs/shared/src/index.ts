@@ -8,3 +8,4 @@ export * from './chatgpt';
 export * from './safeParse';
 export * from './auth';
 export * from './form';
+export * from './resources';
