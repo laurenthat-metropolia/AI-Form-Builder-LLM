@@ -21,6 +21,12 @@ export class FormSubmission {
     @ApiProperty({ type: String })
     formId: string;
 
+    @ApiProperty({ type: Date })
+    createdAt: Date;
+
+    @ApiProperty({ type: Date })
+    updatedAt: Date;
+
     @ApiProperty({ isArray: true, type: () => FormTextFieldResponse })
     textFieldResponses: FormTextFieldResponse[];
 
