@@ -286,14 +286,13 @@ export class FormController {
         if (!item) {
             throw new NotFoundException();
         }
-        const hasTextRes = item.upload?.events.find((ev) => ev.event === ImageEvents.TextDetectionResponseReceived);
-        const hasObjectRes = item.upload?.events.find((ev) => ev.event === ImageEvents.ObjectDetectionResponseReceived);
-        const hasFormRes = item.upload?.events.find((ev) => ev.event === ImageEvents.FormComponentsCreated);
-        return {
-            textRecognition: hasTextRes === undefined ? 'loading' : hasTextRes === null ? 'error' : 'success',
-            objectRecognition: hasObjectRes === undefined ? 'loading' : hasObjectRes === null ? 'error' : 'success',
-            formGeneration: hasFormRes === undefined ? 'loading' : hasFormRes === null ? 'error' : 'success',
-        };
+        const resObject = Object.values(ImageEvents)
+            .map((event) => {
+                const eventBody = item.upload?.events.find((ev) => ev.event === event);
+                return { [event]: eventBody === undefined ? 'loading' : eventBody === null ? 'error' : 'success' };
+            })
+            .reduce((prev, curr) => ({ ...prev, ...curr }), {});
+        return resObject;
     }
 
     @Get(':id/event/:event')
