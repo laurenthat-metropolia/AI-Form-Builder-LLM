@@ -191,7 +191,7 @@ export const SubmitForm = () => {
                                     </div>
                                 )}
                                 {uiComponent.textField && (
-                                    <div className={`w-full grid grid-cols-2 gap-2 items-center`}>
+                                    <div className={`w-full grid grid-cols-1 lg:grid-cols-2 gap-2 items-center`}>
                                         <Label htmlFor={`cl-${index}`} className="flex">
                                             {uiComponent.textField.label}
                                         </Label>
@@ -199,7 +199,7 @@ export const SubmitForm = () => {
                                             id={`cl-${index}`}
                                             type="text"
                                             placeholder={uiComponent.textField.label}
-                                            className=" border border-gray-300  text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                                             required
                                             onChange={(e) => {
                                                 const copy = structuredClone(uiComponent);

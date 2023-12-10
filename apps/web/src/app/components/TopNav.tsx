@@ -25,7 +25,7 @@ export const TopNav = () => {
                         Draw2Form
                     </Link>
                     <small className="absolute top-0 left-1/2 text-gray-500 bg-transparent">{version}</small>
-                    {loginInformation && <Link to="/forms">Forms</Link>}
+                    {/*{loginInformation && <Link to="/forms">Forms</Link>}*/}
                 </div>
                 <div>
                     {loginInformation === null && (
